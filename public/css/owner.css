@@ -131,3 +131,53 @@ select,.input{height:45px;border:1px solid var(--line);border-radius:12px;paddin
     .page-head{display:block}
     .head-actions{margin-top:16px}
 }
+/* =========================================
+   LOGOUT
+========================================= */
+
+.logout-form {
+    margin-top: 10px;
+    padding: 0 18px 18px;
+}
+
+.logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 13px 15px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: transparent;
+    color: #9b5f35;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.25s ease,
+        color 0.25s ease,
+        transform 0.25s ease;
+}
+
+.logout-btn i {
+    width: 20px;
+    text-align: center;
+    font-size: 16px;
+}
+
+.logout-btn:hover {
+    background: #f8e9dc;
+    color: #7b3f0d;
+    transform: translateX(3px);
+}
+
+.logout-btn:active {
+    transform: translateX(1px) scale(0.98);
+}

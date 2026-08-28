@@ -834,3 +834,56 @@
 .auth-alert.error { background: #fdecea; color: #a33a2b; border: 1px solid #f3c7c0; }
 .auth-alert.success { background: #eaf8ef; color: #237a43; border: 1px solid #c5e8d1; }
 .forgot-pass span { font-size: 11px; color: var(--text-muted); }
+/* =========================================
+   PASSWORD SHOW / HIDE
+========================================= */
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    padding-right: 50px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    background: transparent;
+
+    color: #8b7355;
+
+    cursor: pointer;
+
+    padding: 0;
+
+    z-index: 5;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.toggle-password:hover {
+    color: #5c4033;
+}
+
+.toggle-password:active {
+    transform: translateY(-50%) scale(0.9);
+}
+
+.toggle-password i {
+    font-size: 16px;
+    pointer-events: none;
+}
