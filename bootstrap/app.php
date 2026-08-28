@@ -11,14 +11,29 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
+    ->withMiddleware(function (Middleware $middleware) {
 
+        // Redirect user yang belum login
+        // berdasarkan area aplikasi yang diakses.
+        $middleware->redirectGuestsTo(function ($request) {
+
+            if (
+                $request->is('owner/*') ||
+                $request->is('kitchen/*') ||
+                $request->is('kasir/*')
+            ) {
+                return route('admin.login');
+            }
+
+            return route('customer.login');
+        });
+
+        // Middleware untuk pengecekan role
         $middleware->alias([
             'role' => RoleMiddleware::class,
         ]);
-
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
+    ->withExceptions(function (Exceptions $exceptions) {
         //
     })
     ->create();

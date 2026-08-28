@@ -202,3 +202,34 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCartUI();
     renderHistory();
 });
+
+function togglePassword(inputId, eyeId) {
+
+    const input = document.getElementById(inputId);
+    const eye = document.getElementById(eyeId);
+
+    if (!input || !eye) {
+        return;
+    }
+
+    // Password sedang tersembunyi
+    if (input.type === "password") {
+
+        // Tampilkan password
+        input.type = "text";
+
+        // Mata terbuka
+        eye.classList.remove("fa-eye-slash");
+        eye.classList.add("fa-eye");
+
+    } else {
+
+        // Sembunyikan password
+        input.type = "password";
+
+        // Mata tertutup / silang
+        eye.classList.remove("fa-eye");
+        eye.classList.add("fa-eye-slash");
+
+    }
+}
