@@ -83,7 +83,7 @@
             </span>
 
             <h3>
-                Hazelnut Latte
+                Cafe Latte
             </h3>
 
             <p>

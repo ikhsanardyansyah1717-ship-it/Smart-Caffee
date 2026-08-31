@@ -2,11 +2,86 @@ const appState = {
     currentUser: window.quattroUser?.name ?? 'Customer',
     currentEmail: window.quattroUser?.email ?? '',
     menu: [
-        { id: 1, name: 'Caramel Macchiato', category: 'coffee', price: 28000, rating: 4.9, desc: 'Espresso, milk, caramel drizzle', img: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=200&auto=format&fit=crop' },
-        { id: 2, name: 'Butter Croissant', category: 'pastry', price: 22000, rating: 4.8, desc: 'Freshly baked crispy croissant', img: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=200&auto=format&fit=crop' },
-        { id: 3, name: 'Hazelnut Latte', category: 'coffee', price: 30000, rating: 4.9, desc: 'Espresso with smooth hazelnut syrup', img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?w=200&auto=format&fit=crop' },
-        { id: 4, name: 'Matcha Cream Latte', category: 'non-coffee', price: 32000, rating: 4.7, desc: 'Premium Uji matcha with fresh milk', img: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?w=200&auto=format&fit=crop' }
-    ],
+    {
+        id: 4,
+        name: 'Caramel Macchiato',
+        category: 'coffee',
+        price: 35000,
+        rating: 4.9,
+        desc: 'Espresso, milk, caramel drizzle',
+        img: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=200&auto=format&fit=crop'
+    },
+
+    {
+        id: 7,
+        name: 'Butter Croissant',
+        category: 'pastry',
+        price: 24000,
+        rating: 4.8,
+        desc: 'Freshly baked crispy croissant',
+        img: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=200&auto=format&fit=crop'
+    },
+
+    {
+        id: 2,
+        name: 'Cafe Latte',
+        category: 'coffee',
+        price: 30000,
+        rating: 4.9,
+        desc: 'Smooth espresso with fresh milk',
+        img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?w=200&auto=format&fit=crop'
+    },
+
+    {
+        id: 5,
+        name: 'Matcha Latte',
+        category: 'non-coffee',
+        price: 32000,
+        rating: 4.7,
+        desc: 'Premium matcha with fresh milk',
+        img: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?w=200&auto=format&fit=crop'
+    },
+
+    {
+        id: 1,
+        name: 'Cappuccino',
+        category: 'coffee',
+        price: 28000,
+        rating: 4.8,
+        desc: 'Espresso with steamed milk',
+        img: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=200&auto=format&fit=crop'
+    },
+
+    {
+        id: 3,
+        name: 'Americano',
+        category: 'coffee',
+        price: 22000,
+        rating: 4.7,
+        desc: 'Rich espresso with hot water',
+        img: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=200&auto=format&fit=crop'
+    },
+
+    {
+        id: 6,
+        name: 'Chocolate',
+        category: 'non-coffee',
+        price: 30000,
+        rating: 4.8,
+        desc: 'Rich chocolate with fresh milk',
+        img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?w=200&auto=format&fit=crop'
+    },
+
+    {
+        id: 8,
+        name: 'French Fries',
+        category: 'pastry',
+        price: 26000,
+        rating: 4.7,
+        desc: 'Crispy golden french fries',
+        img: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=200&auto=format&fit=crop'
+    }
+],
     cart: [],
     favorites: [1],
     history: []
