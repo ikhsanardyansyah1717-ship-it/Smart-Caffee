@@ -57,14 +57,6 @@ Route::middleware('auth')->group(function () {
         ->name('logout');
 });
 
-Route::middleware('auth')->group(function () {
-
-    Route::post('/logout', [AuthController::class, 'logout'])
-        ->name('logout');
-
-});
-
-
 /*
 |--------------------------------------------------------------------------
 | CUSTOMER
@@ -81,6 +73,9 @@ Route::middleware(['auth', 'role:customer'])
 
         Route::get('/orders', [CustomerController::class, 'orders'])
             ->name('orders');
+
+            Route::post('/orders', [CustomerController::class, 'storeOrder'])
+            ->name('orders.store');
 
         Route::get('/favorites', [CustomerController::class, 'favorites'])
             ->name('favorites');

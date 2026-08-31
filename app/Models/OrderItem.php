@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class OrderItem extends Model
+{
+    protected $fillable = [
+        'order_id',
+        'product_id',
+        'product_name',
+        'quantity',
+        'price',
+        'subtotal',
+    ];
+
+    protected $casts = [
+        'price' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+    ];
+
+    /**
+     * Item milik satu order
+     */
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    /**
+     * Item berasal dari satu product
+     */
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
+}

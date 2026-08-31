@@ -141,21 +141,149 @@ function switchOrderTab(tab) {
     }
 }
 
-function checkout() {
-    if (!appState.cart.length) return;
-    const subtotal = appState.cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-    const total = subtotal * 1.1;
-    appState.history.unshift({
-        id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-        date: new Date().toLocaleString('id-ID'),
-        items: appState.cart.map(c => `${c.qty}x ${c.name}`).join(', '),
-        total
-    });
-    appState.cart = [];
-    saveCustomerState();
-    updateCartUI();
-    switchOrderTab('history');
-    showToast('Pesanan berhasil dibuat');
+async function checkout() {
+
+    // Cek keranjang
+    if (!appState.cart.length) {
+        showToast('Keranjang masih kosong');
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ambil CSRF Token Laravel
+    |--------------------------------------------------------------------------
+    */
+
+    const csrfToken = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content');
+
+    if (!csrfToken) {
+        showToast('CSRF token tidak ditemukan');
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ubah isi cart menjadi format yang dibutuhkan Laravel
+    |--------------------------------------------------------------------------
+    */
+
+    const items = appState.cart.map(item => ({
+        product_id: item.id,
+        quantity: item.qty
+    }));
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ambil nomor meja jika ada
+    |--------------------------------------------------------------------------
+    */
+
+    const tableInput = document.getElementById('table-number');
+
+    const tableNumber = tableInput
+        ? tableInput.value.trim()
+        : null;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kirim Order ke Laravel
+    |--------------------------------------------------------------------------
+    */
+
+    try {
+
+        showToast('Menyimpan pesanan...');
+
+        const response = await fetch(
+            '/customer/orders',
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+
+                body: JSON.stringify({
+                    table_number: tableNumber,
+                    items: items
+                })
+            }
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Jika validasi Laravel gagal
+        |--------------------------------------------------------------------------
+        */
+
+        if (!response.ok) {
+
+            let errorMessage =
+                'Pesanan gagal dibuat';
+
+            try {
+
+                const errorData =
+                    await response.json();
+
+                if (errorData.message) {
+                    errorMessage =
+                        errorData.message;
+                }
+
+            } catch (error) {
+                // Abaikan jika response bukan JSON
+            }
+
+            throw new Error(errorMessage);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Order berhasil masuk database
+        |--------------------------------------------------------------------------
+        */
+
+        appState.cart = [];
+
+        saveCustomerState();
+
+        updateCartUI();
+
+        showToast(
+            'Pesanan berhasil dibuat!'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pindah ke halaman Orders
+        |--------------------------------------------------------------------------
+        */
+
+        setTimeout(() => {
+
+            window.location.href =
+                '/customer/orders';
+
+        }, 800);
+
+    } catch (error) {
+
+        console.error(
+            'Checkout Error:',
+            error
+        );
+
+        showToast(
+            error.message ||
+            'Terjadi kesalahan saat membuat pesanan'
+        );
+    }
 }
 
 function renderHistory() {
