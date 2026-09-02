@@ -41,6 +41,16 @@
                 <div><strong>Kasir Staff</strong><small>Quattro Coffee</small></div>
             </div>
         </div>
+
+        <form action="{{ route('admin.logout') }}" method="POST" class="logout-form">
+    @csrf
+
+    <button type="submit" class="logout-btn">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span>Logout</span>
+    </button>
+</form>
+
     </aside>
 
     <main class="main-content">

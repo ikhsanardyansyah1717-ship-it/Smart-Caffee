@@ -60,3 +60,38 @@ label{display:block;font-size:11px;font-weight:700;color:#5c5048;margin-bottom:1
 .payment-order.selected{border-color:#8B4F08;background:#fbf5ef}
 .progress{background:#ece4dc}
 .progress>span{background:#8B4F08}
+.logout-form {
+    margin-top: 12px;
+}
+
+.logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 12px 16px;
+    border: none;
+    border-radius: 12px;
+
+    background: transparent;
+    color: #9b5f35;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.logout-btn i {
+    width: 20px;
+    font-size: 16px;
+}
+
+.logout-btn:hover {
+    background: #f8e9dc;
+    color: #7b3f0d;
+    transform: translateX(3px);
+}

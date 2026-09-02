@@ -834,3 +834,480 @@
 .auth-alert.error { background: #fdecea; color: #a33a2b; border: 1px solid #f3c7c0; }
 .auth-alert.success { background: #eaf8ef; color: #237a43; border: 1px solid #c5e8d1; }
 .forgot-pass span { font-size: 11px; color: var(--text-muted); }
+/* =========================================
+   PASSWORD SHOW / HIDE
+========================================= */
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    padding-right: 50px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    background: transparent;
+
+    color: #8b7355;
+
+    cursor: pointer;
+
+    padding: 0;
+
+    z-index: 5;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.toggle-password:hover {
+    color: #5c4033;
+}
+
+.toggle-password:active {
+    transform: translateY(-50%) scale(0.9);
+}
+
+.toggle-password i {
+    font-size: 16px;
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   QUATTRO COFFEE
+   CHECKOUT PAYMENT DETAIL
+   ========================================================= */
+
+.checkout-payment-details {
+    margin-top: 12px;
+    animation: checkoutDetailIn .25s ease;
+}
+
+.checkout-detail-card {
+    padding: 15px;
+    margin-top: 10px;
+
+    background: #fffaf5;
+
+    border: 1px solid #e5d9cf;
+
+    border-radius: 18px;
+
+    animation: checkoutDetailIn .25s ease;
+}
+
+.checkout-detail-title {
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    margin-bottom: 15px;
+}
+
+.checkout-detail-title > div:last-child {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+.checkout-detail-title strong {
+    font-size: 13px;
+}
+
+.checkout-detail-title span {
+    font-size: 10px;
+
+    opacity: .55;
+}
+
+
+/* ICON */
+
+.checkout-detail-icon {
+    width: 40px;
+    height: 40px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    font-size: 16px;
+}
+
+.checkout-detail-icon.cash {
+    background: #e8f4e9;
+    color: #3d7a43;
+}
+
+.checkout-detail-icon.qris {
+    background: #eee9f9;
+    color: #64469b;
+}
+
+.checkout-detail-icon.debit {
+    background: #e8eef7;
+    color: #42618c;
+}
+
+
+/* =========================================================
+   CASH
+   ========================================================= */
+
+.checkout-input-label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.checkout-money-input {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 0 12px;
+
+    background: white;
+
+    border: 1px solid #e2d7ce;
+
+    border-radius: 12px;
+}
+
+.checkout-money-input span {
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.checkout-money-input input {
+    width: 100%;
+
+    padding: 12px 0;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    font-size: 13px;
+}
+
+.checkout-change {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-top: 10px;
+
+    padding: 11px 12px;
+
+    border-radius: 11px;
+
+    background: #f4ece5;
+
+    font-size: 11px;
+}
+
+.checkout-change strong {
+    font-size: 13px;
+    color: #704432;
+}
+
+
+/* =========================================================
+   QRIS
+   ========================================================= */
+
+.checkout-qris-wrapper {
+    text-align: center;
+}
+
+.checkout-qris-label {
+    margin-bottom: 8px;
+
+    font-size: 18px;
+    font-weight: 900;
+
+    letter-spacing: 1px;
+}
+
+.checkout-qris {
+    position: relative;
+
+    width: 160px;
+    height: 160px;
+
+    margin: auto;
+
+    padding: 9px;
+
+    background: white;
+
+    border: 1px solid #ddd;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.08);
+}
+
+.checkout-qr-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    width: 100%;
+    height: 100%;
+
+    gap: 3px;
+}
+
+.checkout-qr-grid span {
+    background: #15120f;
+}
+
+.checkout-qr-grid span:nth-child(3n),
+.checkout-qr-grid span:nth-child(7n) {
+    background: white;
+}
+
+.checkout-qr-center {
+    position: absolute;
+
+    top: 50%;
+    left: 50%;
+
+    width: 36px;
+    height: 36px;
+
+    transform:
+        translate(-50%, -50%);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: white;
+
+    color: #704432;
+
+    box-shadow:
+        0 3px 9px rgba(0,0,0,.18);
+}
+
+.checkout-qris-total {
+    display: block;
+
+    margin-top: 10px;
+
+    font-size: 17px;
+}
+
+.checkout-qris-wrapper p {
+    margin: 5px 0 0;
+
+    font-size: 9px;
+
+    opacity: .55;
+}
+
+
+/* =========================================================
+   BANK
+   ========================================================= */
+
+.checkout-bank-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 9px;
+}
+
+.checkout-bank-option {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 10px;
+
+    min-height: 58px;
+
+    background: white;
+
+    border: 1.5px solid #e4d9d1;
+
+    border-radius: 14px;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.checkout-bank-option:hover {
+    transform: translateY(-1px);
+}
+
+.checkout-bank-option input {
+    position: absolute;
+
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+.checkout-bank-option:has(input:checked) {
+    background: #fff6ef;
+
+    border-color: #704432;
+
+    box-shadow:
+        0 4px 12px
+        rgba(112,68,50,.09);
+}
+
+.checkout-bank-option > i {
+    margin-left: auto;
+
+    color: transparent;
+
+    font-size: 11px;
+}
+
+.checkout-bank-option:has(input:checked) > i {
+    color: #704432;
+}
+
+
+/* LOGO */
+
+.checkout-bank-logo {
+    width: 40px;
+    height: 35px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    font-size: 9px;
+    font-weight: 900;
+}
+
+.checkout-bank-logo.bca {
+    background: #e8f0ff;
+    color: #1956a3;
+}
+
+.checkout-bank-logo.mandiri {
+    background: #fff0c8;
+    color: #86600b;
+}
+
+.checkout-bank-logo.bni {
+    background: #fff0e8;
+    color: #b44b21;
+}
+
+.checkout-bank-logo.bri {
+    background: #e9efff;
+    color: #315aa6;
+}
+
+.checkout-bank-info {
+    min-width: 0;
+}
+
+.checkout-bank-info strong {
+    display: block;
+
+    font-size: 11px;
+}
+
+.checkout-bank-info span {
+    display: block;
+
+    margin-top: 2px;
+
+    font-size: 9px;
+
+    opacity: .5;
+}
+
+
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+
+@keyframes checkoutDetailIn {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0);
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+    .checkout-bank-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .checkout-qris {
+        width: 145px;
+        height: 145px;
+    }
+
+}

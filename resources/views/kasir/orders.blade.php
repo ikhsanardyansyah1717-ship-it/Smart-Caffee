@@ -16,17 +16,92 @@
         <table id="ordersTable">
             <thead><tr><th>ID Pesanan</th><th>Pelanggan</th><th>Meja</th><th>Pesanan</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
             <tbody>
-            @foreach($orders as $order)
-                <tr>
-                    <td><strong>{{ $order['id'] }}</strong><small>{{ $order['time'] }}</small></td>
-                    <td>{{ $order['customer'] }}</td>
-                    <td>{{ $order['table'] }}</td>
-                    <td>{{ $order['items'] }}</td>
-                    <td>Rp {{ number_format($order['total'],0,',','.') }}</td>
-                    <td><span class="badge {{ strtolower($order['status']) }}">{{ $order['status'] }}</span></td>
-                    <td><a class="table-action" href="{{ route('kasir.payment') }}"><i class="fa-solid fa-arrow-right"></i></a></td>
-                </tr>
-            @endforeach
+            @forelse($orders as $order)
+
+    <tr>
+
+        {{-- ID PESANAN --}}
+        <td>
+            <strong>{{ $order->order_number }}</strong>
+            <small>
+                {{ $order->created_at->format('H:i') }}
+            </small>
+        </td>
+
+
+        {{-- PELANGGAN --}}
+        <td>
+            {{ $order->customer_name }}
+        </td>
+
+
+        {{-- MEJA --}}
+        <td>
+            {{ $order->table_number ?? 'Take Away' }}
+        </td>
+
+
+        {{-- PESANAN --}}
+        <td>
+
+            @forelse($order->items as $item)
+
+                <div style="margin-bottom: 4px;">
+                    <strong>
+                        {{ $item->product_name }}
+                    </strong>
+
+                    <span>
+                        × {{ $item->quantity }}
+                    </span>
+                </div>
+
+            @empty
+
+                <span>Tidak ada item</span>
+
+            @endforelse
+
+        </td>
+
+
+        {{-- TOTAL --}}
+        <td>
+            Rp {{ number_format($order->total, 0, ',', '.') }}
+        </td>
+
+
+        {{-- STATUS --}}
+        <td>
+            <span class="badge {{ strtolower($order->status) }}">
+                {{ $order->status }}
+            </span>
+        </td>
+
+
+        {{-- AKSI --}}
+        <td>
+
+            <a
+                class="table-action"
+                href="{{ route('kasir.payment') }}"
+            >
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+
+        </td>
+
+    </tr>
+
+@empty
+
+    <tr>
+        <td colspan="7" style="text-align:center; padding:40px;">
+            Belum ada pesanan dari Customer.
+        </td>
+    </tr>
+
+@endforelse
             </tbody>
         </table>
     </div>
