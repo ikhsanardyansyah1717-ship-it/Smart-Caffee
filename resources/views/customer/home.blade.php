@@ -6,7 +6,9 @@
 
 <div class="app-container">
 
-    {{-- TOAST --}}
+    {{-- =====================================================
+        TOAST
+    ====================================================== --}}
     <div id="toast" class="toast">
 
         <i class="fa-solid fa-circle-check"></i>
@@ -18,7 +20,9 @@
     </div>
 
 
-    {{-- LOCATION HEADER --}}
+    {{-- =====================================================
+        LOCATION HEADER
+    ====================================================== --}}
     <div class="location-header">
 
         <div class="loc-tag">
@@ -30,6 +34,7 @@
             </span>
 
         </div>
+
 
         <a href="{{ route('customer.profile') }}">
 
@@ -44,7 +49,9 @@
     </div>
 
 
-    {{-- GREETING --}}
+    {{-- =====================================================
+        GREETING
+    ====================================================== --}}
     <div class="user-greeting">
 
         <h2>
@@ -58,7 +65,9 @@
     </div>
 
 
-    {{-- SEARCH --}}
+    {{-- =====================================================
+        SEARCH
+    ====================================================== --}}
     <div class="search-box">
 
         <i class="fa-solid fa-magnifying-glass"></i>
@@ -73,7 +82,9 @@
     </div>
 
 
-    {{-- PROMO --}}
+    {{-- =====================================================
+        PROMO
+    ====================================================== --}}
     <div class="promo-card">
 
         <div class="promo-text">
@@ -92,94 +103,80 @@
 
         </div>
 
+
         <img
-            src="https://images.unsplash.com/photo-1541167760496-1628856ab772?w=200&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1541167760496-1628856ab772?w=500&auto=format&fit=crop"
             class="promo-img"
-            alt="Latte"
+            alt="Cafe Latte"
         >
 
     </div>
 
 
     {{-- KATEGORI --}}
-    <div class="section-header">
+<div class="section-header">
+    <h4>Kategori</h4>
+</div>
 
-        <h4>
-            Kategori
-        </h4>
+<div class="categories-grid">
 
+    {{-- SEMUA --}}
+    <div
+        class="category-item active"
+        onclick="selectCategory(this, 'all')"
+    >
+        <div class="category-icon">
+            <i class="fa-solid fa-border-all"></i>
+        </div>
+
+        <span>Semua</span>
     </div>
 
 
-    <div class="categories-grid">
-
-        <div
-            class="category-item active"
-            onclick="selectCategory(this,'all')"
-        >
-
-            <div class="category-icon">
-                <i class="fa-solid fa-border-all"></i>
-            </div>
-
-            <span>
-                Semua
-            </span>
-
+    {{-- COFFEE --}}
+    <div
+        class="category-item"
+        onclick="selectCategory(this, 'coffee')"
+    >
+        <div class="category-icon">
+            <i class="fa-solid fa-mug-hot"></i>
         </div>
 
-
-        <div
-            class="category-item"
-            onclick="selectCategory(this,'coffee')"
-        >
-
-            <div class="category-icon">
-                <i class="fa-solid fa-mug-hot"></i>
-            </div>
-
-            <span>
-                Coffee
-            </span>
-
-        </div>
-
-
-        <div
-            class="category-item"
-            onclick="selectCategory(this,'non-coffee')"
-        >
-
-            <div class="category-icon">
-                <i class="fa-solid fa-glass-water"></i>
-            </div>
-
-            <span>
-                Non-Coffee
-            </span>
-
-        </div>
-
-
-        <div
-            class="category-item"
-            onclick="selectCategory(this,'pastry')"
-        >
-
-            <div class="category-icon">
-                <i class="fa-solid fa-bread-slice"></i>
-            </div>
-
-            <span>
-                Pastry
-            </span>
-
-        </div>
-
+        <span>Coffee</span>
     </div>
 
 
-    {{-- MENU --}}
+    {{-- NON COFFEE --}}
+    <div
+        class="category-item"
+        onclick="selectCategory(this, 'non-coffee')"
+    >
+        <div class="category-icon">
+            <i class="fa-solid fa-glass-water"></i>
+        </div>
+
+        <span>Non-Coffee</span>
+    </div>
+
+
+    {{-- FOOD --}}
+    <div
+        class="category-item"
+        onclick="selectCategory(this, 'food')"
+    >
+        <div class="category-icon">
+            <i class="fa-solid fa-utensils"></i>
+        </div>
+
+        <span>Food</span>
+    </div>
+
+</div>
+
+
+    {{-- =====================================================
+        MENU
+    ====================================================== --}}
     <div class="section-header">
 
         <h4>
@@ -192,29 +189,86 @@
     <div
         class="menu-list"
         id="main-menu-list"
-    ></div>
+    >
+
+        {{-- Menu akan di-render oleh customer.js --}}
+
+        <div class="empty-state">
+
+            <i class="fa-solid fa-spinner fa-spin"></i>
+
+            <p>
+                Memuat menu...
+            </p>
+
+        </div>
+
+    </div>
 
 
-    {{-- BOTTOM NAV --}}
+    {{-- =====================================================
+        BOTTOM NAVIGATION
+    ====================================================== --}}
     @include('customer.partials.nav')
+
 
 </div>
 
 @endsection
 
 
+{{-- =========================================================
+    JAVASCRIPT
+========================================================= --}}
 @push('scripts')
 
 <script>
 
-window.quattroUser = @json([
-    'id' => auth()->id(),
-    'name' => auth()->user()->name,
-    'email' => auth()->user()->email
-]);
+    /*
+    |--------------------------------------------------------------------------
+    | DATA CUSTOMER
+    |--------------------------------------------------------------------------
+    */
+
+    window.quattroUser = @json([
+        'id' => auth()->id(),
+        'name' => auth()->user()->name,
+        'email' => auth()->user()->email
+    ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DATA PRODUCT DARI DATABASE
+    |--------------------------------------------------------------------------
+    |
+    | $products dikirim oleh CustomerController:
+    |
+    | $products = Product::where('is_available', true)->get();
+    |
+    */
+
+    window.quattroProducts = @json($products);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DEBUG
+    |--------------------------------------------------------------------------
+    |
+    | Buka F12 > Console untuk melihat apakah produk masuk.
+    |
+    */
+
+    console.log(
+        'Quattro Products:',
+        window.quattroProducts
+    );
 
 </script>
 
+
+{{-- CUSTOMER JS --}}
 <script src="{{ asset('js/customer.js') }}"></script>
 
 @endpush
