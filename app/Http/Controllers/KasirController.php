@@ -3,120 +3,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Product;
+use App\Models\Order;
 
 class KasirController extends Controller
 {
     /**
-     * Data produk sementara
+     * Data produk yang tersedia
      */
     private function products()
     {
-        return [
-            [
-                'id' => 1,
-                'name' => 'Cappuccino',
-                'category' => 'Coffee',
-                'price' => 28000,
-                'icon' => 'fa-mug-hot'
-            ],
-            [
-                'id' => 2,
-                'name' => 'Cafe Latte',
-                'category' => 'Coffee',
-                'price' => 30000,
-                'icon' => 'fa-mug-saucer'
-            ],
-            [
-                'id' => 3,
-                'name' => 'Americano',
-                'category' => 'Coffee',
-                'price' => 22000,
-                'icon' => 'fa-coffee'
-            ],
-            [
-                'id' => 4,
-                'name' => 'Caramel Macchiato',
-                'category' => 'Coffee',
-                'price' => 35000,
-                'icon' => 'fa-glass-water'
-            ],
-            [
-                'id' => 5,
-                'name' => 'Matcha Latte',
-                'category' => 'Non Coffee',
-                'price' => 32000,
-                'icon' => 'fa-leaf'
-            ],
-            [
-                'id' => 6,
-                'name' => 'Chocolate',
-                'category' => 'Non Coffee',
-                'price' => 30000,
-                'icon' => 'fa-chocolate-bar'
-            ],
-            [
-                'id' => 7,
-                'name' => 'Croissant',
-                'category' => 'Food',
-                'price' => 24000,
-                'icon' => 'fa-bread-slice'
-            ],
-            [
-                'id' => 8,
-                'name' => 'French Fries',
-                'category' => 'Food',
-                'price' => 26000,
-                'icon' => 'fa-bowl-food'
-            ],
-        ];
-    }
-
-    /**
-     * Data pesanan sementara
-     *
-     * Namanya dibuat orderData()
-     * agar tidak bentrok dengan method orders().
-     */
-    private function orderData()
-    {
-        return [
-            [
-                'id' => 'ORD-001',
-                'customer' => 'Andi',
-                'table' => 'A01',
-                'items' => 'Cappuccino x2, Croissant x1',
-                'total' => 80000,
-                'status' => 'Selesai',
-                'time' => '10:15'
-            ],
-            [
-                'id' => 'ORD-002',
-                'customer' => 'Budi',
-                'table' => 'B03',
-                'items' => 'Cafe Latte x1, French Fries x1',
-                'total' => 56000,
-                'status' => 'Diproses',
-                'time' => '10:28'
-            ],
-            [
-                'id' => 'ORD-003',
-                'customer' => 'Citra',
-                'table' => 'C02',
-                'items' => 'Matcha Latte x1',
-                'total' => 32000,
-                'status' => 'Menunggu',
-                'time' => '10:41'
-            ],
-            [
-                'id' => 'ORD-004',
-                'customer' => 'Dimas',
-                'table' => 'Take Away',
-                'items' => 'Americano x2',
-                'total' => 44000,
-                'status' => 'Selesai',
-                'time' => '10:55'
-            ],
-        ];
+        return Product::where('is_available', true)->get();
     }
 
     /**
@@ -124,23 +21,112 @@ class KasirController extends Controller
      */
     public function dashboard()
     {
-        $orders = $this->orderData();
+        // Tanggal hari ini
+        $today = now()->toDateString();
 
-        return view('kasir.dashboard', [
-            'orders' => $orders,
-            'products' => $this->products(),
-        ]);
+        /*
+        |--------------------------------------------------------------------------
+        | Pesanan terbaru
+        |--------------------------------------------------------------------------
+        */
+        $orders = Order::with('items')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pesanan hari ini
+        |--------------------------------------------------------------------------
+        */
+        $pesananHariIni = Order::whereDate('created_at', $today)
+            ->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pesanan yang belum dibayar
+        |--------------------------------------------------------------------------
+        */
+        $menungguBayar = Order::whereDate('created_at', $today)
+            ->where('payment_status', 'Belum Dibayar')
+            ->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Penjualan hari ini
+        |--------------------------------------------------------------------------
+        */
+        $penjualanHariIni = Order::whereDate('created_at', $today)
+            ->where('payment_status', 'Lunas')
+            ->sum('total');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Transaksi selesai hari ini
+        |--------------------------------------------------------------------------
+        */
+        $transaksiSelesai = Order::whereDate('created_at', $today)
+            ->where('status', 'Selesai')
+            ->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Jumlah pelanggan hari ini
+        |--------------------------------------------------------------------------
+        */
+        $pelangganHariIni = Order::whereDate('created_at', $today)
+            ->whereNotNull('customer_name')
+            ->distinct('customer_name')
+            ->count('customer_name');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pesanan prioritas
+        |--------------------------------------------------------------------------
+        |
+        | Untuk sementara menggunakan pesanan yang masih menunggu.
+        | Kalau database kamu memiliki kolom priority, bagian ini
+        | bisa dibuat lebih spesifik.
+        |
+        */
+        $pesananPrioritas = Order::whereDate('created_at', $today)
+            ->where('status', 'Menunggu')
+            ->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Produk
+        |--------------------------------------------------------------------------
+        */
+        $products = $this->products();
+
+        return view('kasir.dashboard', compact(
+            'orders',
+            'products',
+            'pesananHariIni',
+            'menungguBayar',
+            'penjualanHariIni',
+            'transaksiSelesai',
+            'pelangganHariIni',
+            'pesananPrioritas'
+        ));
     }
 
     /**
-     * Halaman Pesanan
+     * Halaman Pesanan Kasir
      */
     public function orders()
     {
-        return view('kasir.orders', [
-            'orders' => $this->orderData(),
-            'products' => $this->products(),
-        ]);
+        $orders = Order::with('items')
+            ->latest()
+            ->get();
+
+        $products = $this->products();
+
+        return view('kasir.orders', compact(
+            'orders',
+            'products'
+        ));
     }
 
     /**
@@ -148,9 +134,14 @@ class KasirController extends Controller
      */
     public function payment()
     {
-        return view('kasir.payment', [
-            'orders' => $this->orderData(),
-        ]);
+        $orders = Order::with('items')
+            ->where('payment_status', 'Belum Dibayar')
+            ->latest()
+            ->get();
+
+        return view('kasir.payment', compact(
+            'orders'
+        ));
     }
 
     /**
@@ -158,13 +149,18 @@ class KasirController extends Controller
      */
     public function history()
     {
-        return view('kasir.history', [
-            'orders' => $this->orderData(),
-        ]);
+        $orders = Order::with('items')
+            ->where('status', 'Selesai')
+            ->latest()
+            ->get();
+
+        return view('kasir.history', compact(
+            'orders'
+        ));
     }
 
     /**
-     * Simpan pesanan
+     * Simpan pesanan baru dari Kasir
      */
     public function storeOrder(Request $request)
     {
@@ -175,8 +171,31 @@ class KasirController extends Controller
             'total' => 'required|numeric|min:0',
         ]);
 
+        Order::create([
+            'order_number' => 'ORD-' . now()->format('YmdHis') . '-' . rand(100, 999),
+
+            'user_id' => auth()->id(),
+
+            'customer_name' => $request->customer,
+
+            'table_number' => $request->table,
+
+            'subtotal' => $request->total,
+
+            'tax' => 0,
+
+            'total' => $request->total,
+
+            'status' => 'Menunggu',
+
+            'payment_status' => 'Belum Dibayar',
+        ]);
+
         return redirect()
             ->route('kasir.orders')
-            ->with('success', 'Pesanan berhasil dibuat.');
+            ->with(
+                'success',
+                'Pesanan berhasil dibuat.'
+            );
     }
 }
