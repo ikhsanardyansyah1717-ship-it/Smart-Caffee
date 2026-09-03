@@ -8,6 +8,8 @@ use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\KasirController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CustomerManagementController;
+use App\Http\Controllers\EmployeeController;
 
 
 /*
@@ -159,13 +161,11 @@ Route::middleware(['auth', 'role:owner'])
         Route::get('/sales', [OwnerController::class, 'sales'])
             ->name('sales');
 
-       Route::resource('/products', ProductController::class);
+        Route::resource('/products', ProductController::class);
 
-        Route::get('/employees', [OwnerController::class, 'employees'])
-            ->name('employees');
+        Route::resource('/employees', EmployeeController::class);
 
-        Route::get('/customers', [OwnerController::class, 'customers'])
-            ->name('customers');
+        Route::resource('/customers', CustomerManagementController::class);
 
         Route::get('/reports', [OwnerController::class, 'reports'])
             ->name('reports');

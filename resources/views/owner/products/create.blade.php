@@ -98,4 +98,44 @@
 
 </div>
 
+{{-- =====================================================
+     SCRIPT AUTO FORMAT RUPIAH
+====================================================== --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Mencari input dengan ID "price" atau name="price"
+    const priceInput = document.getElementById('price') || document.querySelector('input[name="price"]');
+
+    if (priceInput) {
+        // Ubah tipe ke text agar bisa menampilkan format titik
+        priceInput.type = 'text';
+
+        // Fungsi format angka dengan pemisah titik
+        function formatRupiah(value) {
+            const cleanValue = value.replace(/\D/g, '');
+            if (!cleanValue) return '';
+            return new Intl.NumberFormat('id-ID').format(cleanValue);
+        }
+
+        // Format angka jika sudah ada isinya (misal saat kembalian error validasi)
+        if (priceInput.value) {
+            priceInput.value = formatRupiah(priceInput.value);
+        }
+
+        // Format otomatis setiap kali mengetik
+        priceInput.addEventListener('input', function () {
+            this.value = formatRupiah(this.value);
+        });
+
+        // Bersihkan titik sebelum form dikirim ke controller/database
+        const form = priceInput.closest('form');
+        if (form) {
+            form.addEventListener('submit', function () {
+                priceInput.value = priceInput.value.replace(/\D/g, '');
+            });
+        }
+    }
+});
+</script>
+
 @endsection
