@@ -26,7 +26,7 @@
             <a href="{{ route('owner.sales') }}" class="owner-link {{ request()->routeIs('owner.sales') ? 'active' : '' }}">
                 <i class="fa-solid fa-chart-line"></i><span>Penjualan</span>
             </a>
-            <a href="{{ route('owner.products') }}" class="owner-link {{ request()->routeIs('owner.products') ? 'active' : '' }}">
+            <a href="{{ route('owner.products.index') }}" class="owner-link {{ request()->routeIs('owner.products') ? 'active' : '' }}">
                 <i class="fa-solid fa-mug-saucer"></i><span>Produk</span>
             </a>
             <a href="{{ route('owner.employees') }}" class="owner-link {{ request()->routeIs('owner.employees') ? 'active' : '' }}">

@@ -6,7 +6,6 @@
     <div><span class="eyebrow">OWNER CONTROL</span><h1>Dashboard</h1><p>Pantau performa bisnis Quattro Coffee secara menyeluruh.</p></div>
     <div class="head-actions"><span class="live"><span class="dot"></span> Live</span><button class="icon-btn" id="ownerRefresh"><i class="fa-solid fa-rotate"></i></button></div>
 </header>
-
 <section class="stats">
     <article class="stat-card"><div class="stat-icon"><i class="fa-solid fa-money-bill-wave"></i></div><div><div class="stat-label">Penjualan Hari Ini</div><div class="stat-value">Rp 4,85 jt</div><div class="stat-note">+12,4% dari kemarin</div></div></article>
     <article class="stat-card"><div class="stat-icon gold"><i class="fa-solid fa-receipt"></i></div><div><div class="stat-label">Total Transaksi</div><div class="stat-value">128</div><div class="stat-note">+8,2% minggu ini</div></div></article>

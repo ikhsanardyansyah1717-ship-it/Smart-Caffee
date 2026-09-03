@@ -7,6 +7,7 @@ use App\Http\Controllers\KitchenController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\KasirController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ProductController;
 
 
 /*
@@ -158,8 +159,7 @@ Route::middleware(['auth', 'role:owner'])
         Route::get('/sales', [OwnerController::class, 'sales'])
             ->name('sales');
 
-        Route::get('/products', [OwnerController::class, 'products'])
-            ->name('products');
+       Route::resource('/products', ProductController::class);
 
         Route::get('/employees', [OwnerController::class, 'employees'])
             ->name('employees');
