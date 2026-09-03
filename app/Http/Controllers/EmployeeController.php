@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http/Controllers;
+namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use Illuminate\Http\Request;
@@ -11,21 +11,18 @@ class EmployeeController extends Controller
     {
         $query = Employee::query();
 
-        // Fitur Pencarian Realtime/Filter
-        if ($request->has('search') && $request->search != '') {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('position', 'like', '%' . $request->search . '%');
+        if ($request->filled('q')) {
+            $query->where('name', 'like', '%' . $request->q . '%');
         }
 
-        $employees = $query->latest()->get();
+        $employees = $query->orderBy('name')->get();
 
-        // Hitung statistik untuk cards
-        $totalEmployees = Employee::count();
-        $activeEmployees = Employee::where('status', 'Aktif')->count();
-        $shiftToday = Employee::whereIn('shift', ['Pagi', 'Siang'])->where('status', 'Aktif')->count();
-        $onLeave = Employee::where('status', 'Cuti')->count();
+        $totalEmployees   = Employee::count();
+        $activeEmployees  = Employee::where('status', 'Aktif')->count();
+        $shiftToday       = Employee::whereIn('shift', ['Pagi', 'Siang'])->where('status', 'Aktif')->count();
+        $onLeave          = Employee::where('status', 'Cuti')->count();
 
-        return view('employees', compact(
+        return view('owner.employees', compact(
             'employees',
             'totalEmployees',
             'activeEmployees',
@@ -34,39 +31,56 @@ class EmployeeController extends Controller
         ));
     }
 
+    public function create()
+    {
+        return view('owner.employees_create');
+    }
+
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'position' => 'required|string',
-            'shift' => 'required|string',
-            'status' => 'required|in:Aktif,Cuti,Nonaktif',
-            'phone' => 'required|string|max:20',
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'position' => 'required|in:Admin,Kasir,Kitchen',
+            'shift'    => 'required|in:Pagi,Siang',
+            'status'   => 'required|in:Aktif,Cuti',
+            'phone'    => 'nullable|string|max:20',
         ]);
 
-        Employee::create($request->all());
+        Employee::create($validated);
 
-        return redirect()->back()->with('success', 'Karyawan berhasil ditambahkan!');
+        return redirect()
+            ->route('owner.employees.index')
+            ->with('success', 'Karyawan baru berhasil ditambahkan.');
+    }
+
+    public function edit(Employee $employee)
+    {
+        return view('owner.employees_edit', compact('employee'));
     }
 
     public function update(Request $request, Employee $employee)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'position' => 'required|string',
-            'shift' => 'required|string',
-            'status' => 'required|in:Aktif,Cuti,Nonaktif',
-            'phone' => 'required|string|max:20',
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'position' => 'required|in:Admin,Kasir,Kitchen',
+            'shift'    => 'required|in:Pagi,Siang',
+            'status'   => 'required|in:Aktif,Cuti',
+            'phone'    => 'nullable|string|max:20',
         ]);
 
-        $employee->update($request->all());
+        $employee->update($validated);
 
-        return redirect()->back()->with('success', 'Data karyawan berhasil diperbarui!');
+        return redirect()
+            ->route('owner.employees.index')
+            ->with('success', 'Data karyawan berhasil diperbarui.');
     }
 
     public function destroy(Employee $employee)
     {
         $employee->delete();
-        return redirect()->back()->with('success', 'Karyawan berhasil dihapus!');
+
+        return redirect()
+            ->route('owner.employees.index')
+            ->with('success', 'Data karyawan berhasil dihapus.');
     }
 }
