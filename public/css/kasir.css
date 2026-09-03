@@ -95,3 +95,685 @@ label{display:block;font-size:11px;font-weight:700;color:#5c5048;margin-bottom:1
     color: #7b3f0d;
     transform: translateX(3px);
 }
+
+/* =========================================================
+   POPUP / MODAL PEMBAYARAN
+   QUATTRO COFFEE
+   ========================================================= */
+
+.delete-modal-overlay {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+
+    background: rgba(58, 42, 25, 0.28);
+
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity 0.25s ease,
+        visibility 0.25s ease;
+
+    z-index: 99999;
+}
+
+
+/* POPUP AKTIF */
+
+.delete-modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+/* =========================================================
+   KOTAK POPUP
+   ========================================================= */
+
+.delete-modal {
+    width: min(92%, 430px);
+
+    padding: 30px;
+
+    background: #fffdf9;
+
+    border: 1px solid #eadfd2;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 20px 60px rgba(91, 62, 35, 0.18),
+        0 5px 20px rgba(91, 62, 35, 0.08);
+
+    text-align: center;
+
+    transform: scale(0.88) translateY(20px);
+
+    opacity: 0;
+
+    transition:
+        transform 0.3s ease,
+        opacity 0.3s ease;
+}
+
+
+/* ANIMASI MUNCUL */
+
+.delete-modal-overlay.show .delete-modal {
+    transform: scale(1) translateY(0);
+
+    opacity: 1;
+}
+
+
+/* =========================================================
+   ICON
+   ========================================================= */
+
+.delete-modal-icon {
+    width: 68px;
+    height: 68px;
+
+    margin: 0 auto 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #f7eadc;
+
+    border: 1px solid #ead0b5;
+
+    color: #a85d0b;
+
+    font-size: 28px;
+
+    box-shadow:
+        0 8px 20px rgba(168, 93, 11, 0.10);
+}
+
+
+/* =========================================================
+   JUDUL
+   ========================================================= */
+
+.delete-modal h2 {
+    margin: 0 0 10px;
+
+    color: #241a13;
+
+    font-size: 22px;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   PESAN
+   ========================================================= */
+
+.delete-modal p {
+    margin: 0;
+
+    color: #806e5e;
+
+    font-size: 14px;
+
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   DETAIL / WARNING
+   ========================================================= */
+
+.delete-warning {
+    margin-top: 18px;
+
+    padding: 14px 16px;
+
+    background: #faf3eb;
+
+    border: 1px solid #eadbca;
+
+    border-radius: 12px;
+
+    color: #6f5a47;
+
+    font-size: 13px;
+
+    line-height: 1.7;
+
+    text-align: left;
+
+    white-space: pre-line;
+}
+
+
+/* =========================================================
+   NAMA PRODUK
+   ========================================================= */
+
+.delete-product-name {
+    color: #a85d0b;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   TOMBOL
+   ========================================================= */
+
+.delete-modal-actions {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    margin-top: 24px;
+}
+
+
+/* =========================================================
+   BATAL
+   ========================================================= */
+
+.delete-cancel-btn {
+    min-width: 110px;
+
+    padding: 11px 20px;
+
+    border: 1px solid #dfd2c5;
+
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #765f4b;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        all 0.2s ease;
+}
+
+
+.delete-cancel-btn:hover {
+    background: #f8f1ea;
+
+    border-color: #cdb9a4;
+
+    color: #5c4634;
+
+    transform: translateY(-1px);
+}
+
+
+.delete-cancel-btn:active {
+    transform: scale(0.96);
+}
+
+
+/* =========================================================
+   YA BAYAR
+   ========================================================= */
+
+.delete-confirm-btn {
+    min-width: 120px;
+
+    padding: 11px 20px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #a85d0b;
+
+    color: #ffffff;
+
+    font-size: 14px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    box-shadow:
+        0 7px 18px rgba(168, 93, 11, 0.18);
+
+    transition:
+        all 0.2s ease;
+}
+
+
+.delete-confirm-btn:hover {
+    background: #8e4e08;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 10px 24px rgba(168, 93, 11, 0.25);
+}
+
+
+.delete-confirm-btn:active {
+    transform: scale(0.95);
+}
+
+
+/* =========================================================
+   BODY
+   ========================================================= */
+
+body.modal-open {
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   ANIMASI ICON
+   ========================================================= */
+
+@keyframes modalIconPop {
+
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    70% {
+        transform: scale(1.08);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+}
+
+
+.delete-modal-overlay.show .delete-modal-icon {
+    animation: modalIconPop 0.35s ease;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 500px) {
+
+    .delete-modal {
+        width: calc(100% - 30px);
+
+        padding: 25px 20px;
+    }
+
+    .delete-modal-icon {
+        width: 60px;
+        height: 60px;
+
+        font-size: 25px;
+    }
+
+    .delete-modal h2 {
+        font-size: 19px;
+    }
+
+    .delete-modal-actions {
+        gap: 8px;
+    }
+
+    .delete-cancel-btn,
+    .delete-confirm-btn {
+        flex: 1;
+
+        min-width: 0;
+    }
+
+}
+
+/* =========================================================
+   RIWAYAT TRANSAKSI
+   ========================================================= */
+
+.history-panel {
+    overflow: hidden;
+}
+
+
+/* SEARCH */
+
+.history-search {
+    width: 290px;
+
+    height: 44px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 0 14px;
+
+    border: 1px solid #e7dcd0;
+
+    border-radius: 12px;
+
+    background: #fffdfa;
+}
+
+
+.history-search i {
+    color: #a58c77;
+
+    font-size: 14px;
+}
+
+
+.history-search input {
+    width: 100%;
+
+    border: none;
+
+    outline: none;
+
+    background: transparent;
+
+    color: #39291d;
+
+    font-size: 14px;
+}
+
+
+.history-search input::placeholder {
+    color: #a99787;
+}
+
+
+/* TABLE WRAPPER */
+
+.history-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+
+    margin-top: 20px;
+}
+
+
+/* TABLE */
+
+.history-table {
+    width: 100%;
+
+    min-width: 850px;
+
+    border-collapse: collapse;
+}
+
+
+/* HEADER */
+
+.history-table thead th {
+    padding: 15px 14px;
+
+    text-align: left;
+
+    color: #9b8978;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: .04em;
+
+    border-bottom: 1px solid #e8ddd2;
+}
+
+
+/* ROW */
+
+.history-table tbody tr {
+    transition: background .2s ease;
+}
+
+
+.history-table tbody tr:hover {
+    background: #fcf7f1;
+}
+
+
+/* CELL */
+
+.history-table tbody td {
+    padding: 17px 14px;
+
+    color: #5d4b3b;
+
+    font-size: 14px;
+
+    vertical-align: top;
+
+    border-bottom: 1px solid #eee5dc;
+}
+
+
+/* CUSTOMER */
+
+.customer-info {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+
+.customer-info strong {
+    color: #39291d;
+
+    font-weight: 700;
+}
+
+
+.customer-info small {
+    color: #a18d7b;
+
+    font-size: 12px;
+}
+
+
+/* ITEMS */
+
+.history-items {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+
+.history-item {
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+}
+
+
+.item-name {
+    color: #49372a;
+
+    font-weight: 600;
+}
+
+
+.item-qty {
+    color: #a07f5d;
+
+    font-size: 13px;
+}
+
+
+/* TOTAL */
+
+.history-total {
+    color: #9a550e;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+/* BADGE */
+
+.history-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 6px 10px;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+/* STATUS SELESAI */
+
+.history-badge.success {
+    color: #6c805e;
+
+    background: #eef4e9;
+
+    border: 1px solid #dce8d4;
+}
+
+
+/* PEMBAYARAN */
+
+.history-badge.paid {
+    color: #9a5a18;
+
+    background: #fbefdf;
+
+    border: 1px solid #efddc5;
+}
+
+
+/* PAYMENT INFO */
+
+.payment-info {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 6px;
+}
+
+
+.payment-info small {
+    color: #9b8978;
+
+    font-size: 12px;
+}
+
+
+/* EMPTY */
+
+.history-empty {
+    padding: 60px 20px !important;
+
+    text-align: center !important;
+
+    color: #a18e7c !important;
+}
+
+
+.history-empty i {
+    margin-bottom: 15px;
+
+    color: #c2a98e;
+
+    font-size: 38px;
+}
+
+
+.history-empty h3 {
+    margin: 0 0 7px;
+
+    color: #5c4634;
+
+    font-size: 18px;
+}
+
+
+.history-empty p {
+    margin: 0;
+
+    color: #a18e7c;
+
+    font-size: 13px;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 700px) {
+
+    .history-search {
+        width: 100%;
+    }
+
+    .panel-head {
+        gap: 15px;
+
+        flex-direction: column;
+
+        align-items: flex-start;
+    }
+
+}
