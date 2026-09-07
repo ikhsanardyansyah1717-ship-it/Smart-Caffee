@@ -26,13 +26,13 @@
             <a href="{{ route('owner.sales') }}" class="owner-link {{ request()->routeIs('owner.sales') ? 'active' : '' }}">
                 <i class="fa-solid fa-chart-line"></i><span>Penjualan</span>
             </a>
-            <a href="{{ route('owner.products.index') }}" class="owner-link {{ request()->routeIs('owner.products') ? 'active' : '' }}">
+            <a href="{{ route('owner.products.index') }}" class="owner-link {{ request()->routeIs('owner.products.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-mug-saucer"></i><span>Produk</span>
             </a>
-            <a href="{{ route('owner.employees') }}" class="owner-link {{ request()->routeIs('owner.employees') ? 'active' : '' }}">
+            <a href="{{ route('owner.employees.index') }}" class="owner-link {{ request()->routeIs('owner.employees.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-users"></i><span>Karyawan</span>
             </a>
-            <a href="{{ route('owner.customers') }}" class="owner-link {{ request()->routeIs('owner.customers') ? 'active' : '' }}">
+            <a href="{{ route('owner.customers.index') }}" class="owner-link {{ request()->routeIs('owner.customers.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-user-group"></i><span>Pelanggan</span>
             </a>
             <a href="{{ route('owner.reports') }}" class="owner-link {{ request()->routeIs('owner.reports') ? 'active' : '' }}">
@@ -46,13 +46,12 @@
         </div>
 
         <form action="{{ route('admin.logout') }}" method="POST" class="logout-form">
-    @csrf
-
-    <button type="submit" class="logout-btn">
-        <i class="fa-solid fa-right-from-bracket"></i>
-        <span>Logout</span>
-    </button>
-</form>
+            @csrf
+            <button type="submit" class="logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </button>
+        </form>
 
     </aside>
 
