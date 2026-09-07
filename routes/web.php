@@ -183,18 +183,27 @@ Route::middleware(['auth', 'role:kasir'])
     ->name('kasir.')
     ->group(function () {
 
+        // Dashboard Kasir
         Route::get('/dashboard', [KasirController::class, 'dashboard'])
             ->name('dashboard');
 
+        // Daftar Pesanan
         Route::get('/orders', [KasirController::class, 'orders'])
             ->name('orders');
 
+        // Simpan Pesanan
         Route::post('/orders', [KasirController::class, 'storeOrder'])
             ->name('orders.store');
 
+        // Halaman Pembayaran
         Route::get('/payment', [KasirController::class, 'payment'])
             ->name('payment');
 
+        // Selesaikan Pembayaran
+        Route::post('/payment/{id}/complete', [KasirController::class, 'completePayment'])
+            ->name('payment.complete');
+
+        // Riwayat Transaksi
         Route::get('/history', [KasirController::class, 'history'])
             ->name('history');
     });
