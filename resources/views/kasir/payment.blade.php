@@ -3,6 +3,166 @@
 @section('title', 'Pembayaran - Quattro Coffee')
 
 @section('content')
+<style>
+.receipt-success {
+    margin-bottom: 18px;
+    padding: 16px 18px;
+    border: 1px solid #d9ead7;
+    border-left: 4px solid #2f9e44;
+    border-radius: 14px;
+    background: #f5fbf4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+.receipt-success strong { color: #245c2d; display:block; margin-bottom:4px; }
+.receipt-success span { color:#5e7461; font-size:13px; }
+.receipt-print-btn {
+    border:0; border-radius:10px; padding:11px 16px;
+    background:#a25d08; color:#fff; font-weight:700; cursor:pointer;
+    white-space:nowrap;
+}
+.receipt-print-btn:hover { background:#874b05; }
+.receipt-overlay {
+    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    padding:20px; background:rgba(45,30,20,.48); backdrop-filter:blur(6px); z-index:11000;
+}
+.receipt-overlay.show { display:flex; }
+.receipt-modal {
+    width:100%; max-width:430px; max-height:92vh; overflow:auto; background:#fff;
+    border-radius:18px; box-shadow:0 25px 70px rgba(40,25,15,.28);
+}
+.receipt-actions { display:flex; gap:10px; padding:15px 18px; border-top:1px solid #eee; background:#fff; position:sticky; bottom:0; }
+.receipt-actions button { flex:1; min-height:44px; border:0; border-radius:10px; font-weight:700; cursor:pointer; }
+.receipt-close { background:#f2ede7; color:#634d3b; }
+.receipt-print { background:#a25d08; color:#fff; }
+.receipt-paper { padding:28px 25px 20px; color:#211a15; font-family:Arial,sans-serif; }
+.receipt-brand { text-align:center; border-bottom:1px dashed #aaa; padding-bottom:16px; margin-bottom:15px; }
+.receipt-brand h2 { margin:0; font-size:23px; letter-spacing:2px; }
+.receipt-brand p { margin:4px 0 0; font-size:11px; letter-spacing:2px; color:#777; }
+.receipt-meta { font-size:12px; line-height:1.7; margin-bottom:15px; }
+.receipt-meta div { display:flex; justify-content:space-between; gap:15px; }
+.receipt-items { border-top:1px dashed #aaa; border-bottom:1px dashed #aaa; padding:12px 0; }
+.receipt-item { margin-bottom:10px; font-size:12px; }
+.receipt-item:last-child { margin-bottom:0; }
+.receipt-item-top, .receipt-item-bottom { display:flex; justify-content:space-between; gap:10px; }
+.receipt-item-top strong { font-size:13px; }
+.receipt-item-bottom { color:#666; margin-top:3px; }
+.receipt-total { padding-top:13px; font-size:12px; }
+.receipt-total div { display:flex; justify-content:space-between; margin-bottom:7px; }
+.receipt-total .grand { font-size:17px; font-weight:800; padding-top:7px; border-top:1px solid #ddd; }
+.receipt-thanks { text-align:center; border-top:1px dashed #aaa; margin-top:14px; padding-top:15px; font-size:12px; color:#666; }
+@media print {
+
+    @page {
+        size: 80mm auto;
+        margin: 0;
+    }
+
+    html,
+    body {
+        width: 80mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+    }
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    #receiptModal,
+    #receiptModal * {
+        visibility: visible !important;
+    }
+
+    #receiptModal {
+        position: static !important;
+        display: block !important;
+        width: 80mm !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #fff !important;
+        overflow: visible !important;
+    }
+
+    #receiptPrintArea {
+        position: static !important;
+        width: 80mm !important;
+        max-width: 80mm !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: #fff !important;
+    }
+
+    .receipt-paper {
+        width: 80mm !important;
+        box-sizing: border-box !important;
+        padding: 8mm 5mm !important;
+        margin: 0 !important;
+    }
+
+    .receipt-actions {
+        display: none !important;
+    }
+
+    .receipt-brand {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .receipt-meta {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .receipt-items {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .receipt-item {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .receipt-total {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .receipt-thanks {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+}
+}
+@media (max-width:700px) {
+    .receipt-success { align-items:flex-start; flex-direction:column; }
+    .receipt-print-btn { width:100%; }
+}
+</style>
+
+
+@if(isset($receiptOrder) && $receiptOrder)
+    <div class="receipt-success">
+        <div>
+            <strong><i class="fa-solid fa-circle-check"></i> Pembayaran berhasil!</strong>
+            <span>Transaksi {{ $receiptOrder->order_number }} sudah selesai.</span>
+        </div>
+        <button type="button" class="receipt-print-btn" onclick="openReceiptModal()">
+            <i class="fa-solid fa-receipt"></i> Cetak Struk
+        </button>
+    </div>
+@endif
+
 
 <div class="grid">
 
@@ -275,6 +435,13 @@
                     id="paymentMethodInput"
                 >
 
+                <input
+                    type="hidden"
+                    name="cash_received"
+                    id="cashReceivedInput"
+                    value="0"
+                >
+
             </form>
 
 
@@ -381,6 +548,64 @@
 
 </div>
 
+
+
+
+
+{{-- ================================================= --}}
+{{-- MODAL STRUK --}}
+{{-- ================================================= --}}
+@if(isset($receiptOrder) && $receiptOrder)
+<div id="receiptModal" class="receipt-overlay">
+    <div class="receipt-modal" id="receiptPrintArea">
+        <div class="receipt-paper">
+            <div class="receipt-brand">
+                <h2>QUATTRO</h2>
+                <p>COFFEE</p>
+            </div>
+
+            <div class="receipt-meta">
+                <div><span>No. Transaksi</span><strong>{{ $receiptOrder->order_number }}</strong></div>
+                <div><span>Tanggal</span><strong>{{ $receiptOrder->created_at->format('d/m/Y H:i') }}</strong></div>
+                <div><span>Pelanggan</span><strong>{{ $receiptOrder->customer_name }}</strong></div>
+                <div><span>Meja</span><strong>{{ $receiptOrder->table_number ?? 'Take Away' }}</strong></div>
+                <div><span>Pembayaran</span><strong>{{ optional($receiptOrder->payment)->payment_method ?? '-' }}</strong></div>
+            </div>
+
+            <div class="receipt-items">
+                @foreach($receiptOrder->items as $item)
+                    <div class="receipt-item">
+                        <div class="receipt-item-top">
+                            <strong>{{ $item->product_name }}</strong>
+                            <strong>Rp {{ number_format($item->subtotal, 0, ',', '.') }}</strong>
+                        </div>
+                        <div class="receipt-item-bottom">
+                            <span>{{ $item->quantity }} × Rp {{ number_format($item->price, 0, ',', '.') }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="receipt-total">
+                <div><span>Subtotal</span><strong>Rp {{ number_format($receiptOrder->subtotal, 0, ',', '.') }}</strong></div>
+                <div><span>Pajak</span><strong>Rp {{ number_format($receiptOrder->tax, 0, ',', '.') }}</strong></div>
+                <div class="grand"><span>Total</span><strong>Rp {{ number_format($receiptOrder->total, 0, ',', '.') }}</strong></div>
+                <div><span>Uang Diterima</span><strong>Rp {{ number_format($receiptCashReceived ?? 0, 0, ',', '.') }}</strong></div>
+                <div><span>Kembalian</span><strong>Rp {{ number_format($receiptChange ?? 0, 0, ',', '.') }}</strong></div>
+            </div>
+
+            <div class="receipt-thanks">
+                Terima kasih sudah berkunjung ke Quattro Coffee.<br>Semoga harimu menyenangkan ☕
+            </div>
+        </div>
+
+        <div class="receipt-actions">
+            <button type="button" class="receipt-close" onclick="closeReceiptModal()">Tutup</button>
+            <button type="button" class="receipt-print" onclick="printReceipt()"><i class="fa-solid fa-print"></i> Cetak</button>
+        </div>
+    </div>
+</div>
+@endif
 
 
 {{-- ================================================= --}}
@@ -897,6 +1122,13 @@
                 'paymentMethod'
             ).value;
 
+        document.getElementById(
+            'cashReceivedInput'
+        ).value =
+            document.getElementById(
+                'cashInput'
+            ).value || 0;
+
 
         /*
         |--------------------------------------------------------------------------
@@ -954,6 +1186,44 @@
 
             }
         );
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | STRUK
+    |--------------------------------------------------------------------------
+    */
+    function openReceiptModal() {
+        const modal = document.getElementById('receiptModal');
+        if (!modal) return;
+        modal.classList.add('show');
+        document.body.classList.add('modal-open');
+    }
+
+    function closeReceiptModal() {
+        const modal = document.getElementById('receiptModal');
+        if (!modal) return;
+        modal.classList.remove('show');
+        document.body.classList.remove('modal-open');
+    }
+
+    function printReceipt() {
+        window.print();
+    }
+
+    @if(isset($receiptOrder) && $receiptOrder)
+        document.addEventListener('DOMContentLoaded', function () {
+            openReceiptModal();
+        });
+    @endif
+
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('receiptModal');
+        if (modal && event.target === modal) {
+            closeReceiptModal();
+        }
+    });
 
 </script>
 
