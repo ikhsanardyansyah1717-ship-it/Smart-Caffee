@@ -1,434 +1,54 @@
-@extends('layouts.kasir')
-
-@section('title','Kasir Dashboard - Quattro Coffee')
-
+@extends('layouts.owner')
+@section('title','Dashboard Owner - Quattro Coffee')
 @section('content')
-
-<header class="topbar">
-
-    <div>
-
-        <span class="eyebrow">
-            CASHIER CONTROL
-        </span>
-
-        <h1>
-            Dashboard
-        </h1>
-
-        <p>
-            Kelola transaksi dan pantau penjualan cafe hari ini.
-        </p>
-
-    </div>
-
-    <div class="top-actions">
-
-        <span class="live">
-            <i class="fa-solid fa-circle"></i>
-            Live
-        </span>
-
-        <button
-            class="icon-btn"
-            onclick="location.reload()"
-        >
-            <i class="fa-solid fa-rotate"></i>
-        </button>
-
-    </div>
-
+<div class="grid">
+<header class="page-head">
+    <div><span class="eyebrow">OWNER CONTROL</span><h1>Dashboard</h1><p>Pantau performa bisnis Quattro Coffee secara menyeluruh.</p></div>
+    <div class="head-actions"><span class="live"><span class="dot"></span> Live</span><button class="icon-btn" id="ownerRefresh"><i class="fa-solid fa-rotate"></i></button></div>
 </header>
 
-
-{{-- ====================================================== --}}
-{{-- STATISTIK --}}
-{{-- ====================================================== --}}
-
-<section class="stats-grid">
-
-    {{-- Pesanan Hari Ini --}}
-    <div class="stat-card">
-
-        <div class="stat-icon brown">
-            <i class="fa-solid fa-receipt"></i>
-        </div>
-
-        <div>
-
-            <span>
-                Pesanan Hari Ini
-            </span>
-
-            <strong>
-                {{ $pesananHariIni }}
-            </strong>
-
-            <small>
-                Total pesanan hari ini
-            </small>
-
-        </div>
-
-    </div>
-
-
-    {{-- Menunggu Bayar --}}
-    <div class="stat-card">
-
-        <div class="stat-icon orange">
-            <i class="fa-solid fa-hourglass-half"></i>
-        </div>
-
-        <div>
-
-            <span>
-                Menunggu Bayar
-            </span>
-
-            <strong>
-                {{ $menungguBayar }}
-            </strong>
-
-            <small>
-                Perlu diproses
-            </small>
-
-        </div>
-
-    </div>
-
-
-    {{-- Penjualan Hari Ini --}}
-    <div class="stat-card">
-
-        <div class="stat-icon green">
-            <i class="fa-solid fa-money-bill-wave"></i>
-        </div>
-
-        <div>
-
-            <span>
-                Penjualan Hari Ini
-            </span>
-
-            <strong>
-                Rp {{ number_format($penjualanHariIni, 0, ',', '.') }}
-            </strong>
-
-            <small>
-                Total transaksi lunas
-            </small>
-
-        </div>
-
-    </div>
-
-
-    {{-- Pesanan Prioritas --}}
-    <div class="stat-card">
-
-        <div class="stat-icon red">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-        </div>
-
-        <div>
-
-            <span>
-                Pesanan Prioritas
-            </span>
-
-            <strong>
-                {{ $pesananPrioritas }}
-            </strong>
-
-            <small>
-                Pesanan yang masih menunggu
-            </small>
-
-        </div>
-
-    </div>
-
+<section class="stats">
+    <article class="stat-card"><div class="stat-icon"><i class="fa-solid fa-money-bill-wave"></i></div><div><div class="stat-label">Penjualan Hari Ini</div><div class="stat-value">Rp {{ number_format($penjualanHariIni, 0, ',', '.') }}</div></div></article>
+    <article class="stat-card"><div class="stat-icon gold"><i class="fa-solid fa-receipt"></i></div><div><div class="stat-label">Total Transaksi</div><div class="stat-value">{{ $transaksiHariIni }}</div></div></article>
+    <article class="stat-card"><div class="stat-icon green"><i class="fa-solid fa-user-group"></i></div><div><div class="stat-label">Pelanggan Baru</div><div class="stat-value">{{ $pelangganBaruHariIni }}</div><div class="stat-note">Hari ini</div></div></article>
+    <article class="stat-card"><div class="stat-icon red"><i class="fa-solid fa-chart-line"></i></div><div><div class="stat-label">Laba Bersih</div><div class="stat-value" style="font-size:16px;color:#999;">Belum tersedia</div></div></article>
 </section>
 
-
-{{-- ====================================================== --}}
-{{-- DASHBOARD --}}
-{{-- ====================================================== --}}
-
-<section class="dashboard-grid">
-
-
-    {{-- ================================================== --}}
-    {{-- PESANAN TERBARU --}}
-    {{-- ================================================== --}}
-
-    <div class="panel">
-
-        <div class="panel-head">
-
-            <div>
-
-                <h2>
-                    Pesanan Terbaru
-                </h2>
-
-                <p>
-                    Transaksi terbaru yang masuk ke kasir.
-                </p>
-
-            </div>
-
-            <a
-                href="{{ route('kasir.orders') }}"
-                class="outline-btn"
-            >
-                Lihat Semua
-            </a>
-
-        </div>
-
-
-        <div class="table-wrap">
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            ID
-                        </th>
-
-                        <th>
-                            Pelanggan
-                        </th>
-
-                        <th>
-                            Meja
-                        </th>
-
-                        <th>
-                            Total
-                        </th>
-
-                        <th>
-                            Status
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                    @forelse($orders as $order)
-
-                        <tr>
-
-                            {{-- ID --}}
-                            <td>
-
-                                <strong>
-                                    {{ $order->order_number ?? $order->id }}
-                                </strong>
-
-                                <small>
-                                    {{ $order->created_at
-                                        ? $order->created_at->format('H:i')
-                                        : '-' }}
-                                </small>
-
-                            </td>
-
-
-                            {{-- PELANGGAN --}}
-                            <td>
-
-                                {{ $order->customer_name ?? '-' }}
-
-                            </td>
-
-
-                            {{-- MEJA --}}
-                            <td>
-
-                                {{ $order->table_number ?? 'Take Away' }}
-
-                            </td>
-
-
-                            {{-- TOTAL --}}
-                            <td>
-
-                                Rp
-                                {{ number_format(
-                                    $order->total,
-                                    0,
-                                    ',',
-                                    '.'
-                                ) }}
-
-                            </td>
-
-
-                            {{-- STATUS --}}
-                            <td>
-
-                                <span
-                                    class="badge {{ strtolower($order->status) }}"
-                                >
-                                    {{ $order->status }}
-                                </span>
-
-                            </td>
-
-                        </tr>
-
-                    @empty
-
-                        <tr>
-
-                            <td
-                                colspan="5"
-                                style="text-align:center; padding:30px;"
-                            >
-
-                                Belum ada pesanan.
-
-                            </td>
-
-                        </tr>
-
-                    @endforelse
-
-                </tbody>
-
-            </table>
-
-        </div>
-
+<div class="two-col">
+<section class="panel">
+    <div class="panel-head"><div><h2>Penjualan Mingguan</h2><p>Ringkasan omzet 7 hari terakhir.</p></div><a class="panel-link" href="{{ route('owner.sales') }}">Lihat Detail</a></div>
+    @php $maxWeekly = $weeklyTrend->max('total') ?: 1; @endphp
+    <div class="chart">
+        @foreach($weeklyTrend as $day)
+        <div class="bar-item"><div class="bar" style="--h:{{ round(($day['total'] / $maxWeekly) * 100) }}%"></div><span class="bar-label">{{ $day['label'] }}</span></div>
+        @endforeach
     </div>
-
-
-    {{-- ================================================== --}}
-    {{-- RINGKASAN PENJUALAN --}}
-    {{-- ================================================== --}}
-
-    <div class="panel">
-
-        <div class="panel-head">
-
-            <div>
-
-                <h2>
-                    Ringkasan Penjualan
-                </h2>
-
-                <p>
-                    Performa transaksi hari ini.
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="sales-highlight">
-
-            <span>
-                Total pendapatan
-            </span>
-
-            <strong>
-                Rp {{ number_format(
-                    $penjualanHariIni,
-                    0,
-                    ',',
-                    '.'
-                ) }}
-            </strong>
-
-            <small>
-
-                <i class="fa-solid fa-arrow-trend-up"></i>
-
-                Penjualan hari ini
-
-            </small>
-
-        </div>
-
-
-        <div class="mini-list">
-
-
-            {{-- TRANSAKSI SELESAI --}}
-            <div>
-
-                <i class="fa-solid fa-receipt"></i>
-
-                <span>
-                    Transaksi selesai
-                </span>
-
-                <strong>
-                    {{ $transaksiSelesai }}
-                </strong>
-
-            </div>
-
-
-            {{-- PELANGGAN --}}
-            <div>
-
-                <i class="fa-solid fa-users"></i>
-
-                <span>
-                    Pelanggan hari ini
-                </span>
-
-                <strong>
-                    {{ $pelangganHariIni }}
-                </strong>
-
-            </div>
-
-
-            {{-- RATING --}}
-            <div>
-
-                <i class="fa-solid fa-star"></i>
-
-                <span>
-                    Rating layanan
-                </span>
-
-                <strong>
-                    4.9/5
-                </strong>
-
-            </div>
-
-        </div>
-
-
-        <a
-            href="{{ route('kasir.payment') }}"
-            class="primary-btn full"
-        >
-
-            <i class="fa-solid fa-cash-register"></i>
-
-            Proses Pembayaran
-
-        </a>
-
-    </div>
-
 </section>
 
+<section class="panel">
+    <div class="panel-head"><div><h2>Status Operasional</h2><p>Ringkasan aktivitas hari ini.</p></div></div>
+    <div class="metric-row"><span>Pesanan selesai</span><strong>{{ $pesananSelesai }}</strong></div>
+    <div class="metric-row"><span>Pesanan diproses</span><strong>{{ $pesananDiproses }}</strong></div>
+    <div class="metric-row"><span>Menu aktif</span><strong>{{ $menuAktif }} item</strong></div>
+    <div class="metric-row"><span>Rating toko</span><strong style="color:#999;">Belum tersedia</strong></div>
+</section>
+</div>
+
+<div class="panel" style="margin-top:22px">
+    <div class="panel-head"><div><h2>Transaksi Terbaru</h2><p>Aktivitas pembayaran terbaru.</p></div><a class="panel-link" href="{{ route('owner.sales') }}">Lihat Semua</a></div>
+    <div class="table-wrap"><table><thead><tr><th>Order</th><th>Pelanggan</th><th>Kasir</th><th>Total</th><th>Status</th></tr></thead><tbody>
+    @forelse($transaksiTerbaru as $order)
+    <tr>
+        <td><strong>{{ $order->order_number }}</strong></td>
+        <td>{{ $order->customer_name }}</td>
+        <td>-</td>
+        <td>Rp {{ number_format($order->total, 0, ',', '.') }}</td>
+        <td><span class="badge {{ $order->payment_status === 'Dibayar' ? 'green' : '' }}">{{ $order->payment_status }}</span></td>
+    </tr>
+    @empty
+    <tr><td colspan="5" style="text-align:center;color:#888;padding:24px;">Belum ada transaksi.</td></tr>
+    @endforelse
+    </tbody></table></div>
+</div>
+</div>
 @endsection

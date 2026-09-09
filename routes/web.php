@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AuthAdminController;
 use App\Http\Controllers\KitchenController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CustomerManagementController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ReportController;
 
 
 /*
@@ -45,6 +47,7 @@ Route::middleware('guest')->group(function () {
 
 });
 
+
 /*
 |--------------------------------------------------------------------------
 | CUSTOMER AUTH
@@ -58,7 +61,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])
         ->name('logout');
+
 });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -77,7 +82,7 @@ Route::middleware(['auth', 'role:customer'])
         Route::get('/orders', [CustomerController::class, 'orders'])
             ->name('orders');
 
-            Route::post('/orders', [CustomerController::class, 'storeOrder'])
+        Route::post('/orders', [CustomerController::class, 'storeOrder'])
             ->name('orders.store');
 
         Route::get('/favorites', [CustomerController::class, 'favorites'])
@@ -102,6 +107,7 @@ Route::middleware('guest')->group(function () {
 
     Route::post('/admin/login', [AuthAdminController::class, 'login'])
         ->name('admin.login.process');
+
 });
 
 
@@ -141,6 +147,7 @@ Route::middleware(['auth', 'role:kitchen'])
 
         Route::get('/history', [KitchenController::class, 'history'])
             ->name('history');
+
     });
 
 
@@ -161,16 +168,21 @@ Route::middleware(['auth', 'role:owner'])
         Route::get('/sales', [OwnerController::class, 'sales'])
             ->name('sales');
 
+        Route::get('/sales/export/excel', [OwnerController::class, 'exportSalesExcel'])
+            ->name('sales.export.excel');
+
+        Route::get('/sales/export/pdf', [OwnerController::class, 'exportSalesPdf'])
+            ->name('sales.export.pdf');
+
         Route::resource('/products', ProductController::class);
 
         Route::resource('/employees', EmployeeController::class);
 
         Route::resource('/customers', CustomerManagementController::class);
 
-        Route::get('/reports', [OwnerController::class, 'reports'])
+        Route::get('/reports', [ReportController::class, 'index'])
             ->name('reports');
     });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -195,6 +207,11 @@ Route::middleware(['auth', 'role:kasir'])
         Route::get('/payment', [KasirController::class, 'payment'])
             ->name('payment');
 
+        // Konfirmasi pembayaran
+        Route::post('/payment/{order}/confirm', [KasirController::class, 'confirmPayment'])
+            ->name('payment.confirm');
+
         Route::get('/history', [KasirController::class, 'history'])
             ->name('history');
+
     });

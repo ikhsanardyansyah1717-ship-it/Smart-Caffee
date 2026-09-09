@@ -21,7 +21,6 @@ class KasirController extends Controller
      */
     public function dashboard()
     {
-        // Tanggal hari ini
         $today = now()->toDateString();
 
         /*
@@ -55,9 +54,12 @@ class KasirController extends Controller
         |--------------------------------------------------------------------------
         | Penjualan hari ini
         |--------------------------------------------------------------------------
+        | FIX:
+        | Database menggunakan "Dibayar", bukan "Lunas".
+        |--------------------------------------------------------------------------
         */
         $penjualanHariIni = Order::whereDate('created_at', $today)
-            ->where('payment_status', 'Lunas')
+            ->where('payment_status', 'Dibayar')
             ->sum('total');
 
         /*
@@ -83,11 +85,6 @@ class KasirController extends Controller
         |--------------------------------------------------------------------------
         | Pesanan prioritas
         |--------------------------------------------------------------------------
-        |
-        | Untuk sementara menggunakan pesanan yang masih menunggu.
-        | Kalau database kamu memiliki kolom priority, bagian ini
-        | bisa dibuat lebih spesifik.
-        |
         */
         $pesananPrioritas = Order::whereDate('created_at', $today)
             ->where('status', 'Menunggu')
@@ -166,9 +163,9 @@ class KasirController extends Controller
     {
         $request->validate([
             'customer' => 'required|string|max:100',
-            'table' => 'required|string|max:50',
-            'items' => 'required|string',
-            'total' => 'required|numeric|min:0',
+            'table'    => 'required|string|max:50',
+            'items'    => 'required|string',
+            'total'    => 'required|numeric|min:0',
         ]);
 
         Order::create([
@@ -197,5 +194,31 @@ class KasirController extends Controller
                 'success',
                 'Pesanan berhasil dibuat.'
             );
+    }
+
+    /**
+     * Konfirmasi pembayaran
+     *
+     * Setelah method ini dijalankan:
+     * payment_status berubah menjadi "Dibayar".
+     * Dashboard Owner akan membaca perubahan tersebut.
+     */
+    public function confirmPayment(Order $order)
+    {
+        if ($order->payment_status === 'Dibayar') {
+            return back()->with(
+                'info',
+                'Pesanan ini sudah dibayar.'
+            );
+        }
+
+        $order->update([
+            'payment_status' => 'Dibayar',
+        ]);
+
+        return back()->with(
+            'success',
+            'Pembayaran ' . $order->order_number . ' berhasil dikonfirmasi.'
+        );
     }
 }
