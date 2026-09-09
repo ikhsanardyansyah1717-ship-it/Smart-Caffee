@@ -86,6 +86,9 @@ Route::middleware(['auth', 'role:customer'])
         Route::get('/profile', [CustomerController::class, 'profile'])
             ->name('profile');
 
+        Route::get('/orders/history', [CustomerController::class, 'orderHistory'])
+            ->name('orders.history');
+
     });
 
 
@@ -141,6 +144,12 @@ Route::middleware(['auth', 'role:kitchen'])
 
         Route::get('/history', [KitchenController::class, 'history'])
             ->name('history');
+
+        Route::post('/orders/{id}/process', [KitchenController::class, 'process'])
+            ->name('orders.process');
+
+        Route::post('/orders/{id}/complete', [KitchenController::class, 'complete'])
+            ->name('orders.complete');
     });
 
 

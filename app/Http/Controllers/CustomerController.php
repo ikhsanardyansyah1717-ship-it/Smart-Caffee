@@ -147,4 +147,45 @@ class CustomerController extends Controller
             'order_number' => $order->order_number,
         ], 201);
     }
+
+    public function orderHistory()
+{
+    $orders = Order::with(['items', 'payment'])
+        ->where('user_id', Auth::id())
+        ->latest()
+        ->get();
+
+    return response()->json([
+        'orders' => $orders->map(function ($order) {
+            return [
+                'id' => $order->id,
+                'order_number' => $order->order_number,
+                'customer_name' => $order->customer_name,
+                'table_number' => $order->table_number,
+                'subtotal' => $order->subtotal,
+                'tax' => $order->tax,
+                'total' => $order->total,
+                'status' => $order->status,
+                'payment_status' => $order->payment_status,
+
+                'payment_method' => $order->payment
+                    ? $order->payment->payment_method
+                    : null,
+
+                'created_at' => $order->created_at
+                    ? $order->created_at->format('d M Y, H:i')
+                    : '-',
+
+                'items' => $order->items->map(function ($item) {
+                    return [
+                        'product_name' => $item->product_name,
+                        'quantity' => $item->quantity,
+                        'price' => $item->price,
+                        'subtotal' => $item->subtotal,
+                    ];
+                })->values(),
+            ];
+        })->values(),
+    ]);
+}
 }

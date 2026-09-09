@@ -100,14 +100,151 @@
 
 
     {{-- HISTORY --}}
-    <div
-        id="tab-history"
-        style="display:none"
-    >
+<div
+    id="tab-history"
+    style="display:none"
+>
 
-        <div id="history-container"></div>
+    <div id="history-container">
+
+        @forelse($orders as $order)
+
+            <div class="history-order-card">
+
+                <div class="history-order-header">
+
+                    <div>
+                        <strong>
+                            #{{ $order->order_number }}
+                        </strong>
+
+                        <small>
+                            {{ $order->created_at->format('d M Y, H:i') }}
+                        </small>
+                    </div>
+
+                    @if($order->status === 'Menunggu')
+
+                        <span class="history-status waiting">
+                            Menunggu
+                        </span>
+
+                    @elseif($order->status === 'Diproses')
+
+                        <span class="history-status processing">
+                            Diproses
+                        </span>
+
+                    @elseif($order->status === 'Selesai')
+
+                        <span class="history-status completed">
+                            Selesai
+                        </span>
+
+                    @elseif($order->status === 'Dibatalkan')
+
+                        <span class="history-status cancelled">
+                            Dibatalkan
+                        </span>
+
+                    @endif
+
+                </div>
+
+
+                <div class="history-order-items">
+
+                    @foreach($order->items as $item)
+
+                        <div class="history-item">
+
+                            <div>
+                                <strong>
+                                    {{ $item->product_name }}
+                                </strong>
+
+                                <span>
+                                    {{ $item->quantity }}x
+                                </span>
+                            </div>
+
+                            <strong>
+                                Rp {{ number_format($item->subtotal, 0, ',', '.') }}
+                            </strong>
+
+                        </div>
+
+                    @endforeach
+
+                </div>
+
+
+                <div class="history-order-footer">
+
+                    <span>
+                        Total Pembayaran
+                    </span>
+
+                    <strong>
+                        Rp {{ number_format($order->total, 0, ',', '.') }}
+                    </strong>
+
+                </div>
+
+
+                @if($order->payment)
+
+                    <div class="history-payment">
+
+                        <span>
+                            Pembayaran:
+                        </span>
+
+                        <strong>
+                            {{ $order->payment->payment_method }}
+                        </strong>
+
+                        @if($order->payment->status === 'Berhasil')
+
+                            <span class="payment-success">
+                                Berhasil
+                            </span>
+
+                        @else
+
+                            <span>
+                                {{ $order->payment->status }}
+                            </span>
+
+                        @endif
+
+                    </div>
+
+                @endif
+
+            </div>
+
+        @empty
+
+            <div class="history-empty">
+
+                <i class="fa-solid fa-clock-rotate-left"></i>
+
+                <h4>
+                    Belum Ada Riwayat
+                </h4>
+
+                <p>
+                    Pesanan yang sudah dibuat akan muncul di sini.
+                </p>
+
+            </div>
+
+        @endforelse
 
     </div>
+
+</div>
 
 
     {{-- ===================================================== --}}

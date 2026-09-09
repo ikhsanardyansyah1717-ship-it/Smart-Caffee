@@ -284,10 +284,10 @@ class KasirController extends Controller
             /**
              * Update status order.
              */
-            $order->update([
-                'payment_status' => 'Dibayar',
-                'status' => 'Selesai',
-            ]);
+           $order->update([
+    'payment_status' => 'Dibayar',
+    'status' => 'Menunggu',
+]);
         });
 
 

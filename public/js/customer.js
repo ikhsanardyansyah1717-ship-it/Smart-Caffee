@@ -1820,7 +1820,11 @@ function closePaymentModalIfExists() {
    HISTORY
    ========================================================= */
 
-function renderHistory() {
+/* =========================================================
+   HISTORY FROM DATABASE
+   ========================================================= */
+
+async function renderHistory() {
 
     const container =
         document.getElementById(
@@ -1833,66 +1837,316 @@ function renderHistory() {
     }
 
 
-    if (!appState.history.length) {
+    /*
+     * TAMPILKAN LOADING
+     */
+    container.innerHTML = `
+
+        <div class="empty-state">
+
+            <i class="fa-solid fa-spinner fa-spin"></i>
+
+            <p>
+                Memuat riwayat pesanan...
+            </p>
+
+        </div>
+
+    `;
+
+
+    try {
+
+        /*
+         * AMBIL DATA DARI DATABASE
+         */
+        const response =
+            await fetch(
+                '/customer/orders/history',
+                {
+                    method: 'GET',
+
+                    headers: {
+                        'Accept':
+                            'application/json',
+
+                        'X-Requested-With':
+                            'XMLHttpRequest'
+                    }
+                }
+            );
+
+
+        /*
+         * CEK RESPONSE
+         */
+        if (!response.ok) {
+
+            throw new Error(
+                'Gagal mengambil riwayat pesanan'
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const orders =
+            Array.isArray(data.orders)
+                ? data.orders
+                : [];
+
+
+        /*
+         * TIDAK ADA ORDER
+         */
+        if (!orders.length) {
+
+            container.innerHTML = `
+
+                <div class="empty-state">
+
+                    <i class="fa-solid fa-receipt"></i>
+
+                    <p>
+                        Belum ada riwayat pesanan
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        /*
+         * RENDER ORDER
+         */
+        container.innerHTML =
+
+            orders.map(order => {
+
+
+                /*
+                 * STATUS CLASS
+                 */
+                let statusClass =
+                    'waiting';
+
+
+                let statusText =
+                    order.status;
+
+
+                if (
+                    order.status === 'Menunggu'
+                ) {
+
+                    statusClass =
+                        'waiting';
+
+                }
+
+                else if (
+                    order.status === 'Diproses'
+                ) {
+
+                    statusClass =
+                        'processing';
+
+                }
+
+                else if (
+                    order.status === 'Selesai'
+                ) {
+
+                    statusClass =
+                        'completed';
+
+                }
+
+                else if (
+                    order.status === 'Dibatalkan'
+                ) {
+
+                    statusClass =
+                        'cancelled';
+
+                }
+
+
+                /*
+                 * ITEMS
+                 */
+                const items =
+                    Array.isArray(order.items)
+                        ? order.items
+                        : [];
+
+
+                const itemsHtml =
+
+                    items.map(item => `
+
+                        <div class="history-item">
+
+                            <div>
+
+                                <strong>
+                                    ${item.product_name}
+                                </strong>
+
+                                <span>
+                                    ${item.quantity}x
+                                </span>
+
+                            </div>
+
+
+                            <strong>
+                                ${rupiah(item.subtotal)}
+                            </strong>
+
+                        </div>
+
+                    `).join('');
+
+
+                /*
+                 * PAYMENT STATUS
+                 */
+                let paymentHtml = '';
+
+
+                if (
+                    order.payment_status ===
+                    'Dibayar'
+                ) {
+
+                    paymentHtml = `
+
+                        <span class="payment-success">
+                            Berhasil
+                        </span>
+
+                    `;
+
+                }
+
+                else {
+
+                    paymentHtml = `
+
+                        <span>
+                            ${order.payment_status ?? 'Belum Dibayar'}
+                        </span>
+
+                    `;
+
+                }
+
+
+                /*
+                 * RETURN CARD
+                 */
+                return `
+
+                    <div class="history-order-card">
+
+                        <div class="history-order-header">
+
+                            <div>
+
+                                <strong>
+                                    #${order.order_number}
+                                </strong>
+
+                                <small>
+                                    ${order.created_at}
+                                </small>
+
+                            </div>
+
+
+                            <span
+                                class="history-status ${statusClass}"
+                            >
+                                ${statusText}
+                            </span>
+
+                        </div>
+
+
+                        <div class="history-order-items">
+
+                            ${itemsHtml}
+
+                        </div>
+
+
+                        <div class="history-order-footer">
+
+                            <span>
+                                Total Pembayaran
+                            </span>
+
+                            <strong>
+                                ${rupiah(order.total)}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="history-payment">
+
+                            <span>
+                                Pembayaran:
+                            </span>
+
+                            <strong>
+                                ${order.payment_method ?? '-'}
+                            </strong>
+
+                            ${paymentHtml}
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            }).join('');
+
+
+    }
+
+    catch (error) {
+
+        console.error(
+            'History Error:',
+            error
+        );
+
 
         container.innerHTML = `
 
             <div class="empty-state">
 
-                <i class="fa-solid fa-receipt"></i>
+                <i class="fa-solid fa-triangle-exclamation"></i>
 
                 <p>
-                    Belum ada riwayat pesanan
+                    Gagal memuat riwayat pesanan.
                 </p>
 
             </div>
 
         `;
 
-        return;
-
     }
-
-
-    container.innerHTML =
-
-        appState.history.map(
-            history => `
-
-                <div class="history-card">
-
-                    <div class="history-header">
-
-                        <span>
-                            ${history.id}
-                            •
-                            ${history.date}
-                        </span>
-
-                        <span class="history-status">
-                            Selesai
-                        </span>
-
-                    </div>
-
-                    <div class="history-title">
-
-                        ${history.items}
-
-                    </div>
-
-                    <div class="history-price">
-
-                        ${rupiah(
-                            history.total
-                        )}
-
-                    </div>
-
-                </div>
-
-            `
-        ).join('');
 
 }
 
@@ -2134,9 +2388,8 @@ document.addEventListener(
 
         updateCartUI();
 
-        renderHistory();
-
         initPaymentUI();
 
     }
 );
+
