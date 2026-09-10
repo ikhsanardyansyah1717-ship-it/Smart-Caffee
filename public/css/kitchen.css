@@ -572,3 +572,685 @@ body {
     color: #7b3f0d;
     transform: translateX(3px);
 }
+
+/* =========================================================
+   QUATTRO COFFEE KITCHEN — STAGE 1 VISUAL REFINEMENT
+   Scope: kitchen-page only. Existing workflow/classes preserved.
+   ========================================================= */
+.kitchen-page {
+    width: 100%;
+    max-width: 100%;
+}
+
+.kitchen-page .topbar {
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 22px;
+}
+
+.kitchen-page .topbar > div:first-child {
+    min-width: 0;
+}
+
+.kitchen-page .topbar h1 {
+    color: #241914;
+    font-weight: 750;
+    letter-spacing: -0.4px;
+}
+
+.kitchen-page .topbar p {
+    line-height: 1.55;
+}
+
+.kitchen-page .top-actions {
+    flex-shrink: 0;
+}
+
+.kitchen-page .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 12px rgba(47, 143, 91, .08);
+}
+
+.kitchen-page .live i {
+    margin-right: 0;
+}
+
+.kitchen-page .icon-btn {
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.kitchen-page .icon-btn:hover {
+    transform: translateY(-1px);
+    background: #fbf7f2;
+    box-shadow: 0 5px 14px rgba(87, 46, 4, .08);
+}
+
+.kitchen-page .filter-bar {
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.kitchen-page .search {
+    min-height: 48px;
+    box-shadow: 0 5px 16px rgba(74, 46, 27, .035);
+}
+
+.kitchen-page .search:focus-within {
+    border-color: #caa47d;
+    box-shadow: 0 0 0 3px rgba(118, 63, 6, .07);
+}
+
+.kitchen-page .search input {
+    min-width: 0;
+    font-size: 13px;
+}
+
+.kitchen-page .filter-bar select {
+    min-width: 170px;
+    min-height: 48px;
+    color: #49392f;
+    outline: none;
+    cursor: pointer;
+}
+
+.kitchen-page .filter-bar select:focus {
+    border-color: #caa47d;
+    box-shadow: 0 0 0 3px rgba(118, 63, 6, .07);
+}
+
+.kitchen-page .panel {
+    padding: 24px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(74, 46, 27, .055);
+}
+
+.kitchen-page .panel-head {
+    gap: 18px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.kitchen-page .panel-head > div {
+    min-width: 0;
+}
+
+.kitchen-page .panel-head h2 {
+    color: #251b16;
+    font-size: 18px;
+    line-height: 1.3;
+}
+
+.kitchen-page .panel-head p {
+    line-height: 1.5;
+}
+
+.kitchen-page .order-count {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-weight: 650;
+    color: #735d4d;
+    border: 1px solid #eee2d5;
+}
+
+/* FIX UTAMA: satu pesanan tidak lagi terjebak di setengah panel. */
+.kitchen-page .order-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+    align-items: stretch;
+    gap: 16px;
+}
+
+.kitchen-page .kitchen-order-card {
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 18px;
+    border-radius: 17px;
+    box-shadow: 0 4px 16px rgba(74, 46, 27, .035);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.kitchen-page .kitchen-order-card:hover {
+    transform: translateY(-2px);
+    border-color: #dfcbb8;
+    box-shadow: 0 10px 24px rgba(74, 46, 27, .075);
+}
+
+.kitchen-page .order-top {
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.kitchen-page .order-top > div:first-child {
+    min-width: 0;
+}
+
+.kitchen-page .order-id {
+    overflow-wrap: anywhere;
+    font-size: 13px;
+    letter-spacing: .1px;
+}
+
+.kitchen-page .order-meta {
+    margin-top: 7px;
+    border-top: 0;
+    padding-top: 0;
+    justify-content: flex-start;
+    display: block;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.kitchen-page .status-pill {
+    flex-shrink: 0;
+    white-space: nowrap;
+    border: 1px solid rgba(0,0,0,.025);
+}
+
+.kitchen-page .items {
+    gap: 7px;
+    margin: 16px 0 14px;
+}
+
+.kitchen-page .item-line {
+    gap: 14px;
+    align-items: center;
+    padding: 9px 10px;
+    border-radius: 10px;
+    background: #faf7f3;
+    color: #4e4138;
+    line-height: 1.4;
+}
+
+.kitchen-page .item-line span:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.kitchen-page .item-line span:last-child {
+    flex-shrink: 0;
+    color: #7d4b18;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.kitchen-page .kitchen-order-actions {
+    margin-top: auto;
+    padding-top: 2px;
+}
+
+.kitchen-page .kitchen-order-actions form {
+    width: 100%;
+}
+
+.kitchen-page .action-btn {
+    width: 100%;
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+.kitchen-page .btn-primary {
+    box-shadow: 0 6px 14px rgba(118, 63, 6, .14);
+}
+
+.kitchen-page .btn-primary:hover {
+    filter: brightness(.96);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 17px rgba(118, 63, 6, .18);
+}
+
+.kitchen-page .btn-success:hover {
+    filter: brightness(.97);
+    transform: translateY(-1px);
+}
+
+.kitchen-page .done-text {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 11px;
+    background: #f4f8f5;
+    color: var(--green);
+    font-weight: 650;
+}
+
+.kitchen-page .empty-state {
+    grid-column: 1 / -1;
+    min-height: 230px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 36px 20px;
+    border: 1px dashed #e4d7ca;
+    border-radius: 15px;
+    background: #fcfaf7;
+    color: var(--muted);
+    text-align: center;
+}
+
+.kitchen-page .empty-state i {
+    font-size: 28px;
+    color: #b89b7e;
+}
+
+.kitchen-page .empty-state p {
+    margin: 0;
+    font-size: 13px;
+}
+
+/* Dashboard tetap dua panel, tetapi kartu order dibuat lebih lega. */
+.kitchen-page .dashboard-grid .panel:first-child .order-card {
+    width: 100%;
+}
+
+.kitchen-page .dashboard-grid .order-stack {
+    gap: 12px;
+}
+
+.kitchen-page .dashboard-grid .order-stack .kitchen-order-card {
+    padding: 16px;
+}
+
+.kitchen-page .stats-grid .stat-card {
+    min-width: 0;
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.kitchen-page .stats-grid .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 11px 28px rgba(74, 46, 27, .075);
+}
+
+@media (max-width: 1100px) {
+    .kitchen-page .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .kitchen-page .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 760px) {
+    .kitchen-page .topbar {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
+
+    .kitchen-page .top-actions {
+        justify-content: flex-end;
+    }
+
+    .kitchen-page .filter-bar {
+        flex-direction: column;
+    }
+
+    .kitchen-page .filter-bar select {
+        width: 100%;
+    }
+
+    .kitchen-page .panel {
+        padding: 18px;
+    }
+
+    .kitchen-page .panel-head {
+        align-items: flex-start;
+    }
+
+    .kitchen-page .order-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .kitchen-page .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .kitchen-page .panel-head {
+        flex-direction: column;
+    }
+
+    .kitchen-page .order-count {
+        align-self: flex-start;
+    }
+
+    .kitchen-page .order-top {
+        flex-direction: column;
+    }
+
+    .kitchen-page .status-pill {
+        align-self: flex-start;
+    }
+}
+
+
+/* =========================================================
+   STAGE 3 — PICKUP CONFIRMATION
+   ========================================================= */
+.pickup-actions{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+.pickup-actions form{
+    width:100%;
+}
+.pickup-actions .action-btn{
+    width:100%;
+    justify-content:center;
+}
+.pickup-actions .done-text{
+    margin-bottom:0;
+}
+@media (max-width: 640px){
+    .pickup-actions{
+        gap:10px;
+    }
+}
+
+
+/* =========================================================
+   PICKUP CONFIRMATION MODAL — QUATTRO COFFEE KITCHEN
+   ========================================================= */
+
+body.pickup-modal-open {
+    overflow: hidden;
+}
+
+/* OVERLAY */
+.pickup-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+
+    background: rgba(45, 36, 36, .32);
+
+    transition:
+        opacity .25s ease,
+        visibility .25s ease;
+}
+
+.pickup-modal.show {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* BACKDROP */
+.pickup-modal-backdrop {
+    position: absolute;
+    inset: 0;
+
+    background: rgba(45, 36, 36, .38);
+
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+}
+
+/* =========================================================
+   MODAL CARD
+   ========================================================= */
+
+.pickup-modal-card {
+    position: relative;
+    z-index: 1;
+
+    width: min(460px, 100%);
+
+    padding: 30px;
+
+    background: #fffdf9;
+
+    border: 1px solid var(--border);
+    border-radius: 22px;
+
+    box-shadow:
+        0 25px 70px rgba(74, 46, 27, .18),
+        0 8px 25px rgba(74, 46, 27, .08);
+
+    transform: translateY(18px) scale(.96);
+
+    transition:
+        transform .28s cubic-bezier(.2,.8,.2,1),
+        opacity .25s ease;
+}
+
+.pickup-modal.show .pickup-modal-card {
+    transform: translateY(0) scale(1);
+}
+
+/* =========================================================
+   ICON
+   ========================================================= */
+
+.pickup-modal-icon {
+    width: 64px;
+    height: 64px;
+
+    display: grid;
+    place-items: center;
+
+    margin-bottom: 18px;
+
+    border-radius: 18px;
+
+    background: #f4e8da;
+
+    border: 1px solid #ead4bd;
+
+    color: var(--primary);
+
+    font-size: 25px;
+
+    box-shadow:
+        0 8px 20px rgba(118, 63, 6, .10);
+}
+
+/* =========================================================
+   LABEL
+   ========================================================= */
+
+.pickup-modal-label {
+    display: inline-block;
+
+    margin-bottom: 7px;
+
+    color: var(--secondary);
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 1.7px;
+}
+
+/* =========================================================
+   TITLE
+   ========================================================= */
+
+.pickup-modal-content h3 {
+    margin: 0 0 9px;
+
+    color: #2d2424;
+
+    font-size: 22px;
+    font-weight: 750;
+
+    line-height: 1.3;
+}
+
+/* =========================================================
+   DESCRIPTION
+   ========================================================= */
+
+.pickup-modal-content p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+
+    line-height: 1.7;
+}
+
+.pickup-modal-content strong {
+    color: var(--primary);
+}
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.pickup-modal-actions {
+    display: grid;
+
+    grid-template-columns: 1fr 1.5fr;
+
+    gap: 10px;
+
+    margin-top: 25px;
+}
+
+.pickup-modal-actions button {
+    min-height: 46px;
+
+    border-radius: 12px;
+
+    padding: 0 16px;
+
+    font-family: inherit;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        transform .2s ease,
+        background .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease;
+}
+
+.pickup-modal-actions button:hover {
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   BUTTON BATAL
+   ========================================================= */
+
+.pickup-modal-cancel {
+    border: 1px solid #dfd2c5;
+
+    background: #ffffff;
+
+    color: #765f4b;
+}
+
+.pickup-modal-cancel:hover {
+    background: #f8f1ea;
+
+    border-color: #cdb9a4;
+
+    color: #5c4634;
+}
+
+.pickup-modal-cancel:active {
+    transform: scale(.96);
+}
+
+/* =========================================================
+   BUTTON CONFIRM
+   ========================================================= */
+
+.pickup-modal-confirm {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    border: 0;
+
+    background: var(--primary);
+
+    color: #ffffff;
+
+    box-shadow:
+        0 8px 20px rgba(118, 63, 6, .20);
+}
+
+.pickup-modal-confirm:hover {
+    background: var(--dark);
+
+    box-shadow:
+        0 11px 26px rgba(87, 46, 4, .25);
+}
+
+.pickup-modal-confirm:active {
+    transform: scale(.96);
+}
+
+.pickup-modal-confirm i {
+    font-size: 13px;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 520px) {
+
+    .pickup-modal {
+        padding: 16px;
+    }
+
+    .pickup-modal-card {
+        width: 100%;
+
+        padding: 23px;
+
+        border-radius: 19px;
+    }
+
+    .pickup-modal-icon {
+        width: 58px;
+        height: 58px;
+
+        font-size: 23px;
+    }
+
+    .pickup-modal-content h3 {
+        font-size: 20px;
+    }
+
+    .pickup-modal-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .pickup-modal-confirm {
+        order: -1;
+    }
+}

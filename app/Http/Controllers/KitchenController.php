@@ -96,6 +96,7 @@ class KitchenController extends Controller
 
     /**
      * Riwayat
+     * Hanya pesanan yang benar-benar sudah diambil / dibatalkan.
      */
     public function history()
     {
@@ -103,11 +104,12 @@ class KitchenController extends Controller
                 'items.product',
                 'payment'
             ])
-            ->where('payment_status', 'Dibayar')
-            ->whereIn('status', [
-                'Selesai',
-                'Dibatalkan'
-            ])
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    $q->where('payment_status', 'Dibayar')
+                      ->where('status', 'Sudah Diambil');
+                })->orWhere('status', 'Dibatalkan');
+            })
             ->latest()
             ->get();
 
@@ -143,7 +145,9 @@ class KitchenController extends Controller
      */
     public function complete($id)
     {
-        $order = Order::findOrFail($id);
+        $order = Order::where('payment_status', 'Dibayar')
+            ->where('status', 'Diproses')
+            ->findOrFail($id);
 
         $order->update([
             'status' => 'Selesai',
@@ -154,6 +158,28 @@ class KitchenController extends Controller
             ->with(
                 'success',
                 'Pesanan siap diambil.'
+            );
+    }
+
+
+    /**
+     * Konfirmasi Pesanan Sudah Diambil
+     */
+    public function confirmPickup($id)
+    {
+        $order = Order::where('payment_status', 'Dibayar')
+            ->where('status', 'Selesai')
+            ->findOrFail($id);
+
+        $order->update([
+            'status' => 'Sudah Diambil',
+        ]);
+
+        return redirect()
+            ->back()
+            ->with(
+                'success',
+                'Pesanan berhasil dikonfirmasi sudah diambil.'
             );
     }
 }

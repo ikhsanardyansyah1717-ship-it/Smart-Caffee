@@ -4,6 +4,8 @@
 
 @section('content')
 
+<div class="kitchen-page">
+
 <header class="topbar">
 
     <div>
@@ -95,7 +97,7 @@
         @forelse($orders as $order)
 
             <div
-                class="order-card"
+                class="order-card kitchen-order-card"
                 data-priority="{{ $order->priority ?? 'normal' }}"
             >
 
@@ -120,7 +122,7 @@
                     </div>
 
                     <span class="status-pill status-history">
-                        Selesai
+                        {{ $order->status === 'Sudah Diambil' ? 'Sudah Diambil' : 'Dibatalkan' }}
                     </span>
 
                 </div>
@@ -148,13 +150,13 @@
                 </div>
 
 
-                <div class="order-actions">
+                <div class="order-actions kitchen-order-actions">
 
                     <div class="done-text">
 
                         <i class="fa-solid fa-circle-check"></i>
 
-                        Pesanan selesai diproses
+                        Pesanan sudah diambil pelanggan
 
                     </div>
 
@@ -179,6 +181,8 @@
     </div>
 
 </section>
+
+</div>
 
 @endsection
 

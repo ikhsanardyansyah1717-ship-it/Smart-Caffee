@@ -7,18 +7,21 @@ use Illuminate\Support\Facades\DB;
 
 use App\Models\Product;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Payment;
 
 class KasirController extends Controller
 {
     /**
      * =========================================================
-     * DATA PRODUK
+     * PRODUK TERSEDIA
      * =========================================================
      */
     private function products()
     {
-        return Product::where('is_available', true)->get();
+        return Product::where('is_available', true)
+            ->orderBy('name')
+            ->get();
     }
 
 
@@ -31,89 +34,42 @@ class KasirController extends Controller
     {
         $today = now()->toDateString();
 
-
         /**
-         * =====================================================
          * PESANAN HARI INI
-         * =====================================================
-         *
-         * Menghitung pesanan yang pembayarannya
-         * berhasil dilakukan hari ini.
-         *
-         * Contoh:
-         * Order dibuat 2 September
-         * Dibayar 3 September
-         *
-         * Maka tetap dihitung sebagai transaksi
-         * pada tanggal 3 September.
          */
-        $pesananHariIni = Order::whereHas('payment', function ($query) use ($today) {
-            $query->whereDate('paid_at', $today)
-                ->where('status', 'Berhasil');
-        })->count();
+        $pesananHariIni = Order::whereDate('created_at', $today)
+            ->count();
 
 
         /**
-         * =====================================================
          * MENUNGGU BAYAR
-         * =====================================================
-         *
-         * SEMUA pesanan yang belum dibayar.
-         *
-         * Tidak dibatasi tanggal.
-         *
-         * Jadi pesanan dari kemarin yang belum dibayar
-         * tetap muncul di dashboard.
          */
-        $menungguBayar = Order::where(
-            'payment_status',
-            'Belum Dibayar'
-        )->count();
+        $menungguBayar = Order::where('payment_status', 'Belum Dibayar')
+            ->count();
 
 
         /**
-         * =====================================================
          * PENJUALAN HARI INI
-         * =====================================================
-         *
-         * Total pembayaran yang berhasil hari ini.
          */
-        $penjualanHariIni = Payment::whereDate(
-                'paid_at',
-                $today
-            )
+        $penjualanHariIni = Payment::whereDate('paid_at', $today)
             ->where('status', 'Berhasil')
             ->sum('amount');
 
 
         /**
-         * =====================================================
          * TRANSAKSI SELESAI
-         * =====================================================
-         *
-         * Jumlah pembayaran berhasil hari ini.
          */
-        $transaksiSelesai = Payment::whereDate(
-                'paid_at',
-                $today
-            )
+        $transaksiSelesai = Payment::whereDate('paid_at', $today)
             ->where('status', 'Berhasil')
             ->count();
 
 
         /**
-         * =====================================================
          * PELANGGAN HARI INI
-         * =====================================================
-         *
-         * Menghitung pelanggan yang melakukan
-         * pembayaran berhasil hari ini.
          */
         $pelangganHariIni = Order::whereHas('payment', function ($query) use ($today) {
-
                 $query->whereDate('paid_at', $today)
                     ->where('status', 'Berhasil');
-
             })
             ->whereNotNull('customer_name')
             ->distinct('customer_name')
@@ -121,27 +77,18 @@ class KasirController extends Controller
 
 
         /**
-         * =====================================================
          * PESANAN PRIORITAS
-         * =====================================================
          *
-         * SEMUA pesanan yang statusnya masih Menunggu.
-         *
-         * Tidak dibatasi tanggal.
-         *
-         * Jadi pesanan yang belum diproses tetap muncul
-         * walaupun dibuat kemarin.
+         * Pesanan yang sudah dibayar tetapi
+         * belum diproses oleh Kitchen.
          */
-        $pesananPrioritas = Order::where(
-            'status',
-            'Menunggu'
-        )->count();
+        $pesananPrioritas = Order::where('status', 'Menunggu')
+            ->where('payment_status', 'Dibayar')
+            ->count();
 
 
         /**
-         * =====================================================
          * PESANAN TERBARU
-         * =====================================================
          */
         $orders = Order::with([
                 'items',
@@ -153,18 +100,11 @@ class KasirController extends Controller
 
 
         /**
-         * =====================================================
          * PRODUK
-         * =====================================================
          */
         $products = $this->products();
 
 
-        /**
-         * =====================================================
-         * KIRIM DATA KE DASHBOARD
-         * =====================================================
-         */
         return view('kasir.dashboard', compact(
             'orders',
             'products',
@@ -194,9 +134,27 @@ class KasirController extends Controller
 
         $products = $this->products();
 
+
+        /**
+         * MEJA YANG SEDANG DIGUNAKAN
+         *
+         * Hanya Menunggu dan Diproses yang dianggap aktif.
+         * Jika Selesai / Dibatalkan maka meja tersedia kembali.
+         */
+        $occupiedTables = Order::whereNotNull('table_number')
+            ->where('table_number', '!=', 'Take Away')
+            ->whereIn('status', ['Menunggu', 'Diproses'])
+            ->pluck('table_number')
+            ->map(fn ($table) => strtoupper(trim($table)))
+            ->unique()
+            ->values()
+            ->toArray();
+
+
         return view('kasir.orders', compact(
             'orders',
-            'products'
+            'products',
+            'occupiedTables'
         ));
     }
 
@@ -206,20 +164,55 @@ class KasirController extends Controller
      * HALAMAN PEMBAYARAN
      * =========================================================
      */
-    public function payment()
+    public function payment(Request $request)
     {
+        /**
+         * Hanya tampilkan order yang belum dibayar.
+         */
         $orders = Order::with([
                 'items'
             ])
-            ->where(
-                'payment_status',
-                'Belum Dibayar'
-            )
+            ->where('payment_status', 'Belum Dibayar')
             ->latest()
             ->get();
 
+
+        $receiptOrder = null;
+        $receiptCashReceived = 0;
+        $receiptChange = 0;
+
+
+        /**
+         * Tampilkan struk setelah pembayaran berhasil.
+         */
+        if ($request->filled('receipt')) {
+
+            $receiptOrder = Order::with([
+                    'items',
+                    'payment'
+                ])
+                ->where('id', $request->receipt)
+                ->where('payment_status', 'Dibayar')
+                ->first();
+
+
+            $receiptCashReceived = (float) session(
+                'receipt_cash_received',
+                0
+            );
+
+            $receiptChange = (float) session(
+                'receipt_change',
+                0
+            );
+        }
+
+
         return view('kasir.payment', compact(
-            'orders'
+            'orders',
+            'receiptOrder',
+            'receiptCashReceived',
+            'receiptChange'
         ));
     }
 
@@ -231,28 +224,37 @@ class KasirController extends Controller
      */
     public function completePayment(Request $request, $id)
     {
-        /**
-         * Validasi metode pembayaran
-         */
         $request->validate([
             'payment_method' => 'required|string|max:50',
+            'cash_received' => 'nullable|numeric|min:0',
         ]);
 
 
-        /**
-         * Simpan pembayaran dan update order
-         * dalam satu transaksi database.
-         */
-        DB::transaction(function () use ($request, $id) {
+        $paidOrderId = null;
 
+        $cashReceived = (float) $request->input(
+            'cash_received',
+            0
+        );
+
+
+        DB::transaction(function () use (
+            $request,
+            $id,
+            &$paidOrderId,
+            $cashReceived
+        ) {
+
+            /**
+             * Ambil order.
+             */
             $order = Order::findOrFail($id);
 
 
             /**
-             * Jangan sampai dibayar dua kali.
+             * Jangan izinkan pembayaran dua kali.
              */
             if ($order->payment_status === 'Dibayar') {
-
                 abort(
                     400,
                     'Pesanan ini sudah dibayar.'
@@ -261,42 +263,99 @@ class KasirController extends Controller
 
 
             /**
-             * Simpan pembayaran
-             * ke tabel payments.
+             * Validasi pembayaran Cash.
+             */
+            if (
+                $request->payment_method === 'Cash' &&
+                $cashReceived < (float) $order->total
+            ) {
+                abort(
+                    422,
+                    'Uang yang diterima tidak mencukupi.'
+                );
+            }
+
+
+            /**
+             * SIMPAN PEMBAYARAN
              */
             Payment::create([
                 'order_id' => $order->id,
-
-                'payment_method' =>
-                    $request->payment_method,
-
-                'amount' =>
-                    $order->total,
-
-                'status' =>
-                    'Berhasil',
-
-                'paid_at' =>
-                    now(),
+                'payment_method' => $request->payment_method,
+                'amount' => $order->total,
+                'status' => 'Berhasil',
+                'paid_at' => now(),
             ]);
 
 
             /**
-             * Update status order.
+             * =================================================
+             * UPDATE STATUS ORDER
+             * =================================================
+             *
+             * PENTING:
+             *
+             * Setelah pembayaran berhasil:
+             *
+             * payment_status = Dibayar
+             * status         = Menunggu
+             *
+             * Jangan gunakan Selesai di sini.
+             *
+             * Karena order harus masuk ke Kitchen terlebih
+             * dahulu.
              */
-           $order->update([
-    'payment_status' => 'Dibayar',
-    'status' => 'Menunggu',
-]);
+            $order->update([
+                'payment_status' => 'Dibayar',
+                'status' => 'Menunggu',
+            ]);
+
+
+            /**
+             * Simpan ID order untuk halaman struk.
+             */
+            $paidOrderId = $order->id;
+
+
+            /**
+             * Hitung kembalian Cash.
+             */
+            $change = $request->payment_method === 'Cash'
+                ? max(
+                    0,
+                    $cashReceived - (float) $order->total
+                )
+                : 0;
+
+
+            /**
+             * Simpan data struk ke session.
+             */
+            session([
+                'receipt_cash_received' =>
+                    $request->payment_method === 'Cash'
+                        ? $cashReceived
+                        : 0,
+
+                'receipt_change' => $change,
+            ]);
         });
 
 
         /**
-         * Setelah pembayaran berhasil,
-         * kembali ke halaman riwayat.
+         * Setelah pembayaran:
+         *
+         * Kasir → halaman struk
+         *
+         * Order:
+         * Dibayar + Menunggu
+         *
+         * Kemudian akan muncul di Kitchen.
          */
         return redirect()
-            ->route('kasir.history')
+            ->route('kasir.payment', [
+                'receipt' => $paidOrderId
+            ])
             ->with(
                 'success',
                 'Pembayaran berhasil diselesaikan.'
@@ -305,25 +364,25 @@ class KasirController extends Controller
 
 
     /**
-     * =========================================================
-     * RIWAYAT TRANSAKSI
-     * =========================================================
-     */
-    public function history()
-    {
-        $orders = Order::with([
-                'items',
-                'payment'
-            ])
-            ->where('status', 'Selesai')
-            ->latest()
-            ->get();
+ * =========================================================
+ * RIWAYAT TRANSAKSI
+ * =========================================================
+ */
+public function history()
+{
+    $orders = Order::with([
+        'items',
+        'payment'
+    ])
+    ->where(function ($query) {
+        $query->where('status', 'Sudah Diambil')
+              ->orWhere('status', 'Dibatalkan');
+    })
+    ->latest()
+    ->get();
 
-        return view('kasir.history', compact(
-            'orders'
-        ));
-    }
-
+    return view('kasir.history', compact('orders'));
+}
 
     /**
      * =========================================================
@@ -333,52 +392,344 @@ class KasirController extends Controller
     public function storeOrder(Request $request)
     {
         $request->validate([
-            'customer' => 'required|string|max:100',
-            'table' => 'required|string|max:50',
-            'items' => 'required|string',
-            'total' => 'required|numeric|min:0',
+            'customer' => [
+                'required',
+                'string',
+                'max:100'
+            ],
+
+            'table' => [
+                'required',
+                'string',
+                'max:50'
+            ],
+
+            'items' => [
+                'required',
+                'json'
+            ],
+
+            'total' => [
+                'required',
+                'numeric',
+                'min:0'
+            ],
         ]);
 
 
-        Order::create([
-
-            'order_number' =>
-                'ORD-' .
-                now()->format('YmdHis') .
-                '-' .
-                rand(100, 999),
-
-            'user_id' =>
-                auth()->id(),
-
-            'customer_name' =>
-                $request->customer,
-
-            'table_number' =>
-                $request->table,
-
-            'subtotal' =>
-                $request->total,
-
-            'tax' =>
-                0,
-
-            'total' =>
-                $request->total,
-
-            'status' =>
-                'Menunggu',
-
-            'payment_status' =>
-                'Belum Dibayar',
-        ]);
+        $items = json_decode(
+            $request->items,
+            true
+        );
 
 
-        return redirect()
-            ->route('kasir.orders')
-            ->with(
-                'success',
-                'Pesanan berhasil dibuat.'
-            );
+        /**
+         * Pastikan items berupa array dan tidak kosong.
+         */
+        if (!is_array($items) || count($items) === 0) {
+
+            return back()
+                ->withErrors([
+                    'items' =>
+                        'Silakan pilih minimal satu menu.'
+                ])
+                ->withInput();
+        }
+
+
+        /**
+         * Validasi setiap item.
+         */
+        foreach ($items as $item) {
+
+            if (
+                !is_array($item) ||
+                empty($item['product_id']) ||
+                !isset($item['quantity']) ||
+                (int) $item['quantity'] < 1
+            ) {
+
+                return back()
+                    ->withErrors([
+                        'items' =>
+                            'Data menu tidak valid. Silakan pilih menu kembali.'
+                    ])
+                    ->withInput();
+            }
+        }
+
+
+        /**
+         * =====================================================
+         * VALIDASI MEJA
+         * =====================================================
+         */
+        $table = trim($request->table);
+
+
+        if (strcasecmp($table, 'Take Away') === 0) {
+
+            $table = 'Take Away';
+
+        } else {
+
+            $table = strtoupper($table);
+
+
+            if (
+                !preg_match(
+                    '/^[A-Z](?:0[1-9]|[1-9][0-9]|100)$/',
+                    $table
+                )
+            ) {
+
+                return back()
+                    ->withErrors([
+                        'table' =>
+                            'Nomor meja tidak valid. Pilih meja A01-Z100 atau Take Away.'
+                    ])
+                    ->withInput();
+            }
+        }
+
+
+        try {
+
+            DB::transaction(function () use (
+                $request,
+                $items,
+                $table
+            ) {
+
+                /**
+                 * =================================================
+                 * CEK MEJA
+                 * =================================================
+                 *
+                 * Meja dianggap terpakai jika order:
+                 *
+                 * Menunggu
+                 * atau
+                 * Diproses
+                 */
+                if ($table !== 'Take Away') {
+
+                    $tableTaken = Order::where(
+                            'table_number',
+                            $table
+                        )
+                        ->whereIn(
+                            'status',
+                            [
+                                'Menunggu',
+                                'Diproses'
+                            ]
+                        )
+                        ->lockForUpdate()
+                        ->exists();
+
+
+                    if ($tableTaken) {
+
+                        throw new \RuntimeException(
+                            "Meja {$table} sedang digunakan. Silakan pilih meja lain."
+                        );
+                    }
+                }
+
+
+                /**
+                 * =================================================
+                 * HITUNG SUBTOTAL
+                 * =================================================
+                 */
+                $subtotal = 0;
+
+
+                /**
+                 * =================================================
+                 * BUAT NOMOR ORDER
+                 * =================================================
+                 */
+                $orderNumber =
+                    'ORD-' .
+                    now()->format('YmdHis') .
+                    '-' .
+                    random_int(100, 999);
+
+
+                /**
+                 * Pastikan nomor order unik.
+                 */
+                while (
+                    Order::where(
+                        'order_number',
+                        $orderNumber
+                    )->exists()
+                ) {
+
+                    $orderNumber =
+                        'ORD-' .
+                        now()->format('YmdHis') .
+                        '-' .
+                        random_int(100, 999);
+                }
+
+
+                /**
+                 * =================================================
+                 * BUAT ORDER
+                 * =================================================
+                 */
+                $order = Order::create([
+                    'order_number' => $orderNumber,
+
+                    'user_id' => auth()->id(),
+
+                    'customer_name' =>
+                        trim($request->customer),
+
+                    'table_number' => $table,
+
+                    'subtotal' => 0,
+
+                    'tax' => 0,
+
+                    'total' => 0,
+
+                    /**
+                     * Order baru belum dibayar.
+                     */
+                    'status' => 'Menunggu',
+
+                    'payment_status' =>
+                        'Belum Dibayar',
+                ]);
+
+
+                /**
+                 * =================================================
+                 * SIMPAN ORDER ITEMS
+                 * =================================================
+                 */
+                foreach ($items as $item) {
+
+                    $product = Product::where(
+                            'id',
+                            (int) $item['product_id']
+                        )
+                        ->where(
+                            'is_available',
+                            true
+                        )
+                        ->first();
+
+
+                    if (!$product) {
+
+                        throw new \RuntimeException(
+                            'Produk tidak ditemukan atau sudah tidak tersedia.'
+                        );
+                    }
+
+
+                    $quantity =
+                        (int) $item['quantity'];
+
+
+                    if ($quantity < 1) {
+
+                        throw new \RuntimeException(
+                            "Jumlah {$product->name} tidak valid."
+                        );
+                    }
+
+
+                    $itemSubtotal =
+                        (float) $product->price *
+                        $quantity;
+
+
+                    $subtotal += $itemSubtotal;
+
+
+                    OrderItem::create([
+                        'order_id' => $order->id,
+
+                        'product_id' => $product->id,
+
+                        'product_name' =>
+                            $product->name,
+
+                        'quantity' =>
+                            $quantity,
+
+                        'price' =>
+                            $product->price,
+
+                        'subtotal' =>
+                            $itemSubtotal,
+                    ]);
+                }
+
+
+                /**
+                 * =================================================
+                 * TOTAL
+                 * =================================================
+                 */
+                $tax = 0;
+
+                $total =
+                    $subtotal +
+                    $tax;
+
+
+                $order->update([
+                    'subtotal' =>
+                        $subtotal,
+
+                    'tax' =>
+                        $tax,
+
+                    'total' =>
+                        $total,
+                ]);
+            });
+
+
+            /**
+             * Berhasil membuat order.
+             */
+            return redirect()
+                ->route('kasir.orders')
+                ->with(
+                    'success',
+                    'Pesanan berhasil disimpan ke database.'
+                );
+
+
+        } catch (\RuntimeException $e) {
+
+            return back()
+                ->withErrors([
+                    'order' =>
+                        $e->getMessage()
+                ])
+                ->withInput();
+
+
+        } catch (\Throwable $e) {
+
+            report($e);
+
+
+            return back()
+                ->withErrors([
+                    'order' =>
+                        'Pesanan gagal disimpan ke database. Periksa struktur tabel orders/order_items dan log Laravel.'
+                ])
+                ->withInput();
+        }
     }
 }

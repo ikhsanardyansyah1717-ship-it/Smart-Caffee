@@ -4,6 +4,8 @@
 
 @section('content')
 
+<div class="kitchen-page">
+
 <header class="topbar">
 
     <div>
@@ -91,7 +93,7 @@
         @forelse($orders as $order)
 
             <div
-                class="order-card"
+                class="order-card kitchen-order-card"
                 data-priority="{{ $order->priority ?? 'normal' }}"
             >
 
@@ -144,7 +146,7 @@
                 </div>
 
 
-                <div class="order-actions">
+                <div class="order-actions kitchen-order-actions">
 
                     <form
                         action="{{ route('kitchen.orders.process', $order->id) }}"
@@ -187,5 +189,7 @@
     </div>
 
 </section>
+
+</div>
 
 @endsection

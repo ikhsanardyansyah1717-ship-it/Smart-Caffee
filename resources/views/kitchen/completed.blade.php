@@ -4,6 +4,8 @@
 
 @section('content')
 
+<div class="kitchen-page">
+
 <header class="topbar">
 
     <div>
@@ -95,7 +97,7 @@
         @forelse($orders as $order)
 
             <div
-                class="order-card"
+                class="order-card kitchen-order-card"
                 data-priority="{{ $order->priority ?? 'normal' }}"
             >
 
@@ -148,7 +150,7 @@
                 </div>
 
 
-                <div class="order-actions">
+                <div class="order-actions kitchen-order-actions pickup-actions">
 
                     <div class="done-text">
 
@@ -157,6 +159,18 @@
                         Pesanan siap diambil
 
                     </div>
+
+                    <form
+                        action="{{ route('kitchen.orders.pickup', $order->id) }}"
+                        method="POST"
+                        onsubmit="return openPickupModal(this)"
+                    >
+                        @csrf
+                        <button type="submit" class="action-btn btn-success">
+                            <i class="fa-solid fa-hand-holding-heart"></i>
+                            Konfirmasi Sudah Diambil
+                        </button>
+                    </form>
 
                 </div>
 
@@ -179,5 +193,69 @@
     </div>
 
 </section>
+
+</div>
+
+
+{{-- MODAL KONFIRMASI PICKUP --}}
+<div class="pickup-modal" id="pickupModal" aria-hidden="true">
+    <div class="pickup-modal-backdrop" onclick="closePickupModal()"></div>
+    <div class="pickup-modal-card" role="dialog" aria-modal="true" aria-labelledby="pickupModalTitle">
+        <div class="pickup-modal-icon">
+            <i class="fa-solid fa-hand-holding-heart"></i>
+        </div>
+        <div class="pickup-modal-content">
+            <span class="pickup-modal-label">KONFIRMASI PESANAN</span>
+            <h3 id="pickupModalTitle">Pesanan sudah diambil?</h3>
+            <p>Pastikan pesanan benar-benar sudah diterima pelanggan sebelum mengubah statusnya menjadi <strong>Sudah Diambil</strong>.</p>
+        </div>
+        <div class="pickup-modal-actions">
+            <button type="button" class="pickup-modal-cancel" onclick="closePickupModal()">
+                Batal
+            </button>
+            <button type="button" class="pickup-modal-confirm" onclick="submitPickupForm()">
+                <i class="fa-solid fa-check"></i>
+                Ya, Sudah Diambil
+            </button>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    let pickupFormTarget = null;
+
+    function openPickupModal(form) {
+        pickupFormTarget = form;
+        const modal = document.getElementById('pickupModal');
+        if (!modal) return true;
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('pickup-modal-open');
+        return false;
+    }
+
+    function closePickupModal() {
+        const modal = document.getElementById('pickupModal');
+        if (!modal) return;
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('pickup-modal-open');
+        pickupFormTarget = null;
+    }
+
+    function submitPickupForm() {
+        if (!pickupFormTarget) return;
+        const form = pickupFormTarget;
+        pickupFormTarget = null;
+        form.removeAttribute('onsubmit');
+        form.submit();
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') closePickupModal();
+    });
+</script>
+@endpush
 
 @endsection

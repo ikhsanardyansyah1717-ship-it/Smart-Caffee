@@ -150,6 +150,9 @@ Route::middleware(['auth', 'role:kitchen'])
 
         Route::post('/orders/{id}/complete', [KitchenController::class, 'complete'])
             ->name('orders.complete');
+
+        Route::post('/orders/{id}/pickup', [KitchenController::class, 'confirmPickup'])
+            ->name('orders.pickup');
     });
 
 

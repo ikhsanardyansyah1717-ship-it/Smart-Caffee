@@ -4,6 +4,8 @@
 
 @section('content')
 
+<div class="kitchen-page">
+
 @php
     $totalOrders = $orders->count();
 
@@ -107,7 +109,7 @@
 
             @forelse($orders->where('status', 'Menunggu')->take(5) as $order)
 
-                <div class="order-card">
+                <div class="order-card kitchen-order-card">
 
                     <div class="order-top">
 
@@ -152,7 +154,7 @@
 
                     </div>
 
-                    <div class="order-actions">
+                    <div class="order-actions kitchen-order-actions">
 
                         <form
                             action="{{ route('kitchen.orders.process', $order->id) }}"
@@ -244,5 +246,7 @@
     </div>
 
 </section>
+
+</div>
 
 @endsection
