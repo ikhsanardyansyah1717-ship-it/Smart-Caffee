@@ -10,6 +10,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CustomerManagementController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ReportController;
 
 
 /*
@@ -167,11 +168,17 @@ Route::middleware(['auth', 'role:owner'])
     ->name('owner.')
     ->group(function () {
 
-        Route::get('/dashboard', [OwnerController::class, 'dashboard'])
+         Route::get('/dashboard', [OwnerController::class, 'dashboard'])
             ->name('dashboard');
 
         Route::get('/sales', [OwnerController::class, 'sales'])
             ->name('sales');
+
+        Route::get('/sales/export/excel', [OwnerController::class, 'exportSalesExcel'])
+            ->name('sales.export.excel');
+
+        Route::get('/sales/export/pdf', [OwnerController::class, 'exportSalesPdf'])
+            ->name('sales.export.pdf');
 
         Route::resource('/products', ProductController::class);
 
@@ -179,8 +186,14 @@ Route::middleware(['auth', 'role:owner'])
 
         Route::resource('/customers', CustomerManagementController::class);
 
-        Route::get('/reports', [OwnerController::class, 'reports'])
+        Route::get('/reports', [ReportController::class, 'index'])
             ->name('reports');
+
+        Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])
+            ->name('reports.export.excel');
+
+        Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])
+            ->name('reports.export.pdf');
     });
 
 

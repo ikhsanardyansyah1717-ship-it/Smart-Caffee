@@ -577,3 +577,1430 @@ body.modal-open {
     }
 
 }
+
+
+
+
+/* =========================================================
+   STATUS OPERASIONAL
+   ========================================================= */
+
+.operational-panel {
+    overflow: hidden;
+}
+
+.operational-panel-head {
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+
+/* Header */
+
+.operational-panel-head h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.operational-panel-head p {
+    margin: 6px 0 0;
+    color: #a1846c;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   LIVE BADGE
+   ========================================================= */
+
+.operational-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 7px 12px;
+
+    border-radius: 999px;
+
+    background: var(--green-soft);
+    color: var(--green);
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* =========================================================
+   STATUS AKTIF - STATUS OPERASIONAL
+========================================================= */
+
+.operational-live {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 30px;
+    padding: 7px 12px;
+
+    border-radius: 999px;
+
+    background: var(--green-soft);
+    color: var(--green);
+
+    font-size: 12px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+.operational-live-dot {
+    width: 7px;
+    height: 7px;
+
+    flex: 0 0 7px;
+
+    border-radius: 50%;
+
+    background: var(--green);
+
+    box-shadow:
+        0 0 0 4px rgba(35, 148, 94, 0.10);
+}
+
+
+/* =========================================================
+   LIST
+   ========================================================= */
+
+.operational-list {
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* =========================================================
+   ITEM
+   ========================================================= */
+
+.operational-item {
+    position: relative;
+
+    display: grid;
+
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+
+    align-items: center;
+
+    gap: 12px;
+
+    min-height: 70px;
+
+    border-bottom: 1px solid var(--line);
+
+    transition:
+        background .2s ease,
+        padding-left .2s ease;
+}
+
+.operational-item:last-child {
+    border-bottom: 0;
+}
+
+
+/* Hover */
+
+.operational-item:hover {
+    background: #fcfaf7;
+    padding-left: 7px;
+}
+
+
+/* =========================================================
+   ICON
+   ========================================================= */
+
+.operational-icon {
+    width: 40px;
+    height: 40px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 12px;
+
+    font-size: 15px;
+}
+
+
+/* Menunggu */
+
+.operational-item.waiting .operational-icon {
+    background: #fff1dc;
+    color: #c77a1b;
+}
+
+
+/* Diproses */
+
+.operational-item.processing .operational-icon {
+    background: var(--brown-soft);
+    color: var(--brown);
+}
+
+
+/* Siap Diambil */
+
+.operational-item.ready .operational-icon {
+    background: var(--green-soft);
+    color: var(--green);
+}
+
+
+/* Menu */
+
+.operational-item.menu .operational-icon {
+    background: #f3e9df;
+    color: #8b603d;
+}
+
+
+/* =========================================================
+   NAME
+   ========================================================= */
+
+.operational-name {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+}
+
+.operational-name strong {
+    color: #3f342c;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.operational-name span {
+    margin-top: 4px;
+
+    color: #aa9685;
+
+    font-size: 10px;
+
+    line-height: 1.3;
+}
+
+
+/* =========================================================
+   NUMBER
+   ========================================================= */
+
+.operational-number {
+    min-width: 35px;
+
+    color: #171717;
+
+    font-size: 19px;
+    font-weight: 800;
+
+    text-align: right;
+}
+
+
+/* =========================================================
+   ACCENT
+   ========================================================= */
+
+.operational-item::before {
+    content: "";
+
+    position: absolute;
+
+    left: -22px;
+    top: 50%;
+
+    width: 3px;
+    height: 0;
+
+    transform: translateY(-50%);
+
+    border-radius: 0 4px 4px 0;
+
+    transition: height .2s ease;
+}
+
+.operational-item:hover::before {
+    height: 45%;
+}
+
+.operational-item.waiting::before {
+    background: #d9922e;
+}
+
+.operational-item.processing::before {
+    background: var(--brown);
+}
+
+.operational-item.ready::before {
+    background: var(--green);
+}
+
+.operational-item.menu::before {
+    background: #9b7048;
+}
+
+
+/* =========================================================
+   TRANSAKSI TERBARU - FULL WIDTH
+   ========================================================= */
+
+.transaction-panel {
+    width: 100%;
+    max-width: none;
+
+    margin-top: 22px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .operational-item {
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+        gap: 10px;
+    }
+
+    .operational-icon {
+        width: 37px;
+        height: 37px;
+    }
+
+    .operational-name strong {
+        font-size: 11px;
+    }
+
+    .operational-name span {
+        font-size: 9px;
+    }
+
+    .operational-number {
+        font-size: 18px;
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .operational-live {
+        padding: 6px 9px;
+        font-size: 10px;
+    }
+
+}
+
+
+
+
+/* =========================================================
+   TRANSAKSI TERBARU - FULL WIDTH
+   ========================================================= */
+
+.transaction-panel {
+    width: 100%;
+    grid-column: 1 / -1;
+    margin-top: 22px;
+}
+
+.transaction-panel .table-wrap {
+    width: 100%;
+}
+
+.transaction-panel table {
+    width: 100%;
+    min-width: 760px;
+}
+
+.table-empty {
+    text-align: center;
+    color: #888;
+    padding: 24px;
+}
+
+
+/* =========================================================
+   CUSTOMER MANAGEMENT
+========================================================= */
+
+.customer-panel {
+    width: 100%;
+    margin-top: 20px;
+}
+
+
+/* =========================================================
+   ALERT
+========================================================= */
+
+.customer-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    width: 100%;
+
+    padding: 14px 18px;
+    margin-bottom: 18px;
+
+    border-radius: 14px;
+
+    font-size: 14px;
+}
+
+.customer-alert.success {
+    background: #edf8f1;
+    color: #218653;
+    border: 1px solid #d6eddf;
+}
+
+.customer-alert.error {
+    background: #fff0ef;
+    color: #c94a42;
+    border: 1px solid #f4d3d0;
+}
+
+
+/* =========================================================
+   CUSTOMER SEARCH
+========================================================= */
+
+.customer-search {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    width: min(420px, 100%);
+}
+
+.customer-search > i {
+    position: absolute;
+    left: 16px;
+
+    color: #9c8069;
+
+    font-size: 15px;
+
+    pointer-events: none;
+}
+
+.customer-search input {
+    width: 100%;
+
+    height: 48px;
+
+    padding: 0 42px;
+
+    border: 1px solid #eadfd3;
+
+    border-radius: 14px;
+
+    outline: none;
+
+    background: #fff;
+
+    color: #24170f;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    transition: .2s ease;
+}
+
+.customer-search input::placeholder {
+    color: #aa9584;
+}
+
+.customer-search input:focus {
+    border-color: #9a5515;
+
+    box-shadow:
+        0 0 0 3px rgba(154, 85, 21, .08);
+}
+
+
+/* CLEAR SEARCH */
+
+.search-clear {
+    position: absolute;
+
+    right: 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 25px;
+    height: 25px;
+
+    border-radius: 50%;
+
+    color: #987b64;
+
+    text-decoration: none;
+
+    transition: .2s ease;
+}
+
+.search-clear:hover {
+    background: #f5eadf;
+    color: #713b0a;
+}
+
+
+/* =========================================================
+   CUSTOMER NAME
+========================================================= */
+
+.customer-name {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.customer-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 40px;
+    height: 40px;
+
+    border-radius: 12px;
+
+    background: #f4e7d8;
+
+    color: #8b4d0b;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.customer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.customer-info strong {
+    color: #21160f;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.customer-info span {
+    color: #aa927f;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   EMAIL
+========================================================= */
+
+.customer-email {
+    color: #5e5148;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   ORDER COUNT
+========================================================= */
+
+.order-count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+
+    color: #33251b;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.order-count small {
+    color: #9c8877;
+
+    font-size: 12px;
+    font-weight: 500;
+}
+
+
+/* =========================================================
+   JOIN DATE
+========================================================= */
+
+.join-date {
+    color: #5e5148;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   EMPTY TABLE
+========================================================= */
+
+.table-empty {
+    padding: 50px 20px !important;
+
+    text-align: center;
+}
+
+.table-empty .empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 54px;
+    height: 54px;
+
+    margin: 0 auto 14px;
+
+    border-radius: 16px;
+
+    background: #f5e9dc;
+
+    color: #92500b;
+
+    font-size: 20px;
+}
+
+.table-empty strong {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #2a1d15;
+
+    font-size: 15px;
+}
+
+.table-empty span {
+    display: block;
+
+    color: #a28e7d;
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   CUSTOMER PANEL TABLE
+========================================================= */
+
+.customer-panel .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.customer-panel table {
+    width: 100%;
+    min-width: 760px;
+
+    border-collapse: collapse;
+}
+
+.customer-panel th {
+    padding: 16px 14px;
+
+    border-bottom: 1px solid #eadfd3;
+
+    color: #9b806b;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: .08em;
+
+    text-align: left;
+    text-transform: uppercase;
+
+    white-space: nowrap;
+}
+
+.customer-panel td {
+    padding: 17px 14px;
+
+    border-bottom: 1px solid #f0e7de;
+
+    vertical-align: middle;
+}
+
+.customer-panel tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.customer-panel tbody tr {
+    transition: background .2s ease;
+}
+
+.customer-panel tbody tr:hover {
+    background: #fcf9f6;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .customer-panel .panel-head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 18px;
+    }
+
+    .customer-search {
+        width: 100%;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .customer-panel {
+        border-radius: 18px;
+    }
+
+    .customer-panel th,
+    .customer-panel td {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+}
+
+
+/* =========================================================
+   OWNER DASHBOARD
+   STATUS OPERASIONAL + TRANSAKSI
+========================================================= */
+
+
+/* =========================================================
+   REFRESH BUTTON
+========================================================= */
+
+.owner-refresh-btn {
+    position: relative;
+    transition:
+        transform 0.2s ease,
+        background-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.owner-refresh-btn:hover {
+    transform: translateY(-1px);
+}
+
+.owner-refresh-btn:active {
+    transform: scale(0.96);
+}
+
+.owner-refresh-btn:disabled {
+    cursor: wait;
+    opacity: 0.75;
+}
+
+.owner-refresh-btn.is-refreshing {
+    box-shadow: 0 0 0 4px rgba(139, 79, 15, 0.08);
+}
+
+
+/* =========================================================
+   STAT VALUE
+========================================================= */
+
+.stat-value-unavailable {
+    font-size: 16px;
+    color: #999;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   CHART EMPTY
+========================================================= */
+
+.chart-empty {
+    width: 100%;
+    min-height: 180px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    gap: 10px;
+
+    color: #9a806a;
+    font-size: 14px;
+}
+
+.chart-empty i {
+    font-size: 28px;
+    color: #c29b70;
+}
+
+
+/* =========================================================
+   STATUS OPERASIONAL
+========================================================= */
+
+.operational-panel {
+    min-width: 0;
+}
+
+.operational-panel-head {
+    align-items: flex-start;
+}
+
+
+/* Label kecil di atas judul */
+
+.operational-eyebrow {
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    letter-spacing: 0.12em;
+
+    color: #a17b5c;
+}
+
+
+/* =========================================================
+   STATUS AKTIF
+========================================================= */
+
+.operational-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 7px 12px;
+
+    border-radius: 999px;
+
+    background: #eaf7f0;
+    color: #168653;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+.operational-live-dot {
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: #20a464;
+
+    box-shadow:
+        0 0 0 4px rgba(32, 164, 100, 0.10);
+}
+
+
+/* =========================================================
+   LIST
+========================================================= */
+
+.operational-list {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    margin-top: 14px;
+}
+
+
+/* =========================================================
+   ITEM
+   BUKAN KOTAK.
+   MEMANJANG SECARA HORIZONTAL.
+========================================================= */
+
+.operational-item {
+    width: 100%;
+
+    min-height: 76px;
+
+    display: grid;
+
+    grid-template-columns:
+        48px
+        minmax(0, 1fr)
+        auto;
+
+    align-items: center;
+
+    column-gap: 14px;
+
+    padding: 12px 0;
+
+    border-bottom: 1px solid #eee2d6;
+
+    transition:
+        background-color 0.2s ease,
+        padding-left 0.2s ease,
+        padding-right 0.2s ease;
+}
+
+
+/* Item terakhir tidak memiliki garis bawah */
+
+.operational-item:last-child {
+    border-bottom: none;
+}
+
+
+/* Hover */
+
+.operational-item:hover {
+    padding-left: 8px;
+    padding-right: 8px;
+
+    background: rgba(247, 239, 229, 0.45);
+
+    border-radius: 12px;
+}
+
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.operational-icon {
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 13px;
+
+    font-size: 16px;
+
+    flex-shrink: 0;
+}
+
+
+/* Menunggu */
+
+.operational-item.waiting .operational-icon {
+    background: #fff1dc;
+    color: #c47a12;
+}
+
+
+/* Diproses */
+
+.operational-item.processing .operational-icon {
+    background: #f3e8da;
+    color: #8b4f0f;
+}
+
+
+/* Siap diambil */
+
+.operational-item.ready .operational-icon {
+    background: #e4f5ed;
+    color: #15915a;
+}
+
+
+/* Menu */
+
+.operational-item.menu .operational-icon {
+    background: #f2e8dd;
+    color: #8b4f0f;
+}
+
+
+/* =========================================================
+   NAMA + DESKRIPSI
+========================================================= */
+
+.operational-name {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.operational-name strong {
+    display: block;
+
+    color: #2a211b;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    line-height: 1.3;
+}
+
+.operational-name span {
+    display: block;
+
+    color: #ad9179;
+
+    font-size: 11px;
+
+    line-height: 1.35;
+
+    white-space: normal;
+}
+
+
+/* =========================================================
+   NUMBER
+========================================================= */
+
+.operational-number {
+    min-width: 30px;
+
+    text-align: right;
+
+    color: #17120f;
+
+    font-size: 18px;
+    font-weight: 800;
+
+    line-height: 1;
+
+    padding-left: 10px;
+}
+
+
+/* =========================================================
+   TRANSAKSI TERBARU
+   FULL WIDTH
+========================================================= */
+
+.transaction-panel {
+    width: 100%;
+
+    margin-top: 22px;
+
+    grid-column: 1 / -1;
+}
+
+
+/*
+   Jika parent .grid menggunakan grid,
+   transaksi tetap memenuhi semua kolom.
+*/
+
+.grid > .transaction-panel {
+    grid-column: 1 / -1;
+}
+
+
+/* =========================================================
+   ORDER NUMBER
+========================================================= */
+
+.order-number {
+    font-size: 13px;
+
+    color: #30251e;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   TABLE EMPTY
+========================================================= */
+
+.table-empty {
+    padding: 32px 24px !important;
+
+    text-align: center;
+}
+
+.table-empty-content {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    color: #9c836d;
+
+    font-size: 13px;
+}
+
+.table-empty-content i {
+    font-size: 24px;
+
+    color: #c3a281;
+}
+
+
+/* =========================================================
+   TABLE WRAP
+========================================================= */
+
+.transaction-panel .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+
+/* =========================================================
+   TRANSACTION TABLE
+========================================================= */
+
+.transaction-panel table {
+    width: 100%;
+    min-width: 760px;
+
+    border-collapse: collapse;
+}
+
+.transaction-panel table th {
+    white-space: nowrap;
+}
+
+.transaction-panel table td {
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   BADGE
+========================================================= */
+
+.transaction-panel .badge {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 28px;
+
+    padding: 5px 10px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+.transaction-panel .badge.green {
+    background: #e5f5ed;
+    color: #158552;
+}
+
+
+/* =========================================================
+   WEEKLY SALES PANEL
+========================================================= */
+
+.weekly-sales-panel {
+    min-width: 0;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    .operational-item {
+        grid-template-columns:
+            44px
+            minmax(0, 1fr)
+            auto;
+
+        column-gap: 12px;
+    }
+
+    .operational-icon {
+        width: 42px;
+        height: 42px;
+    }
+
+    .operational-name strong {
+        font-size: 12px;
+    }
+
+    .operational-name span {
+        font-size: 10px;
+    }
+
+    .operational-number {
+        font-size: 17px;
+    }
+
+}
+
+
+@media (max-width: 900px) {
+
+    .transaction-panel {
+        margin-top: 18px;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .operational-panel-head {
+        gap: 12px;
+    }
+
+    .operational-live {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+
+    .operational-item {
+        min-height: 70px;
+
+        grid-template-columns:
+            42px
+            minmax(0, 1fr)
+            auto;
+
+        column-gap: 10px;
+
+        padding: 11px 0;
+    }
+
+    .operational-icon {
+        width: 40px;
+        height: 40px;
+
+        border-radius: 11px;
+    }
+
+    .operational-name strong {
+        font-size: 12px;
+    }
+
+    .operational-name span {
+        font-size: 10px;
+    }
+
+    .operational-number {
+        font-size: 16px;
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .operational-panel-head {
+        align-items: flex-start;
+    }
+
+    .operational-live {
+        margin-top: 2px;
+    }
+
+    .operational-item {
+        grid-template-columns:
+            40px
+            minmax(0, 1fr)
+            auto;
+
+        column-gap: 9px;
+    }
+
+    .operational-icon {
+        width: 38px;
+        height: 38px;
+    }
+
+    .operational-name strong {
+        font-size: 11px;
+    }
+
+    .operational-name span {
+        font-size: 9px;
+    }
+
+    .operational-number {
+        font-size: 15px;
+    }
+
+}
+
+/* =========================================================
+   OWNER TRANSACTION TABLE - COLUMN ALIGNMENT
+========================================================= */
+
+.owner-transaction-table {
+    width: 100%;
+    min-width: 760px;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.owner-transaction-table .col-order {
+    width: 30%;
+}
+
+.owner-transaction-table .col-customer {
+    width: 20%;
+}
+
+.owner-transaction-table .col-cashier {
+    width: 15%;
+}
+
+.owner-transaction-table .col-total {
+    width: 15%;
+}
+
+.owner-transaction-table .col-status {
+    width: 20%;
+}
+
+.owner-transaction-table th,
+.owner-transaction-table td {
+    vertical-align: middle;
+}
+
+.owner-transaction-table th {
+    text-align: left;
+    white-space: nowrap;
+}
+
+.owner-transaction-table td {
+    white-space: nowrap;
+}
+
+.transaction-customer,
+.transaction-cashier {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+.transaction-total {
+    white-space: nowrap;
+}
+
+.transaction-empty-value {
+    color: var(--muted);
+}
+
+.owner-transaction-table .badge {
+    white-space: nowrap;
+}
+
+
+/* TOTAL DAN STATUS TETAP RAPI */
+.owner-transaction-table th:nth-child(4),
+.owner-transaction-table td:nth-child(4) {
+    text-align: left;
+}
+
+.owner-transaction-table th:nth-child(5),
+.owner-transaction-table td:nth-child(5) {
+    text-align: left;
+}
+
+
+/* MOBILE */
+@media (max-width: 760px) {
+
+    .owner-transaction-table {
+        min-width: 760px;
+    }
+
+}
+
+/* =========================================================
+   OWNER REFRESH BUTTON
+========================================================= */
+
+.owner-refresh-btn {
+    position: relative;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 42px;
+    height: 42px;
+
+    transition:
+        transform .2s ease,
+        background-color .2s ease,
+        box-shadow .2s ease;
+}
+
+.owner-refresh-btn:hover {
+    background: var(--brown-soft);
+    border-color: #dfcdb9;
+    transform: translateY(-1px);
+}
+
+.owner-refresh-btn:active {
+    transform: scale(.94);
+}
+
+.owner-refresh-btn:disabled {
+    cursor: wait;
+    opacity: .75;
+}
+
+.owner-refresh-btn.is-refreshing {
+    background: var(--brown-soft);
+    box-shadow:
+        0 0 0 4px rgba(118, 63, 6, .08);
+}
+
+.owner-refresh-btn.is-refreshing i {
+    color: var(--brown);
+}

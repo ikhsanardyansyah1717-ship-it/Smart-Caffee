@@ -1,46 +1,364 @@
 @extends('layouts.owner')
-@section('title','Pelanggan - Quattro Coffee')
+
+@section('title', 'Pelanggan - Quattro Coffee')
+
 @section('content')
+
 <div class="grid">
-<header class="page-head"><div><span class="eyebrow">CUSTOMER MANAGEMENT</span><h1>Pelanggan</h1><p>Lihat pertumbuhan dan aktivitas pelanggan.</p></div><a class="btn btn-primary" href="{{ route('owner.customers.create') }}"><i class="fa-solid fa-user-plus"></i> Tambah Pelanggan</a></header>
 
-@if (session('success'))
-<div class="alert alert-success" style="background:#e9f9ee;color:#1e8a4c;padding:12px 16px;border-radius:10px;margin-bottom:16px;"><i class="fa-solid fa-circle-check"></i> {{ session('success') }}</div>
-@endif
+    {{-- =========================================================
+         HEADER
+    ========================================================== --}}
+    <header class="page-head">
 
-<section class="stats">
-<article class="stat-card"><div class="stat-icon"><i class="fa-solid fa-user-group"></i></div><div><div class="stat-label">Total Pelanggan</div><div class="stat-value">{{ $totalCustomers }}</div></div></article>
-<article class="stat-card"><div class="stat-icon green"><i class="fa-solid fa-user-plus"></i></div><div><div class="stat-label">Pelanggan Baru</div><div class="stat-value">{{ $newThisMonth }}</div><div class="stat-note">Bulan ini</div></div></article>
-</section>
+        <div>
 
-<div class="panel">
-<div class="panel-head">
-    <div><h2>Daftar Pelanggan</h2><p>Semua akun dengan role customer.</p></div>
-    <form method="GET" action="{{ route('owner.customers.index') }}" class="search" style="max-width:280px">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari pelanggan..." onchange="this.form.submit()">
-    </form>
+            <span class="eyebrow">
+                CUSTOMER MANAGEMENT
+            </span>
+
+            <h1>
+                Pelanggan
+            </h1>
+
+            <p>
+                Lihat pertumbuhan dan aktivitas pelanggan.
+            </p>
+
+        </div>
+
+    </header>
+
+
+    {{-- =========================================================
+         ALERT SUCCESS
+    ========================================================== --}}
+    @if(session('success'))
+
+        <div class="customer-alert success">
+
+            <i class="fa-solid fa-circle-check"></i>
+
+            <span>
+                {{ session('success') }}
+            </span>
+
+        </div>
+
+    @endif
+
+
+    {{-- =========================================================
+         ALERT ERROR
+    ========================================================== --}}
+    @if($errors->any())
+
+        <div class="customer-alert error">
+
+            <i class="fa-solid fa-circle-exclamation"></i>
+
+            <div>
+
+                @foreach($errors->all() as $error)
+
+                    <div>
+                        {{ $error }}
+                    </div>
+
+                @endforeach
+
+            </div>
+
+        </div>
+
+    @endif
+
+
+    {{-- =========================================================
+         STATISTIK PELANGGAN
+    ========================================================== --}}
+    <section class="stats">
+
+
+        {{-- TOTAL PELANGGAN --}}
+        <article class="stat-card">
+
+            <div class="stat-icon">
+
+                <i class="fa-solid fa-user-group"></i>
+
+            </div>
+
+            <div>
+
+                <div class="stat-label">
+                    Total Pelanggan
+                </div>
+
+                <div class="stat-value">
+                    {{ $totalCustomers ?? 0 }}
+                </div>
+
+            </div>
+
+        </article>
+
+
+
+        {{-- PELANGGAN BARU --}}
+        <article class="stat-card">
+
+            <div class="stat-icon green">
+
+                <i class="fa-solid fa-user-plus"></i>
+
+            </div>
+
+            <div>
+
+                <div class="stat-label">
+                    Pelanggan Baru
+                </div>
+
+                <div class="stat-value">
+                    {{ $newThisMonth ?? 0 }}
+                </div>
+
+                <div class="stat-note">
+                    Bulan ini
+                </div>
+
+            </div>
+
+        </article>
+
+    </section>
+
+
+
+    {{-- =========================================================
+         DAFTAR PELANGGAN
+    ========================================================== --}}
+    <section class="panel customer-panel">
+
+
+        {{-- PANEL HEADER --}}
+        <div class="panel-head">
+
+            <div>
+
+                <h2>
+                    Daftar Pelanggan
+                </h2>
+
+                <p>
+                    Semua akun dengan role customer.
+                </p>
+
+            </div>
+
+
+            {{-- =================================================
+                 SEARCH
+            ================================================== --}}
+            <form
+                method="GET"
+                action="{{ route('owner.customers.index') }}"
+                class="customer-search"
+            >
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ request('q') }}"
+                    placeholder="Cari pelanggan..."
+                    autocomplete="off"
+                >
+
+                @if(request('q'))
+
+                    <a
+                        href="{{ route('owner.customers.index') }}"
+                        class="search-clear"
+                        title="Hapus pencarian"
+                    >
+
+                        <i class="fa-solid fa-xmark"></i>
+
+                    </a>
+
+                @endif
+
+            </form>
+
+        </div>
+
+
+
+        {{-- =====================================================
+             TABEL PELANGGAN
+        ====================================================== --}}
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Pelanggan
+                        </th>
+
+                        <th>
+                            Email
+                        </th>
+
+                        <th>
+                            Jumlah Pesanan
+                        </th>
+
+                        <th>
+                            Bergabung
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    @forelse($customers as $customer)
+
+                        <tr>
+
+                            {{-- =================================
+                                 NAMA PELANGGAN
+                            ================================== --}}
+                            <td>
+
+                                <div class="customer-name">
+
+                                    <div class="customer-avatar">
+
+                                        {{ strtoupper(
+                                            substr($customer->name, 0, 1)
+                                        ) }}
+
+                                    </div>
+
+
+                                    <div class="customer-info">
+
+                                        <strong>
+                                            {{ $customer->name }}
+                                        </strong>
+
+                                        <span>
+                                            Customer
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+
+                            {{-- =================================
+                                 EMAIL
+                            ================================== --}}
+                            <td>
+
+                                <span class="customer-email">
+
+                                    {{ $customer->email }}
+
+                                </span>
+
+                            </td>
+
+
+
+                            {{-- =================================
+                                 JUMLAH PESANAN
+                            ================================== --}}
+                            <td>
+
+                                <span class="order-count">
+
+                                    {{ $customer->orders_count }}
+
+                                    <small>
+                                        pesanan
+                                    </small>
+
+                                </span>
+
+                            </td>
+
+
+
+                            {{-- =================================
+                                 TANGGAL BERGABUNG
+                            ================================== --}}
+                            <td>
+
+                                <span class="join-date">
+
+                                    {{ $customer->created_at->format('d M Y') }}
+
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    @empty
+
+                        {{-- =====================================
+                             DATA KOSONG
+                        ====================================== --}}
+                        <tr>
+
+                            <td
+                                colspan="4"
+                                class="table-empty"
+                            >
+
+                                <div class="empty-icon">
+
+                                    <i class="fa-solid fa-users"></i>
+
+                                </div>
+
+                                <strong>
+                                    Belum ada pelanggan
+                                </strong>
+
+                                <span>
+                                    Pelanggan yang melakukan registrasi
+                                    akan muncul di sini.
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    @endforelse
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
 </div>
-<div class="table-wrap"><table><thead><tr><th>Pelanggan</th><th>Email</th><th>Jumlah Pesanan</th><th>Bergabung</th><th>Aksi</th></tr></thead><tbody>
-@forelse($customers as $customer)
-<tr>
-    <td><strong>{{ $customer->name }}</strong></td>
-    <td>{{ $customer->email }}</td>
-    <td>{{ $customer->orders_count }}</td>
-    <td>{{ $customer->created_at->format('d M Y') }}</td>
-    <td style="display:flex;gap:8px;">
-        <a href="{{ route('owner.customers.edit', $customer) }}" class="btn btn-light" style="padding:6px 12px;"><i class="fa-solid fa-pen"></i></a>
-        <form action="{{ route('owner.customers.destroy', $customer) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus pelanggan {{ $customer->name }}?');">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-light" style="padding:6px 12px;color:#d9534f;"><i class="fa-solid fa-trash"></i></button>
-        </form>
-    </td>
-</tr>
-@empty
-<tr><td colspan="5" style="text-align:center;color:#888;padding:24px;">Belum ada pelanggan terdaftar.</td></tr>
-@endforelse
-</tbody></table></div>
-</div>
-</div>
+
 @endsection
