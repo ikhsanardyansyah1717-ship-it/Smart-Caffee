@@ -1,0 +1,11 @@
+SMART-CAFFEE RECOVERY NOTE
+
+This project was restored from the Git branch 'ikhsan', which contains the later Kasir, Kitchen, Owner, receipt, and history work.
+The newer customer profile/favorites changes from the working folder were merged back in.
+
+IMPORTANT:
+1. Do NOT run: php artisan migrate:fresh
+2. Do NOT run seeders against the old production/development database if you need to preserve real orders/history.
+3. The MySQL data (orders, payments, history) is NOT stored inside this ZIP. It must be restored from the same MySQL database or an SQL backup.
+4. Run `php artisan migrate` only after checking which migrations have already been applied.
+5. Keep the existing .env database settings if they point to the database containing the real history.
