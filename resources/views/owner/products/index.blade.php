@@ -113,28 +113,11 @@
                 </option>
 
 
-                <option
-                    value="Coffee"
-                    {{ request('category') == 'Coffee' ? 'selected' : '' }}
-                >
-                    Coffee
-                </option>
-
-
-                <option
-                    value="Non Coffee"
-                    {{ request('category') == 'Non Coffee' ? 'selected' : '' }}
-                >
-                    Non Coffee
-                </option>
-
-
-                <option
-                    value="Food"
-                    {{ request('category') == 'Food' ? 'selected' : '' }}
-                >
-                    Food
-                </option>
+                @foreach(config('product_categories') as $category)
+                    <option value="{{ $category['value'] }}" {{ request('category') == $category['value'] ? 'selected' : '' }}>
+                        {{ $category['label'] }}
+                    </option>
+                @endforeach
 
             </select>
 
@@ -231,7 +214,7 @@
                     ====================================== --}}
                     <p>
 
-                        {{ $product->category }}
+                        {{ collect(config('product_categories'))->firstWhere('value', $product->category)['label'] ?? $product->category }}
 
                         ·
 

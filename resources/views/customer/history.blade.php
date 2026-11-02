@@ -22,6 +22,11 @@
 <div
     id="tab-history"
 >
+    @if (session('payment_notice'))
+        <div role="status" style="margin: 12px 16px; padding: 12px 14px; border-radius: 12px; background: #fff4e5; color: #754000; font-size: 14px;">
+            {{ session('payment_notice') }}
+        </div>
+    @endif
     <div id="history-container">
 
         @forelse($orders as $order)
@@ -62,9 +67,7 @@
                 };
 
 
-                $paymentStatus =
-                    $order->payment?->status
-                    ?? 'Belum ada pembayaran';
+                $paymentStatus = $order->payment?->status ?? 'Belum ada pembayaran';
 
 
                 $paymentMethod =
@@ -74,6 +77,7 @@
 
                 $isPaid =
                     $paymentStatus === 'Berhasil';
+
 
             @endphp
 
@@ -341,5 +345,5 @@
     window.quattroFavoriteIds = @json($favoriteIds);
     window.quattroProducts = @json($products);
 </script>
-<script src="{{ asset('js/customer.js') }}?v=14"></script>
+<script src="{{ asset('js/customer.js') }}?v=23"></script>
 @endpush

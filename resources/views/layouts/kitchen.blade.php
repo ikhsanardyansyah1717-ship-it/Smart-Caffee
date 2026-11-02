@@ -71,7 +71,7 @@
                 </a>
 
 
-                <!-- PESANAN BARU -->
+                <!-- PESANAN -->
                 <a
                     href="{{ route('kitchen.incoming') }}"
                     class="side-link {{ request()->routeIs('kitchen.incoming') ? 'active' : '' }}"
@@ -80,33 +80,12 @@
                     <i class="fa-solid fa-bell"></i>
 
                     <span>
-                        Pesanan Baru
+                        Pesanan
                     </span>
 
                     <b id="new-count">
                         {{ \App\Models\Order::where('payment_status', 'Dibayar')
                             ->where('status', 'Menunggu')
-                            ->count() }}
-                    </b>
-
-                </a>
-
-
-                <!-- SEDANG DIPROSES -->
-                <a
-                    href="{{ route('kitchen.processing') }}"
-                    class="side-link {{ request()->routeIs('kitchen.processing') ? 'active' : '' }}"
-                >
-
-                    <i class="fa-solid fa-fire-burner"></i>
-
-                    <span>
-                        Sedang Diproses
-                    </span>
-
-                    <b id="process-count">
-                        {{ \App\Models\Order::where('payment_status', 'Dibayar')
-                            ->where('status', 'Diproses')
                             ->count() }}
                     </b>
 
@@ -202,6 +181,10 @@
 
         <!-- MAIN CONTENT -->
         <main class="main-content">
+
+            @if(session('error'))
+                <div class="kitchen-alert" role="alert">{{ session('error') }}</div>
+            @endif
 
             @yield('content')
 

@@ -94,7 +94,7 @@
                 class="side-link {{ request()->routeIs('kasir.products.availability*') ? 'active' : '' }}"
             >
                 <i class="fa-solid fa-box"></i>
-                <span>Ketersediaan Produk</span>
+                <span>Pantau Stok</span>
             </a>
 
 

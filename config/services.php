@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'midtrans' => [
+        'server_key' => env('MIDTRANS_SERVER_KEY'),
+        'client_key' => env('MIDTRANS_CLIENT_KEY'),
+        'production' => env('MIDTRANS_IS_PRODUCTION', false),
+        'expiry_minutes' => env('MIDTRANS_EXPIRY_MINUTES', 15),
+    ],
+
 ];

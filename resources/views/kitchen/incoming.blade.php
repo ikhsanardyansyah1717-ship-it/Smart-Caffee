@@ -1,6 +1,6 @@
 @extends('layouts.kitchen')
 
-@section('title', 'Pesanan Baru - Quattro Coffee')
+@section('title', 'Pesanan - Quattro Coffee')
 
 @section('content')
 
@@ -11,10 +11,10 @@
     <div>
         <span class="eyebrow">QUATTRO COFFEE • KITCHEN</span>
 
-        <h1>Pesanan Baru</h1>
+        <h1>Pesanan</h1>
 
         <p>
-            Kelola pesanan pelanggan dengan cepat dan rapi.
+            Pesanan baru dan yang sedang dikerjakan, dalam satu daftar.
         </p>
     </div>
 
@@ -73,10 +73,10 @@
 
         <div>
 
-            <h2>Pesanan Baru</h2>
+            <h2>Semua Pesanan Aktif</h2>
 
             <p>
-                Pesanan yang sudah dibayar dan menunggu diproses.
+                Pesanan dibayar yang menunggu atau sedang dikerjakan.
             </p>
 
         </div>
@@ -107,7 +107,7 @@
 
                         <div class="order-meta">
 
-                            {{ $order->customer_name }}
+                            {{ $order->customer_name }} · {{ $order->created_at->format('d/m/Y H:i') }}
 
                             @if($order->table_number)
                                 • Meja {{ $order->table_number }}
@@ -117,9 +117,7 @@
 
                     </div>
 
-                    <span class="status-pill status-new">
-                        Menunggu
-                    </span>
+                    <span class="status-pill {{ $order->status === 'Diproses' ? 'status-processing' : 'status-new' }}">{{ $order->status }}</span>
 
                 </div>
 
@@ -150,6 +148,16 @@
 
 
                 <div class="order-actions kitchen-order-actions">
+                    @if($order->status === 'Diproses')
+                        @php
+                            $startedAt = $order->kitchen_started_at ?? $order->updated_at;
+                        @endphp
+                        <div class="order-timer" data-started-at="{{ $startedAt?->toIso8601String() }}"><i class="fa-regular fa-clock"></i> <span class="timer-label">Waktu proses 00:00</span></div>
+                        <form action="{{ route('kitchen.orders.complete', $order->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="action-btn btn-success"><i class="fa-solid fa-circle-check"></i> Siap Diambil</button>
+                        </form>
+                    @else
 
                     <form
                         action="{{ route('kitchen.orders.process', $order->id) }}"
@@ -170,6 +178,7 @@
                         </button>
 
                     </form>
+                    @endif
 
                 </div>
 
@@ -182,7 +191,7 @@
                 <i class="fa-solid fa-receipt"></i>
 
                 <p>
-                    Belum ada pesanan baru.
+                    Tidak ada pesanan aktif.
                 </p>
 
             </div>

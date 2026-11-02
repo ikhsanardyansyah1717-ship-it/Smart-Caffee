@@ -31,6 +31,20 @@
     </div>
 </header>
 
+<p class="dashboard-period-caption">Periode transaksi: {{ \Carbon\Carbon::parse($tanggal)->format('d/m/Y') }} · Data stok terbaru {{ now()->format('d/m/Y H:i') }}</p>
+
+<div class="dashboard-search-bar search-box">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input id="cashierDashboardSearch" type="search" placeholder="Cari pesanan, pelanggan, atau produk..." aria-label="Cari pesanan, pelanggan, atau produk">
+</div>
+
+@if(($stockWarningCount ?? 0) > 0)
+    <div class="stock-warning-banner" role="status">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span><strong>{{ $stockWarningCount }} produk perlu diperiksa</strong> · stok tersisa 5 atau kurang. Pelanggan hanya dapat memesan sampai jumlah stok yang tersedia.</span>
+    </div>
+@endif
+
 {{-- STATISTIK --}}
 <section class="stats-grid">
     {{-- Pesanan Tanggal Terpilih --}}
@@ -87,7 +101,7 @@
         </div>
 
         <div class="table-wrap">
-            <table>
+            <table id="cashierDashboardOrders">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -107,7 +121,7 @@
                             <td>{{ $order->customer_name ?? '-' }}</td>
                             <td>{{ $order->table_number ?? 'Take Away' }}</td>
                             <td>Rp {{ number_format($order->total, 0, ',', '.') }}</td>
-                            <td><span class="badge {{ strtolower($order->status) }}">{{ $order->status }}</span></td>
+                            <td><span class="badge {{ str_replace(' ', '-', strtolower($order->status)) }}">{{ $order->status }}</span></td>
                         </tr>
                     @empty
                         <tr>
@@ -162,18 +176,18 @@
     <div class="panel-head">
         <div>
             <h2>Ketersediaan Produk</h2>
-            <p>Ringkasan jumlah stok produk saat ini.</p>
+            <p>Stok terbaru per {{ now()->format('d/m/Y H:i') }}.</p>
         </div>
-        <a href="{{ route('kasir.products.availability') }}" class="outline-btn">Kelola Produk</a>
+        <a href="{{ route('kasir.products.availability') }}" class="outline-btn">Pantau Stok</a>
     </div>
 
     <div class="table-wrap">
-        <table>
+        <table id="cashierDashboardProducts">
             <thead>
                 <tr>
                     <th>Nama Produk</th>
                     <th>Harga</th>
-                    <th>Stok</th>
+                    <th>Stok Tersedia</th>
                     <th>Ketersediaan</th>
                 </tr>
             </thead>
@@ -182,11 +196,11 @@
                     <tr>
                         <td><strong>{{ $product->name }}</strong></td>
                         <td>Rp {{ number_format((float) $product->price, 0, ',', '.') }}</td>
-                        <td><strong>{{ $product->stock }}</strong></td>
+                        <td><strong>{{ $product->available_stock ?? $product->stock }}</strong></td>
                         <td>
-                            @if((int) $product->stock <= 0)
+                            @if((int) ($product->available_stock ?? $product->stock) <= 0)
                                 <span class="badge red">Stok Habis</span>
-                            @elseif((int) $product->stock <= 5)
+                            @elseif((int) ($product->available_stock ?? $product->stock) <= 5)
                                 <span class="badge" style="background:#fff0d4;color:#8a5100;">Stok Menipis</span>
                             @else
                                 <span class="badge green">Tersedia</span>
@@ -204,3 +218,20 @@
 </section>
 
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const search = document.getElementById('cashierDashboardSearch');
+    if (!search) return;
+    search.addEventListener('input', function () {
+        const query = this.value.trim().toLocaleLowerCase('id-ID');
+        ['cashierDashboardOrders', 'cashierDashboardProducts'].forEach(function (tableId) {
+            document.querySelectorAll(`#${tableId} tbody tr`).forEach(function (row) {
+                row.style.display = query !== '' && !row.textContent.toLocaleLowerCase('id-ID').includes(query) ? 'none' : '';
+            });
+        });
+    });
+});
+</script>
+@endpush

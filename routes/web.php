@@ -14,9 +14,13 @@ use App\Http\Controllers\CustomerManagementController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\MidtransWebhookController;
 
 /* WELCOME */
 Route::view('/', 'welcome')->name('welcome');
+
+Route::post('/payments/midtrans/notification', MidtransWebhookController::class)
+    ->name('payments.midtrans.notification');
 
 /* CUSTOMER GUEST */
 Route::prefix('customer')->name('customer.')->group(function () {
@@ -27,6 +31,12 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/products/{product}/reviews', [CustomerController::class, 'productReviews'])->name('products.reviews');
     Route::post('/products/{product}/reviews', [CustomerController::class, 'storeProductReview'])->name('products.reviews.store');
     Route::post('/orders', [CustomerController::class, 'storeOrder'])->name('orders.store');
+    Route::post('/orders/{order}/payment/retry', [CustomerController::class, 'retryPayment'])->name('orders.payment.retry');
+    Route::post('/orders/{order}/cancel', [CustomerController::class, 'cancelOrder'])->name('orders.cancel');
+    Route::get('/orders/{order}/payment', [CustomerController::class, 'openPayment'])->name('orders.payment.open');
+    Route::get('/orders/{order}/payment/qr', [CustomerController::class, 'paymentQr'])->name('orders.payment.qr');
+    Route::post('/orders/{order}/payment/check', [CustomerController::class, 'checkPaymentStatus'])->name('orders.payment.check');
+    Route::get('/payment/finish/{order}', [CustomerController::class, 'paymentFinish'])->name('payment.finish');
     Route::get('/favorites', [CustomerController::class, 'favorites'])->name('favorites');
     Route::post('/favorites/toggle', [CustomerController::class, 'toggleFavorite'])->name('favorites.toggle');
     Route::get('/orders/history', [CustomerController::class, 'orderHistory'])->name('orders.history');
@@ -162,6 +172,12 @@ Route::middleware(['auth', 'role:kasir'])
         Route::post('/orders/{id}/confirm', [KasirController::class, 'confirmManualPayment'])
             ->name('orders.confirm');
 
+        Route::post('/orders/{id}/payment/check', [KasirController::class, 'checkGatewayPayment'])
+            ->name('orders.payment.check');
+
+        Route::post('/orders/{id}/kitchen/confirm', [KasirController::class, 'releaseToKitchen'])
+            ->name('orders.kitchen.confirm');
+
         Route::post('/orders/{id}/finish-table', [KasirController::class, 'finishTable'])
             ->name('orders.finishTable');
 
@@ -177,12 +193,7 @@ Route::middleware(['auth', 'role:kasir'])
         Route::get('/products/availability', [ProductAvailabilityController::class, 'index'])
             ->name('products.availability');
 
-        Route::post('/products', [ProductAvailabilityController::class, 'store'])
-            ->name('products.store');
+        Route::patch('/products/{product}/stock', [ProductAvailabilityController::class, 'updateStock'])
+            ->name('products.stock.update');
 
-        Route::put('/products/{id}', [ProductAvailabilityController::class, 'update'])
-            ->name('products.update');
-
-        Route::delete('/products/{id}', [ProductAvailabilityController::class, 'destroy'])
-            ->name('products.destroy');
     });

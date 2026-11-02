@@ -30,7 +30,7 @@
 </div></section>
 
 <section class="panel"><div class="panel-head"><div><h2>Metode Pembayaran</h2><p>Distribusi transaksi berhasil, periode terpilih.</p></div></div>
-@forelse(['QRIS', 'Cash', 'Debit', 'E-Wallet'] as $method)
+@forelse(['QRIS', 'Cash'] as $method)
 @php $jumlah = $metodePembayaran[$method] ?? 0; $persen = $totalMetode > 0 ? round(($jumlah / $totalMetode) * 100) : 0; @endphp
 <div class="progress-row"><div class="progress-top"><span>{{ $method }}</span><span>{{ $persen }}%</span></div><div class="progress"><span style="width:{{ $persen }}%"></span></div></div>
 @empty

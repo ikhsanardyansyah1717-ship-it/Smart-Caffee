@@ -267,37 +267,13 @@
         </button>
 
 
-        {{-- COFFEE --}}
-        <button type="button"
-            class="category-item"
-            aria-pressed="false"
-            onclick="selectCategory(this, 'coffee')"
-        >
-            <i class="fa-solid fa-mug-hot" aria-hidden="true"></i>
-            <span>Coffee</span>
-        </button>
-
-
-        {{-- NON COFFEE --}}
-        <button type="button"
-            class="category-item"
-            aria-pressed="false"
-            onclick="selectCategory(this, 'non-coffee')"
-        >
-            <i class="fa-solid fa-glass-water" aria-hidden="true"></i>
-            <span>Non-Coffee</span>
-        </button>
-
-
-        {{-- FOOD --}}
-        <button type="button"
-            class="category-item"
-            aria-pressed="false"
-            onclick="selectCategory(this, 'food')"
-        >
-            <i class="fa-solid fa-utensils" aria-hidden="true"></i>
-            <span>Food</span>
-        </button>
+        @foreach($categories as $category)
+            <button type="button" class="category-item" aria-pressed="false"
+                onclick="selectCategory(this, @js(strtolower(str_replace(' ', '-', $category['value']))))">
+                <i class="{{ $category['icon'] }}" aria-hidden="true"></i>
+                <span>{{ $category['label'] }}</span>
+            </button>
+        @endforeach
 
     </div>
 

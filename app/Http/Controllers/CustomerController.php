@@ -7,19 +7,49 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Favorite;
 use App\Models\Payment;
+use App\Models\PaymentAttempt;
 use App\Models\ProductReview;
+use App\Services\MidtransSnapService;
+use App\Services\MidtransPaymentStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
+    private function customerProductsQuery()
+    {
+        $pendingReservations = OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->join('payments', 'payments.order_id', '=', 'orders.id')
+            ->whereColumn('order_items.product_id', 'products.id')
+            ->where('payments.status', 'Pending')
+            ->where('orders.payment_status', 'Belum Dibayar')
+            ->where('orders.status', '!=', 'Dibatalkan')
+            ->selectRaw('COALESCE(SUM(order_items.quantity), 0)');
+
+        return Product::query()
+            ->select('products.*')
+            ->selectSub($pendingReservations, 'reserved_stock');
+    }
+
+    private function applyCustomerAvailableStock($products): void
+    {
+        foreach ($products as $product) {
+            $availableStock = max(0, (int) $product->stock - (int) $product->reserved_stock);
+            $product->stock = $availableStock;
+            $product->is_available = (bool) $product->is_available && $availableStock > 0;
+        }
+    }
+
     /**
      * =========================================================
      * HALAMAN HOME CUSTOMER
@@ -32,11 +62,13 @@ class CustomerController extends Controller
      */
     public function home(): View
     {
-        $products = Product::withAvg('reviews', 'rating')
+        $products = $this->customerProductsQuery()->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->orderBy('category')
             ->orderBy('name')
             ->get();
+        $this->applyCustomerAvailableStock($products);
+        $categories = config('product_categories');
 
         $favoriteIds = Auth::check()
             ? Favorite::where('user_id', Auth::id())->pluck('product_id')->map(fn ($id) => (int) $id)->all()
@@ -44,7 +76,7 @@ class CustomerController extends Controller
 
         return view(
             'customer.home',
-            compact('products', 'favoriteIds')
+            compact('products', 'favoriteIds', 'categories')
         );
     }
 
@@ -56,7 +88,7 @@ class CustomerController extends Controller
      */
     public function orders(): Response
     {
-        $ordersQuery = Order::with(['items.review', 'payment']);
+        $ordersQuery = Order::with(['items.review', 'payment.attempts']);
         if (Auth::check()) {
             $ordersQuery->where('user_id', Auth::id());
         } else {
@@ -84,7 +116,8 @@ class CustomerController extends Controller
             }
         }
         $orders = $ordersQuery->latest()->get();
-        $products = Product::orderBy('category')->orderBy('name')->get();
+        $products = $this->customerProductsQuery()->orderBy('category')->orderBy('name')->get();
+        $this->applyCustomerAvailableStock($products);
         $favoriteIds = Auth::check()
             ? Favorite::where('user_id', Auth::id())->pluck('product_id')->map(fn ($id) => (int) $id)->all()
             : array_map('intval', session('guest_favorite_ids', []));
@@ -104,7 +137,8 @@ class CustomerController extends Controller
     /** Halaman ringkasan pesanan sebelum pembayaran. */
     public function checkoutPage(): View
     {
-        $products = Product::orderBy('category')->orderBy('name')->get();
+        $products = $this->customerProductsQuery()->orderBy('category')->orderBy('name')->get();
+        $this->applyCustomerAvailableStock($products);
 
         return view('customer.checkout', compact('products'));
     }
@@ -112,7 +146,8 @@ class CustomerController extends Controller
     /** Halaman informasi pemesan dan pembayaran QRIS. */
     public function paymentPage(): View
     {
-        $products = Product::orderBy('category')->orderBy('name')->get();
+        $products = $this->customerProductsQuery()->orderBy('category')->orderBy('name')->get();
+        $this->applyCustomerAvailableStock($products);
 
         return view('customer.payment', compact('products'));
     }
@@ -475,6 +510,10 @@ class CustomerController extends Controller
      */
     public function storeOrder(Request $request)
     {
+        $request->merge([
+            'customer_phone' => preg_replace('/[\s().-]+/', '', (string) $request->input('customer_phone', '')),
+            'customer_email' => trim((string) $request->input('customer_email', '')),
+        ]);
         $data = $request->validate([
 
             'customer_name' => [
@@ -483,9 +522,9 @@ class CustomerController extends Controller
                 'max:255',
             ],
 
-            'customer_phone' => ['nullable', 'string', 'max:30'],
+            'customer_phone' => ['required', 'string', 'max:30', 'regex:/^(?:0|\+?62)8[0-9]{8,11}$/'],
 
-            'customer_email' => ['nullable', 'email', 'max:255'],
+            'customer_email' => ['required', 'email:rfc', 'max:255'],
 
             'table_number' => [
                 'nullable',
@@ -532,9 +571,55 @@ class CustomerController extends Controller
                 ?: $this->validGuestToken($request->input('guest_token'))
                 ?: Str::random(64));
 
-        $order = DB::transaction(function () use ($data, $guestToken) {
+        $requestedQuantities = [];
+        foreach ($data['items'] as $item) {
+            $productId = (int) $item['product_id'];
+            $requestedQuantities[$productId] = ($requestedQuantities[$productId] ?? 0) + (int) $item['quantity'];
+        }
+
+        $mergedItems = [];
+        foreach ($data['items'] as $item) {
+            $customization = $item['customization'] ?? [];
+            ksort($customization);
+            $key = (int) $item['product_id'] . ':' . json_encode($customization);
+            if (isset($mergedItems[$key])) {
+                $mergedItems[$key]['quantity'] += (int) $item['quantity'];
+            } else {
+                $mergedItems[$key] = [
+                    'product_id' => (int) $item['product_id'],
+                    'quantity' => (int) $item['quantity'],
+                    'customization' => $customization,
+                ];
+            }
+        }
+
+        $order = DB::transaction(function () use ($data, $guestToken, $requestedQuantities, $mergedItems) {
 
             $subtotal = 0;
+            $products = Product::whereIn('id', array_keys($requestedQuantities))
+                ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+
+            foreach ($requestedQuantities as $productId => $quantity) {
+                $product = $products->get($productId);
+                if (!$product) {
+                    abort(422, 'Salah satu produk sudah tidak tersedia. Silakan perbarui keranjang.');
+                }
+                if (!$product->is_available || (int) $product->stock < $quantity) {
+                    abort(422, "Stok {$product->name} tersisa {$product->stock}. Kurangi jumlah pesanan lalu coba lagi.");
+                }
+                $reserved = OrderItem::query()
+                    ->join('orders', 'orders.id', '=', 'order_items.order_id')
+                    ->join('payments', 'payments.order_id', '=', 'orders.id')
+                    ->where('order_items.product_id', $productId)
+                    ->where('payments.status', 'Pending')
+                    ->where('orders.payment_status', 'Belum Dibayar')
+                    ->where('orders.status', '!=', 'Dibatalkan')
+                    ->sum('order_items.quantity');
+                $available = max(0, (int) $product->stock - (int) $reserved);
+                if ($available < $quantity) {
+                    abort(422, "Stok {$product->name} yang masih tersedia hanya {$available}. Kurangi jumlah pesanan lalu coba lagi.");
+                }
+            }
 
 
             /**
@@ -545,20 +630,8 @@ class CustomerController extends Controller
              * Produk boleh tetap tampil di menu,
              * tetapi TIDAK boleh masuk order jika Habis.
              */
-            foreach ($data['items'] as $item) {
-
-                $product = Product::findOrFail(
-                    $item['product_id']
-                );
-
-                if (!$product->is_available) {
-
-                    abort(
-                        422,
-                        "Produk {$product->name} sedang habis. Silakan pilih produk lain."
-                    );
-                }
-
+            foreach ($mergedItems as $item) {
+                $product = $products->get((int) $item['product_id']);
                 $unitPrice = $this->configuredPrice(
                     $product,
                     $item['customization'] ?? []
@@ -622,7 +695,7 @@ class CustomerController extends Controller
                     Auth::id(),
 
                 'customer_name' =>
-                    Auth::user()?->name ?? trim($data['customer_name']),
+                    trim($data['customer_name'] ?? Auth::user()?->name ?? ''),
 
                 'customer_phone' => $data['customer_phone'] ?? Auth::user()?->phone,
 
@@ -661,21 +734,10 @@ class CustomerController extends Controller
                  * CEK ULANG DI DALAM TRANSACTION
                  * supaya status terbaru dipakai.
                  */
-                $product = Product::where(
-                        'id',
-                        (int) $item['product_id']
-                    )
-                    ->where(
-                        'is_available',
-                        true
-                    )
-                    ->first();
+                $product = $products->get((int) $item['product_id']);
 
-                if (!$product) {
-
-                    throw new \RuntimeException(
-                        'Produk sudah habis atau tidak tersedia. Silakan pilih produk lain.'
-                    );
+                if (!$product || !$product->is_available) {
+                    abort(422, 'Produk sudah habis atau tidak tersedia. Silakan pilih produk lain.');
                 }
 
                 $quantity =
@@ -711,7 +773,6 @@ class CustomerController extends Controller
                 ]);
             }
 
-
             /**
              * =================================================
              * PAYMENT
@@ -745,6 +806,18 @@ class CustomerController extends Controller
             session(['guest_order_ids' => array_values(array_unique($guestOrderIds))]);
         }
 
+        $paymentUrl = null;
+        $paymentDeadline = null;
+        $midtrans = app(MidtransSnapService::class);
+        if ($midtrans->isConfigured()) {
+            try {
+                $attempt = $midtrans->createSession($order->payment);
+                $paymentUrl = $attempt->payment_url;
+                $paymentDeadline = $attempt->expires_at?->toIso8601String();
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
 
         $response = response()->json([
 
@@ -763,6 +836,10 @@ class CustomerController extends Controller
             'guest_token' =>
                 $guestToken,
 
+            'payment_url' => $paymentUrl,
+
+            'payment_deadline' => $paymentDeadline,
+
         ], 201);
 
         if ($guestToken) {
@@ -772,7 +849,6 @@ class CustomerController extends Controller
         return $response;
     }
 
-
     /**
      * =========================================================
      * ORDER HISTORY
@@ -780,7 +856,8 @@ class CustomerController extends Controller
      */
     public function orderHistory()
     {
-        $ordersQuery = Order::with(['items.review', 'payment']);
+        $ordersQuery = Order::with(['items.review', 'payment.attempts']);
+        $guestToken = null;
         if (Auth::check()) {
             $ordersQuery->where('user_id', Auth::id());
         } else {
@@ -808,6 +885,21 @@ class CustomerController extends Controller
 
             'orders' =>
                 $orders->map(function ($order) {
+                    $payment = $order->payment;
+                    $attempt = $payment?->attempts?->sortByDesc('id')->first();
+                    $rawPaymentStatus = strtolower(trim((string) ($order->payment_status ?? '')));
+                    $paymentStatus = ($rawPaymentStatus === 'dibayar' || $payment?->status === 'Berhasil')
+                        ? 'Dibayar'
+                        : 'Belum Dibayar';
+                    if ($paymentStatus !== 'Dibayar' && ($attempt?->status === 'Gagal' || $rawPaymentStatus === 'gagal')) {
+                        $paymentStatus = 'Gagal';
+                    }
+                    if ($paymentStatus !== 'Dibayar' && $attempt?->expires_at?->isPast()) {
+                        $paymentStatus = 'Kedaluwarsa';
+                    }
+                    if ($order->status === 'Dibatalkan' && $paymentStatus !== 'Dibayar') {
+                        $paymentStatus = 'Dibatalkan';
+                    }
 
                     return [
 
@@ -835,8 +927,26 @@ class CustomerController extends Controller
                         'status' =>
                             $order->status,
 
-                        'payment_status' =>
-                            $order->payment_status,
+                        'cancellation_reason' => $order->cancellation_reason,
+
+                        'cancelled_by' => $order->cancelled_by,
+
+                        'cancelled_at' => $order->cancelled_at?->format('d M Y, H:i'),
+
+                        'payment_status' => $paymentStatus,
+
+                        'payment_deadline' => $attempt?->expires_at?->toIso8601String(),
+
+                        'payment_url' => $paymentStatus === 'Belum Dibayar'
+                            && $attempt?->expires_at?->isFuture() ? route('customer.orders.payment.open', $order) : null,
+
+                        'can_retry_payment' => in_array($paymentStatus, ['Belum Dibayar', 'Kedaluwarsa', 'Gagal'], true)
+                            && strtoupper((string) $payment?->payment_method) === 'QRIS'
+                            && $order->status !== 'Dibatalkan',
+
+                        'can_cancel_order' => $order->status === 'Menunggu'
+                            && $paymentStatus !== 'Dibayar'
+                            && strtoupper((string) $payment?->payment_method) === 'QRIS',
 
                         'payment_method' =>
                             $order->payment
@@ -903,6 +1013,320 @@ class CustomerController extends Controller
         return is_string($token) && preg_match('/^[A-Za-z0-9]{64}$/', $token)
             ? $token
             : null;
+    }
+
+    public function retryPayment(Request $request, Order $order, MidtransSnapService $midtrans)
+    {
+        abort_unless($this->customerCanAccessOrder($request, $order), 404);
+        if ($order->status === 'Dibatalkan' || $order->payment_status === 'Dibayar') {
+            return response()->json(['message' => 'Pesanan ini tidak dapat dibayar lagi.'], 422);
+        }
+        $payment = $order->payment;
+        if (!$payment || $payment->payment_method !== 'QRIS') {
+            return response()->json(['message' => 'Pembayaran ulang hanya tersedia untuk QRIS.'], 422);
+        }
+        $latest = $payment->attempts()->latest('id')->first();
+        if ($latest && $latest->status === 'Pending' && $latest->expires_at?->isFuture() && $latest->payment_url && $latest->qr_code_url) {
+            return response()->json(['payment_url' => route('customer.orders.payment.open', $order), 'payment_deadline' => $latest->expires_at->toIso8601String()]);
+        }
+        try {
+            $payment->update(['status' => 'Pending']);
+            $attempt = $midtrans->createSession($payment);
+            return response()->json(['payment_url' => $attempt->payment_url, 'payment_deadline' => $attempt->expires_at?->toIso8601String()]);
+        } catch (\Throwable $exception) {
+            report($exception);
+            return response()->json(['message' => 'QRIS belum dapat dibuat. Coba lagi beberapa saat.'], 503);
+        }
+    }
+
+    public function cancelOrder(Request $request, Order $order, MidtransSnapService $midtrans, MidtransPaymentStatusService $statusService)
+    {
+        abort_unless($this->customerCanAccessOrder($request, $order), 404);
+        $validated = $request->validate([
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $order->loadMissing('payment.attempts');
+        $payment = $order->payment;
+        if ($order->status === 'Dibatalkan') {
+            return response()->json(['message' => 'Pesanan ini sudah dibatalkan.'], 422);
+        }
+        if ($order->status !== 'Menunggu'
+            || !$payment
+            || strtoupper((string) $payment->payment_method) !== 'QRIS'
+            || $order->payment_status === 'Dibayar'
+            || $payment->status === 'Berhasil') {
+            return response()->json(['message' => 'Pembatalan hanya tersedia untuk pesanan QRIS yang belum dibayar dan masih menunggu.'], 422);
+        }
+
+        $attempt = $payment->attempts->sortByDesc('id')->first();
+        if ($attempt && filled($attempt->gateway_order_id) && ($attempt->status === 'Pending' || filled($attempt->qr_code_url))) {
+            try {
+                $gatewayStatus = $midtrans->transactionStatus($attempt);
+                $gatewayState = strtolower((string) ($gatewayStatus['transaction_status'] ?? ''));
+                if ($gatewayState === 'settlement' || ($gatewayState === 'capture' && strtolower((string) ($gatewayStatus['fraud_status'] ?? '')) === 'accept')) {
+                    $statusService->apply($attempt, $gatewayStatus);
+                    return response()->json(['message' => 'Pembayaran sudah berhasil. Pesanan tidak dapat dibatalkan dari riwayat.'], 422);
+                }
+                if ($gatewayState === 'pending') {
+                    try {
+                        $cancelResult = $midtrans->cancelTransaction($attempt);
+                        $cancelState = strtolower((string) ($cancelResult['transaction_status'] ?? ''));
+                        if ($cancelState === 'settlement' || ($cancelState === 'capture' && strtolower((string) ($cancelResult['fraud_status'] ?? '')) === 'accept')) {
+                            $statusService->apply($attempt, $cancelResult);
+                            return response()->json(['message' => 'Pembayaran sudah berhasil. Pesanan tidak dapat dibatalkan dari riwayat.'], 422);
+                        }
+                        if (!in_array($cancelState, ['cancel', 'expire', 'deny'], true)) {
+                            $cancelResult = $midtrans->transactionStatus($attempt);
+                            $cancelState = strtolower((string) ($cancelResult['transaction_status'] ?? ''));
+                        }
+                        if (!in_array($cancelState, ['cancel', 'expire', 'deny'], true)) {
+                            throw new \RuntimeException('Status pembatalan QRIS belum final.');
+                        }
+                    } catch (\Throwable $cancelException) {
+                        // The request may race with expiry or a successful payment.
+                        try {
+                            $gatewayStatus = $midtrans->expireTransaction($attempt);
+                        } catch (\Throwable) {
+                            $gatewayStatus = $midtrans->transactionStatus($attempt);
+                        }
+                        $gatewayState = strtolower((string) ($gatewayStatus['transaction_status'] ?? ''));
+                        if ($gatewayState === 'settlement' || ($gatewayState === 'capture' && strtolower((string) ($gatewayStatus['fraud_status'] ?? '')) === 'accept')) {
+                            $statusService->apply($attempt, $gatewayStatus);
+                            return response()->json(['message' => 'Pembayaran sudah berhasil. Pesanan tidak dapat dibatalkan dari riwayat.'], 422);
+                        }
+                        if (!in_array($gatewayState, ['expire', 'cancel', 'deny'], true)) {
+                            throw $cancelException;
+                        }
+                    }
+                } elseif (!in_array($gatewayState, ['expire', 'cancel', 'deny'], true)) {
+                    throw new \RuntimeException('Status pembayaran QRIS belum dapat dipastikan.');
+                }
+            } catch (\Throwable $exception) {
+                report($exception);
+                return response()->json(['message' => 'Status QRIS belum dapat dipastikan. Coba lagi sebentar.'], 503);
+            }
+        }
+
+        try {
+            DB::transaction(function () use ($order, $attempt, $validated) {
+                $lockedOrder = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+                $lockedPayment = Payment::where('order_id', $lockedOrder->id)->lockForUpdate()->first();
+                if ($lockedOrder->status !== 'Menunggu'
+                    || $lockedOrder->payment_status === 'Dibayar'
+                    || $lockedPayment?->status === 'Berhasil') {
+                    throw new \RuntimeException('Pesanan sudah dibayar atau statusnya berubah.');
+                }
+                if ($attempt) {
+                    $lockedAttempt = PaymentAttempt::whereKey($attempt->id)->lockForUpdate()->first();
+                    if ($lockedAttempt && $lockedAttempt->status === 'Pending') {
+                        $lockedAttempt->update(['status' => 'Gagal']);
+                    }
+                }
+                $lockedPayment?->update(['status' => 'Gagal']);
+                $lockedOrder->update([
+                    'status' => 'Dibatalkan',
+                    'cancellation_reason' => trim((string) ($validated['reason'] ?? '')) ?: 'Dibatalkan oleh pelanggan.',
+                    'cancelled_by' => 'customer',
+                    'cancelled_at' => now(),
+                ]);
+            });
+        } catch (\Throwable $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        return response()->json(['message' => 'Pesanan berhasil dibatalkan. Stok reservasi sudah dilepas.']);
+    }
+
+    public function openPayment(Request $request, Order $order, MidtransSnapService $midtrans)
+    {
+        abort_unless($this->customerCanAccessOrder($request, $order), 404);
+        if ($order->payment_status === 'Dibayar' || $order->payment?->status === 'Berhasil') {
+            return redirect()->route('customer.history');
+        }
+        if ($order->status === 'Dibatalkan' || !$order->payment || $order->payment->payment_method !== 'QRIS') {
+            return redirect()->route('customer.history')->with('payment_notice', 'Pesanan ini tidak dapat dibayar melalui QRIS.');
+        }
+
+        $payment = $order->payment;
+        $attempt = $payment->attempts()->latest('id')->first();
+        // Older QR attempts could carry an expiry timestamp parsed with a timezone
+        // offset, leaving the UI open for hours. The Quattro QR deadline is always
+        // 15 minutes from when this attempt was created.
+        if ($attempt && $attempt->status === 'Pending' && $attempt->created_at) {
+            $correctDeadline = $attempt->created_at->copy()->addMinutes(15);
+            if (!$attempt->expires_at?->equalTo($correctDeadline)) {
+                $attempt->update(['expires_at' => $correctDeadline]);
+                $attempt->refresh();
+            }
+            if ($correctDeadline->isPast()) {
+                $attempt->update(['status' => 'Gagal']);
+            }
+        }
+
+        if ($attempt && $attempt->status === 'Pending' && $attempt->qr_code_url) {
+            $storedQrUrl = parse_url($attempt->qr_code_url);
+            $trustedQrHosts = ['api.midtrans.com', 'api.sandbox.midtrans.com'];
+            $qrPath = $storedQrUrl['path'] ?? '';
+            if (in_array($storedQrUrl['host'] ?? '', $trustedQrHosts, true)
+                && preg_match('#^/v[24]/qris/[^/]+/qr-code$#', $qrPath)) {
+                $qrBaseUrl = config('services.midtrans.production') ? 'https://api.midtrans.com' : 'https://api.sandbox.midtrans.com';
+                $attempt->update(['qr_code_url' => $qrBaseUrl . $qrPath]);
+                $attempt->refresh();
+            }
+        }
+        if (!$attempt || $attempt->status !== 'Pending' || !$attempt->expires_at?->isFuture() || !$attempt->qr_code_url) {
+            try {
+                if ($attempt && $attempt->status === 'Pending') {
+                    $attempt->update(['status' => 'Gagal']);
+                }
+                $payment->update(['status' => 'Pending']);
+                $attempt = $midtrans->createSession($payment);
+            } catch (\Throwable $exception) {
+                report($exception);
+                return redirect()->route('customer.history')->with('payment_notice', 'QRIS belum dapat dibuat. Periksa Server Key Sandbox Midtrans di .env, lalu coba lagi.');
+            }
+        }
+
+        $qrImageData = null;
+        $storedQrUrl = parse_url($attempt->qr_code_url);
+        $qrPath = $storedQrUrl['path'] ?? '';
+        if (in_array($storedQrUrl['host'] ?? '', ['api.midtrans.com', 'api.sandbox.midtrans.com'], true)
+            && preg_match('#^/v[24]/qris/[^/]+/qr-code$#', $qrPath)) {
+            $qrBaseUrl = config('services.midtrans.production')
+                ? 'https://api.midtrans.com'
+                : 'https://api.sandbox.midtrans.com';
+            try {
+                $qrResponse = Http::accept('image/png')
+                    ->withBasicAuth(config('services.midtrans.server_key'), '')
+                    ->timeout(10)
+                    ->get($qrBaseUrl . $qrPath);
+                if ($qrResponse->successful() && str_starts_with(strtolower((string) $qrResponse->header('Content-Type')), 'image/')) {
+                    $qrImageData = 'data:' . $qrResponse->header('Content-Type', 'image/png') . ';base64,' . base64_encode($qrResponse->body());
+                }
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
+        $sandboxQrUrl = null;
+        if (!config('services.midtrans.production')
+            && in_array($storedQrUrl['host'] ?? '', ['api.midtrans.com', 'api.sandbox.midtrans.com'], true)
+            && preg_match('#^/v[24]/qris/[^/]+/qr-code$#', $qrPath)) {
+            $sandboxQrUrl = 'https://api.sandbox.midtrans.com' . $qrPath;
+        }
+
+        return response()->view('customer.qris-payment', [
+            'order' => $order->load('items'),
+            'attempt' => $attempt,
+            'qrImageData' => $qrImageData,
+            'sandboxQrUrl' => $sandboxQrUrl,
+            'qrImageUrl' => URL::temporarySignedRoute(
+                'customer.orders.payment.qr',
+                $attempt->expires_at,
+                ['order' => $order, 'attempt' => $attempt->id],
+                false,
+            ),
+            'qrDownloadUrl' => URL::temporarySignedRoute(
+                'customer.orders.payment.qr',
+                $attempt->expires_at,
+                ['order' => $order, 'attempt' => $attempt->id, 'download' => 1],
+                false,
+            ),
+        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
+    }
+
+    public function paymentQr(Request $request, Order $order)
+    {
+        $signedAccess = URL::hasValidSignature($request, false, ['retry']) && $request->filled('attempt');
+        $attempts = $order->payment?->attempts();
+        $attempt = $signedAccess
+            ? $attempts?->whereKey($request->query('attempt'))->first()
+            : $attempts?->latest('id')->first();
+        $canAccess = ($signedAccess && $attempt) || $this->customerCanAccessOrder($request, $order);
+        if (!$canAccess || !$attempt || $attempt->status !== 'Pending' || !$attempt->expires_at?->isFuture() || !$attempt->qr_code_url) {
+            \Illuminate\Support\Facades\Log::warning('QR image route rejected.', [
+                'order_id' => $order->id,
+                'customer_access' => $canAccess,
+                'attempt_status' => $attempt?->status,
+                'deadline_future' => $attempt?->expires_at?->isFuture(),
+                'has_qr_url' => (bool) $attempt?->qr_code_url,
+            ]);
+            abort(404);
+        }
+
+        $qrUrl = parse_url($attempt->qr_code_url);
+        $trustedHosts = ['api.midtrans.com', 'api.sandbox.midtrans.com'];
+        abort_unless(in_array($qrUrl['host'] ?? '', $trustedHosts, true), 404);
+        $expectedHost = config('services.midtrans.production') ? 'api.midtrans.com' : 'api.sandbox.midtrans.com';
+        $expectedBaseUrl = config('services.midtrans.production') ? 'https://api.midtrans.com' : 'https://api.sandbox.midtrans.com';
+        $qrPath = $qrUrl['path'] ?? '';
+        abort_unless(preg_match('#^/v[24]/qris/[^/]+/qr-code$#', $qrPath), 404);
+        $qrImageUrl = $expectedBaseUrl . $qrPath;
+        if (($qrUrl['host'] ?? '') !== $expectedHost) {
+            $attempt->update(['qr_code_url' => $qrImageUrl]);
+        }
+
+        $response = Http::accept('image/png')
+            ->withBasicAuth(config('services.midtrans.server_key'), '')
+            ->timeout(15)
+            ->get($qrImageUrl);
+        if (!$response->successful()) {
+            \Illuminate\Support\Facades\Log::warning('Midtrans QR image fetch failed.', [
+                'order_id' => $order->id,
+                'http_status' => $response->status(),
+                'content_type' => $response->header('Content-Type'),
+                'host' => $expectedHost,
+            ]);
+            abort(502, 'QR pembayaran belum dapat dimuat.');
+        }
+
+        $headers = ['Content-Type' => $response->header('Content-Type', 'image/png'), 'Cache-Control' => 'private, no-store'];
+        if ($request->boolean('download')) {
+            $headers['Content-Disposition'] = 'attachment; filename="quattro-' . preg_replace('/[^A-Za-z0-9_-]/', '', $order->order_number) . '-qris.png"';
+        }
+        return response($response->body(), 200, $headers);
+    }
+
+    public function checkPaymentStatus(Request $request, Order $order, MidtransSnapService $midtrans, MidtransPaymentStatusService $statusService)
+    {
+        abort_unless($this->customerCanAccessOrder($request, $order), 404);
+        if ($order->payment_status === 'Dibayar' || $order->payment?->status === 'Berhasil') {
+            return response()->json(['status' => 'Dibayar', 'message' => 'Pembayaran sudah berhasil.']);
+        }
+        $attempt = $order->payment?->attempts()->latest('id')->first();
+        if (!$attempt || $attempt->status !== 'Pending') {
+            return response()->json(['status' => 'Kedaluwarsa', 'message' => 'Sesi QRIS sudah berakhir. Silakan buat QR baru.']);
+        }
+
+        try {
+            $status = $midtrans->transactionStatus($attempt);
+            $result = $statusService->apply($attempt, $status);
+            return response()->json([
+                'status' => $result,
+                'message' => $result === 'Dibayar' ? 'Pembayaran berhasil dikonfirmasi.' : ($result === 'Menunggu' ? 'Pembayaran belum terdeteksi. Jika sudah membayar, tunggu sebentar lalu cek kembali.' : 'QRIS kedaluwarsa. Silakan buat QR baru.'),
+            ]);
+        } catch (\Throwable $exception) {
+            report($exception);
+            return response()->json(['message' => 'Status belum dapat diperiksa. Coba kembali sebentar lagi.'], 503);
+        }
+    }
+
+    public function paymentFinish(Order $order)
+    {
+        return redirect()->route('customer.history')->with('payment_notice', 'Terima kasih. Status pembayaran sedang diverifikasi otomatis.');
+    }
+
+    private function customerCanAccessOrder(Request $request, Order $order): bool
+    {
+        if (Auth::check()) {
+            return (int) $order->user_id === (int) Auth::id();
+        }
+        $token = $this->validGuestToken($request->cookie('quattro_guest_token'))
+            ?: $this->validGuestToken($request->header('X-Guest-Token'));
+        return ($token && hash_equals((string) $order->guest_token, $token))
+            || in_array((int) $order->id, array_map('intval', session('guest_order_ids', [])), true);
     }
 
     private function configuredPrice(Product $product, array $customization): float

@@ -32,6 +32,11 @@
     </div>
 
     <div class="top-actions">
+        <form method="GET" action="{{ route('kitchen.dashboard') }}" class="period-form">
+            <label for="dashboard-date"><i class="fa-regular fa-calendar"></i><span>Periode</span></label>
+            <input id="dashboard-date" type="date" name="date" value="{{ $date }}">
+            <button class="outline-btn" type="submit">Tampilkan</button>
+        </form>
         <span class="live">
             <i class="fa-solid fa-circle"></i> Live
         </span>
@@ -42,6 +47,7 @@
     </div>
 </header>
 
+<p class="period-caption">Data dashboard untuk {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}</p>
 <section class="stats-grid">
 
     <div class="stat-card">
@@ -90,14 +96,21 @@
 
 </section>
 
+<div class="filter-bar dashboard-search-bar">
+    <div class="search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input id="kitchen-search" type="search" placeholder="Cari pesanan, pelanggan, atau menu..." aria-label="Cari pesanan, pelanggan, atau menu">
+    </div>
+</div>
+
 <section class="dashboard-grid">
 
     <div class="panel">
 
         <div class="panel-head">
             <div>
-                <h2>Pesanan Masuk</h2>
-                <p>Pesanan terbaru yang perlu segera diproses.</p>
+                <h2>Pesanan Aktif</h2>
+                <p>Pesanan terbaru yang menunggu atau sedang diproses.</p>
             </div>
 
             <a href="{{ route('kitchen.incoming') }}" class="outline-btn">
@@ -107,9 +120,9 @@
 
         <div id="dashboard-orders" class="order-stack">
 
-            @forelse($orders->where('status', 'Menunggu')->take(5) as $order)
+            @forelse($orders->whereIn('status', ['Menunggu', 'Diproses'])->take(5) as $order)
 
-                <div class="order-card kitchen-order-card">
+                <div class="order-card kitchen-order-card" data-searchable>
 
                     <div class="order-top">
 
@@ -119,7 +132,7 @@
                             </div>
 
                             <div class="order-meta">
-                                {{ $order->customer_name }}
+                                {{ $order->customer_name }} · {{ $order->created_at->format('d/m/Y H:i') }}
 
                                 @if($order->table_number)
                                     • Meja {{ $order->table_number }}
@@ -127,9 +140,7 @@
                             </div>
                         </div>
 
-                        <span class="status-pill status-new">
-                            Menunggu
-                        </span>
+                        <span class="status-pill {{ $order->status === 'Diproses' ? 'status-processing' : 'status-new' }}">{{ $order->status }}</span>
 
                     </div>
 
@@ -158,6 +169,16 @@
                     </div>
 
                     <div class="order-actions kitchen-order-actions">
+                        @if($order->status === 'Diproses')
+                            @php
+                                $startedAt = $order->kitchen_started_at ?? $order->updated_at;
+                            @endphp
+                            <div class="order-timer" data-started-at="{{ $startedAt?->toIso8601String() }}"><i class="fa-regular fa-clock"></i> <span class="timer-label">Waktu proses 00:00</span></div>
+                            <form action="{{ route('kitchen.orders.complete', $order->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="action-btn btn-success"><i class="fa-solid fa-circle-check"></i> Siap Diambil</button>
+                            </form>
+                        @else
 
                         <form
                             action="{{ route('kitchen.orders.process', $order->id) }}"
@@ -172,6 +193,7 @@
                             </button>
 
                         </form>
+                        @endif
 
                     </div>
 
@@ -184,7 +206,7 @@
                     <i class="fa-solid fa-receipt"></i>
 
                     <p>
-                        Belum ada pesanan baru.
+                        Tidak ada pesanan aktif pada {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}.
                     </p>
 
                 </div>
@@ -202,7 +224,7 @@
 
             <div>
                 <h2>Status Kitchen</h2>
-                <p>Ringkasan aktivitas hari ini.</p>
+                <p>Ringkasan aktivitas pada {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}.</p>
             </div>
 
         </div>
@@ -229,21 +251,25 @@
             <div>
                 <i class="fa-solid fa-clock"></i>
                 <span>Rata-rata proses</span>
-                <strong>12 menit</strong>
+                <strong>{{ $menuAverages->isNotEmpty() ? round($menuAverages->avg(), 1) . ' menit' : 'Belum ada data' }}</strong>
             </div>
 
             <div>
                 <i class="fa-solid fa-fire"></i>
                 <span>Menu aktif</span>
-                <strong>18 item</strong>
+                <strong>{{ $orders->flatMap->items->pluck('product_name')->unique()->count() }} menu</strong>
             </div>
 
-            <div>
-                <i class="fa-solid fa-star"></i>
-                <span>Rating kitchen</span>
-                <strong>4.9/5</strong>
-            </div>
+        </div>
 
+        <div class="menu-average-list">
+            <h3>Rata-rata waktu per menu</h3>
+            @forelse($menuAverages as $menu => $minutes)
+                <div><span>{{ $menu }}</span><strong>{{ $minutes }} menit</strong></div>
+            @empty
+                <p>Belum ada pesanan selesai untuk dihitung.</p>
+            @endforelse
+            @if($menuAverages->isNotEmpty())<small>Berdasarkan pesanan selesai sampai {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}.</small>@endif
         </div>
 
     </div>

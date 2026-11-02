@@ -158,6 +158,7 @@ class OwnerController extends Controller
         */
         $metodePembayaran = DB::table('payments')
             ->where('status', 'Berhasil')
+            ->whereIn('payment_method', ['QRIS', 'Cash'])
             ->whereBetween('paid_at', [
                 $startOfMonth,
                 $endOfMonth

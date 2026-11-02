@@ -379,10 +379,6 @@
                         QRIS
                     </option>
 
-                    <option value="Debit / E-Wallet">
-                        Debit / E-Wallet
-                    </option>
-
                 </select>
 
             </label>

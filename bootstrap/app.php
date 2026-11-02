@@ -13,6 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
 
+        $middleware->validateCsrfTokens(except: [
+            'payments/midtrans/notification',
+        ]);
+
         // Redirect user yang belum login
         // berdasarkan area aplikasi yang diakses.
         $middleware->redirectGuestsTo(function ($request) {

@@ -102,10 +102,14 @@ function normalizeCategory(category) {
         return 'other';
     }
 
-    return String(category)
+    const normalized = String(category)
         .toLowerCase()
         .trim()
         .replace(/\s+/g, '-');
+
+    if (['makanan-berat', 'food'].includes(normalized)) return 'food';
+    if (['non-coffee', 'noncoffee'].includes(normalized)) return 'non-coffee';
+    return normalized;
 
 }
 
@@ -147,10 +151,12 @@ const menuFromDatabase =
                 Number(product.price),
 
             // STATUS KETERSEDIAAN DARI DATABASE
+            stock: Number(product.stock ?? 0),
+
             is_available:
-                product.is_available === true ||
+                (product.is_available === true ||
                 product.is_available === 1 ||
-                product.is_available === '1',
+                product.is_available === '1') && Number(product.stock ?? 0) > 0,
 
             rating:
                 product.reviews_avg_rating === null || product.reviews_avg_rating === undefined
@@ -423,6 +429,7 @@ function renderMenu(items) {
                 (sum, cartItem) => sum + Number(cartItem.qty || 0),
                 0
             );
+            const stock = Math.max(0, Number(item.stock || 0));
 
             return `
 
@@ -463,13 +470,14 @@ function renderMenu(items) {
                             <span class="price">
                                 ${rupiah(item.price)}
                             </span>
+                            ${isAvailable && stock <= 5 ? `<small class="stock-warning">Tersisa ${stock}</small>` : ''}
 
                             ${productCartQty > 0
                                 ? `
                                     <div class="menu-card-qty-control" onclick="event.stopPropagation()" aria-label="Jumlah ${item.name}">
                                         <button type="button" aria-label="Kurangi ${item.name}" onclick="updateProductCartQty(${item.id}, -1)">−</button>
                                         <span>${productCartQty}</span>
-                                        <button type="button" aria-label="Tambah ${item.name}" onclick="updateProductCartQty(${item.id}, 1)">+</button>
+                                        <button type="button" aria-label="Tambah ${item.name}" ${productCartQty >= stock ? 'disabled' : ''} onclick="updateProductCartQty(${item.id}, 1)">+</button>
                                     </div>
                                 `
                                 : `
@@ -661,6 +669,14 @@ function addProductVariant(menuId, customization = {}, quantity = 1) {
     return;
 }
 
+    const alreadyInCart = appState.cart
+        .filter(cartItem => Number(cartItem.id) === Number(item.id))
+        .reduce((sum, cartItem) => sum + Number(cartItem.qty || 0), 0);
+    if (alreadyInCart + Number(quantity) > Number(item.stock || 0)) {
+        showToast(`Stok ${item.name} tersisa ${Number(item.stock || 0)}. Jumlah di keranjang sudah mencapai batas stok.`);
+        return;
+    }
+
     const normalizedCustomization = {
         temperature: customization.temperature || '',
         note: String(customization.note || '').trim().slice(0, 300)
@@ -831,7 +847,15 @@ function selectProductOption(type, value) {
 }
 
 function changeDetailQty(delta) {
-    activeDetailQuantity = Math.max(1, activeDetailQuantity + delta);
+    const alreadyInCart = appState.cart
+        .filter(cartItem => Number(cartItem.id) === Number(activeDetailProduct?.id))
+        .reduce((sum, cartItem) => sum + Number(cartItem.qty || 0), 0);
+    const nextQuantity = Math.max(1, activeDetailQuantity + delta);
+    if (delta > 0 && alreadyInCart + nextQuantity > Number(activeDetailProduct?.stock || 0)) {
+        showToast(`Stok ${activeDetailProduct?.name} tersisa ${Number(activeDetailProduct?.stock || 0)}.`);
+        return;
+    }
+    activeDetailQuantity = nextQuantity;
     updateProductDetailPrice();
 }
 
@@ -873,6 +897,17 @@ function changeQty(
 
     if (!item) {
         return;
+    }
+
+    if (delta > 0) {
+        const product = appState.menu.find(menu => Number(menu.id) === Number(menuId));
+        const currentQuantity = appState.cart
+            .filter(cartItem => Number(cartItem.id) === Number(menuId))
+            .reduce((sum, cartItem) => sum + Number(cartItem.qty || 0), 0);
+        if (!product || currentQuantity + delta > Number(product.stock || 0)) {
+            showToast(`Stok ${product?.name || item.name} tersisa ${Number(product?.stock || 0)}.`);
+            return;
+        }
     }
 
 
@@ -1795,8 +1830,10 @@ const unavailableItems = appState.cart.filter(cartItem => {
                 Number(cartItem.id)
         );
 
-    return !currentProduct ||
-           currentProduct.is_available !== true;
+    const totalInCart = appState.cart
+        .filter(item => Number(item.id) === Number(cartItem.id))
+        .reduce((sum, item) => sum + Number(item.qty || 0), 0);
+    return !currentProduct || currentProduct.is_available !== true || totalInCart > Number(currentProduct.stock || 0);
 
 });
 
@@ -1806,6 +1843,19 @@ if (unavailableItems.length) {
         unavailableItems
             .map(item => item.name)
             .join(', ');
+
+    const changedQuantity = unavailableItems.find(cartItem => {
+        const currentProduct = appState.menu.find(product => Number(product.id) === Number(cartItem.id));
+        const totalInCart = appState.cart.filter(item => Number(item.id) === Number(cartItem.id))
+            .reduce((sum, item) => sum + Number(item.qty || 0), 0);
+        return currentProduct && totalInCart > Number(currentProduct.stock || 0);
+    });
+
+    if (changedQuantity) {
+        const currentProduct = appState.menu.find(product => Number(product.id) === Number(changedQuantity.id));
+        showToast(`Stok ${currentProduct.name} tersisa ${currentProduct.stock}. Kurangi jumlah di keranjang.`);
+        return;
+    }
 
     showToast(
         `Produk berikut sedang habis: ${productNames}`
@@ -2066,7 +2116,6 @@ if (unavailableItems.length) {
         appState.cart = [];
 
         sessionStorage.removeItem('quattro_order_note');
-        sessionStorage.removeItem('quattro_pickup_time');
 
 
         saveCustomerState();
@@ -2088,23 +2137,13 @@ if (unavailableItems.length) {
         closePaymentModalIfExists();
 
 
-        showToast(
-
-            data.message ||
-
-            `Transaksi ${
-                data.order_number ?? ''
-            } berhasil dibuat`
-
-        );
-
-
-        setTimeout(() => {
-
-            window.location.href =
-                '/customer/history';
-
-        }, 800);
+        if (data.payment_url) {
+            showToast('Pesanan dibuat. Membuka pembayaran QRIS...');
+            setTimeout(() => { window.location.href = data.payment_url; }, 500);
+        } else {
+            showToast(data.message || `Pesanan ${data.order_number ?? ''} dibuat. QRIS belum tersedia; silakan bayar dari Riwayat Pesanan.`);
+            setTimeout(() => { window.location.href = '/customer/history'; }, 1200);
+        }
 
     }
 
@@ -2344,19 +2383,41 @@ async function renderHistory() {
                                         ${order.payment_method}
                                     </strong>
 
-                                    <span class="payment-success">
-                                        ${order.payment_status ?? 'Berhasil'}
-                                    </span>
+                                    <span class="history-payment-status ${order.payment_status === 'Dibayar' ? 'is-paid' : order.payment_status === 'Dibatalkan' ? 'is-cancelled' : 'is-pending'}">${order.payment_status ?? 'Belum Dibayar'}</span>
 
                                 </div>
                             `
                             : ''
                     }
 
+                    ${String(order.payment_method || '').toUpperCase() === 'QRIS' && order.payment_status !== 'Dibayar' && order.status !== 'Dibatalkan' ? `
+                        <div class="history-payment-action">
+                            <div class="history-payment-timer ${order.payment_deadline && Date.parse(order.payment_deadline) > Date.now() ? '' : 'is-expired'}">
+                                <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                                <span data-history-countdown data-deadline-ms="${order.payment_deadline ? Date.parse(order.payment_deadline) : ''}">${order.payment_deadline && Date.parse(order.payment_deadline) > Date.now() ? 'Sisa waktu…' : 'QRIS siap dibuat'}</span>
+                            </div>
+                            <div class="history-order-actions">
+                                <a class="history-qris-pay" href="/customer/orders/${Number(order.id)}/payment">${order.payment_deadline && Date.parse(order.payment_deadline) > Date.now() ? 'Bayar Sekarang' : 'Buat QR Baru'}</a>
+                                ${order.can_cancel_order ? `<button type="button" class="history-cancel-order" onclick="openCancelOrderDialog(${Number(order.id)})"><i class="fa-regular fa-circle-xmark" aria-hidden="true"></i> Batalkan</button>` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${order.status === 'Dibatalkan' ? `
+                        <div class="history-cancellation-note" style="padding:12px 16px 16px;background:#fff8f5;border-top:1px solid #f0e5dc;color:#765b49;font-size:13px">
+                            <strong style="color:#754000">Pesanan dibatalkan${order.cancelled_at ? ` · ${escapeHtml(order.cancelled_at)}` : ''}</strong>
+                            <div style="margin-top:4px">Alasan: ${escapeHtml(order.cancellation_reason || 'Dibatalkan oleh pelanggan.')}</div>
+                        </div>
+                    ` : ''}
+
                 </div>
             `;
 
         }).join('');
+        updateHistoryCountdowns();
+        if (!window.quattroHistoryCountdownInterval) {
+            window.quattroHistoryCountdownInterval = window.setInterval(updateHistoryCountdowns, 1000);
+        }
 
     } catch (error) {
 
@@ -2382,6 +2443,144 @@ async function renderHistory() {
         `;
     }
 }
+
+function updateHistoryCountdowns() {
+    document.querySelectorAll('[data-history-countdown]').forEach(element => {
+        const deadline = Number(element.dataset.deadlineMs);
+        const wrapper = element.closest('.history-payment-action');
+        const timer = element.closest('.history-payment-timer');
+        const payLink = wrapper?.querySelector('.history-qris-pay');
+        if (!deadline || !Number.isFinite(deadline)) {
+            element.textContent = 'QRIS siap dibuat';
+            timer?.classList.add('is-expired');
+            if (payLink) payLink.textContent = 'Buat QR Baru';
+            return;
+        }
+        const secondsLeft = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+        if (secondsLeft === 0) {
+            element.textContent = 'Waktu habis · buat QR baru';
+            timer?.classList.add('is-expired');
+            if (payLink) payLink.textContent = 'Buat QR Baru';
+            return;
+        }
+        const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+        const seconds = String(secondsLeft % 60).padStart(2, '0');
+        element.textContent = `Sisa waktu ${minutes}:${seconds}`;
+        timer?.classList.remove('is-expired');
+        if (payLink) payLink.textContent = 'Bayar Sekarang';
+    });
+}
+
+window.openCancelOrderDialog = function (orderId) {
+    let dialog = document.getElementById('customer-cancel-order-dialog');
+    if (!dialog) {
+        dialog = document.createElement('dialog');
+        dialog.id = 'customer-cancel-order-dialog';
+        dialog.className = 'quattro-cancel-dialog';
+        dialog.innerHTML = `
+            <form id="customer-cancel-order-form" class="quattro-cancel-card">
+                <header class="quattro-cancel-header">
+                    <div>
+                        <span class="quattro-cancel-eyebrow">QUATTRO COFFEE</span>
+                        <h2>Pilih Alasan Pembatalan</h2>
+                    </div>
+                    <button type="button" class="quattro-cancel-close" data-cancel-dialog-close aria-label="Tutup">&times;</button>
+                </header>
+                <div class="quattro-cancel-warning"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><span>Semua menu dalam pesanan ini akan dibatalkan. Pesanan yang sudah dibatalkan tidak dapat dipulihkan.</span></div>
+                <fieldset class="quattro-reason-list">
+                    <legend class="quattro-cancel-label">Kenapa pesanan dibatalkan?</legend>
+                    <label class="quattro-reason-option"><input type="radio" name="cancel_reason" value="Saya berubah pikiran" required><span>Saya berubah pikiran</span></label>
+                    <label class="quattro-reason-option"><input type="radio" name="cancel_reason" value="Salah memilih menu atau jumlah"><span>Salah memilih menu atau jumlah</span></label>
+                    <label class="quattro-reason-option"><input type="radio" name="cancel_reason" value="Pesanan dibuat dua kali"><span>Pesanan dibuat dua kali</span></label>
+                    <label class="quattro-reason-option"><input type="radio" name="cancel_reason" value="Waktu tunggu terlalu lama"><span>Waktu tunggu terlalu lama</span></label>
+                    <label class="quattro-reason-option"><input type="radio" name="cancel_reason" value="Ada kendala pembayaran"><span>Ada kendala pembayaran</span></label>
+                    <label class="quattro-reason-option"><input type="radio" name="cancel_reason" value="Saya tidak ingin membeli lagi"><span>Saya tidak ingin membeli lagi</span></label>
+                    <label class="quattro-reason-option"><input type="radio" name="cancel_reason" value="Lainnya"><span>Lainnya</span></label>
+                </fieldset>
+                <div id="customer-cancel-other-wrap" class="quattro-cancel-other" hidden>
+                    <label class="quattro-cancel-label" for="customer-cancel-other-reason">Tulis alasan lainnya</label>
+                    <textarea id="customer-cancel-other-reason" maxlength="500" rows="3" placeholder="Ceritakan alasan pembatalan…"></textarea>
+                </div>
+                <button type="submit" class="quattro-cancel-confirm">Konfirmasi Pembatalan</button>
+            </form>`;
+        document.body.appendChild(dialog);
+        dialog.querySelectorAll('input[name="cancel_reason"]').forEach(input => input.addEventListener('change', event => {
+            const otherWrap = dialog.querySelector('#customer-cancel-other-wrap');
+            const otherField = dialog.querySelector('#customer-cancel-other-reason');
+            const isOther = event.target.value === 'Lainnya';
+            otherWrap.hidden = !isOther;
+            otherField.required = isOther;
+            dialog.querySelectorAll('.quattro-reason-option').forEach(row => row.classList.toggle('is-selected', row.contains(event.target)));
+            if (isOther) otherField.focus();
+        }));
+        dialog.addEventListener('click', event => {
+            if (event.target === dialog || event.target.closest('[data-cancel-dialog-close]')) dialog.close();
+        });
+        dialog.querySelector('form').addEventListener('submit', async event => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const submit = form.querySelector('[type="submit"]');
+            const selectedReason = form.querySelector('input[name="cancel_reason"]:checked')?.value || '';
+            const customReason = form.querySelector('#customer-cancel-other-reason').value.trim();
+            const reason = selectedReason === 'Lainnya' ? customReason : selectedReason;
+            submit.disabled = true;
+            submit.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Memproses…';
+            try {
+                const response = await fetch(`/customer/orders/${Number(form.dataset.orderId)}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                        'X-Guest-Token': getGuestToken()
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ reason })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || 'Pesanan belum dapat dibatalkan.');
+                dialog.close();
+                showToast(data.message || 'Pesanan berhasil dibatalkan.');
+                await renderHistory();
+            } catch (error) {
+                showToast(error.message || 'Pesanan belum dapat dibatalkan.');
+            } finally {
+                submit.disabled = false;
+                submit.textContent = 'Konfirmasi Pembatalan';
+            }
+        });
+    }
+    const form = dialog.querySelector('form');
+    form.dataset.orderId = String(Number(orderId));
+    form.querySelectorAll('input[name="cancel_reason"]').forEach(input => { input.checked = false; });
+    form.querySelectorAll('.quattro-reason-option').forEach(row => row.classList.remove('is-selected'));
+    form.querySelector('#customer-cancel-other-reason').value = '';
+    form.querySelector('#customer-cancel-other-reason').required = false;
+    form.querySelector('#customer-cancel-other-wrap').hidden = true;
+    dialog.showModal();
+};
+
+function formatPaymentDeadline(value) {
+    if (!value) return '—';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+window.resumeQrisPayment = async function (orderId, retry) {
+    try {
+        if (!retry) {
+            window.location.href = `/customer/orders/${orderId}/payment`;
+            return;
+        }
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const response = await fetch(`/customer/orders/${orderId}/payment/retry`, { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Guest-Token': getGuestToken() }, credentials: 'same-origin' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.payment_url) throw new Error(data.message || 'QRIS belum dapat dibuka.');
+        window.location.href = data.payment_url;
+    } catch (error) {
+        showToast(error.message || 'Pembayaran belum dapat dibuka.');
+    }
+};
 
 function toggleOrderItemReview(orderItemId) {
     const form = document.getElementById(`order-review-form-${orderItemId}`);

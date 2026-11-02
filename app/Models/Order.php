@@ -22,12 +22,20 @@ class Order extends Model
         'total',
         'status',
         'payment_status',
+        'cancellation_reason',
+        'cancelled_by',
+        'cancelled_at',
+        'kitchen_confirmed_at',
     ];
 
     protected $casts = [
         'subtotal' => 'decimal:2',
         'tax' => 'decimal:2',
         'total' => 'decimal:2',
+        'kitchen_started_at' => 'datetime',
+        'kitchen_completed_at' => 'datetime',
+        'kitchen_confirmed_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     /**

@@ -36,6 +36,84 @@ body.modal-open {
     overflow: hidden;
 }
 
+#orderModal .modal-card {
+    box-sizing: border-box;
+    width: min(1040px, calc(100vw - 32px));
+    max-width: 1040px;
+    max-height: min(860px, calc(100dvh - 48px));
+    padding: 26px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cdb59d transparent;
+}
+
+#orderModal .modal-card input, #orderModal .modal-card select,
+#confirmPaymentModal .modal-card input, #confirmPaymentModal .modal-card select { box-sizing: border-box; }
+#orderModal .modal-head { margin-bottom: 16px; }
+#orderModal .modal-head h2 { font-size: 26px; }
+#orderModal .form-grid { grid-template-columns: 1fr; gap: 12px; margin-bottom: 0; }
+#orderModal .form-grid label { min-width: 0; font-size: 13px; }
+#orderModal .modal-card input, #orderModal .modal-card select { min-height: 44px; font-size: 14px; }
+#orderModal .menu-selector { margin-top: 0; padding: 17px; background:#fff; }
+#orderModal .menu-input-row { grid-template-columns: minmax(0, 1fr) 105px; gap: 10px; margin-top: 12px; }
+#orderModal .menu-input-row label { font-size: 13px; }
+#orderModal .add-menu-btn { min-height: 44px; padding: 0 14px; grid-column:1/-1; }
+#orderModal .selected-menu-item { padding: 12px 0; }
+#orderModal .order-total-box { margin-top: 12px; padding: 14px 16px; }
+#orderModal .order-total-box strong { font-size: 23px; }
+#orderModal .primary-btn.full { min-height: 50px; margin-top: 10px; }
+.order-workspace { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(320px,.88fr); gap:16px; align-items:start; }
+.order-builder { display:grid; gap:14px; min-width:0; }
+.order-panel { padding:16px; border:1px solid #eee2d7; border-radius:17px; background:#fffdfa; }
+.order-panel-title { display:flex; align-items:center; gap:11px; margin:0 0 14px; }
+.order-panel-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:12px; background:#f5eadc; color:#925308; }
+.order-panel-title h3 { margin:0; font-size:15px; color:#3b2b20; }
+.order-panel-title p { margin:3px 0 0; font-size:12px; color:#9a8878; }
+.order-customer-grid { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(145px,.8fr); gap:12px; align-items:end; }
+.order-table-field { grid-column:1/-1; }
+.order-cart { position:sticky; top:0; padding:17px; border:1px solid #ead9c7; border-radius:18px; background:#fbf5ee; }
+.order-cart-head { display:flex; justify-content:space-between; align-items:center; gap:10px; padding-bottom:13px; border-bottom:1px solid #eadfd3; }
+.order-cart-head h3 { margin:0; font-size:17px; color:#3b2b20; }
+.order-cart-head p { margin:4px 0 0; font-size:12px; color:#8b7a6b; }
+.order-cart-count { padding:5px 9px; border-radius:999px; background:#efe0ce; color:#85500f; font-size:11px; font-weight:700; white-space:nowrap; }
+#orderModal #selectedProducts { max-height:350px; overflow-y:auto; }
+#orderModal .empty-menu { min-height:170px; flex-direction:column; gap:8px; text-align:center; }
+#orderModal .empty-menu i { width:44px; height:44px; display:grid; place-items:center; border-radius:50%; background:#f5eadc; }
+#orderModal .selected-menu-item { align-items:flex-start; gap:8px; }
+#orderModal .menu-subtotal { align-items:center; gap:8px; }
+#orderModal .menu-subtotal strong { font-size:13px; }
+#orderModal .remove-menu-btn { width:30px; height:30px; flex-shrink:0; }
+#orderModal .order-total-box { background:#f1e2d0; border-color:#e7d2ba; }
+#orderModal .order-total-box span { font-size:13px; }
+#orderModal .order-cart .primary-btn.full { margin-top:10px; }
+.order-customer-grid { grid-template-columns:minmax(0,1.2fr) minmax(150px,.8fr) minmax(155px,.9fr) minmax(140px,.8fr); }
+.order-table-field { grid-column:auto; }
+.order-catalog-toolbar { display:grid; grid-template-columns:minmax(0,1fr) 190px; gap:10px; margin-bottom:13px; }
+.order-catalog-toolbar input, .order-catalog-toolbar select { min-height:42px!important; }
+.pos-product-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; max-height:430px; overflow-y:auto; padding:2px; }
+.pos-product-card { display:flex; flex-direction:column; align-items:flex-start; gap:6px; min-width:0; padding:13px; border:1px solid #eee2d7; border-radius:14px; background:#fff; text-align:left; cursor:pointer; transition:transform .15s,border-color .15s,box-shadow .15s; }
+.pos-product-card:hover { transform:translateY(-2px); border-color:#c9955c; box-shadow:0 8px 20px #70451314; }
+.pos-product-card:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.pos-product-card strong { overflow:hidden; max-width:100%; color:#3b2b20; font-size:14px; text-overflow:ellipsis; white-space:nowrap; }
+.pos-product-card small { color:#8b7a6b; font-size:11px; }
+.pos-product-card-price { color:#915509; font-weight:800; font-size:14px; }
+.pos-product-card-foot { display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; margin-top:3px; }
+.pos-product-category { padding:3px 7px; border-radius:999px; background:#f7eee4; color:#85500f; font-size:10px; font-weight:700; }
+.order-cart #selectedProducts { max-height:365px; overflow-y:auto; }
+.order-cart .selected-menu-item { gap:6px; }
+.order-cart .menu-info strong { font-size:13px; }
+.order-cart .menu-info small { font-size:11px; }
+.order-cart .quantity-control { margin-top:5px; }
+.order-cart-count { min-width:58px; text-align:center; }
+.order-catalog-empty { grid-column:1/-1; padding:26px 14px; border:1px dashed #dfcbb4; border-radius:13px; color:#8b7a6b; text-align:center; }
+#orderModal #saveOrderBtn:disabled { opacity:.7; cursor:wait; }
+
+@media(max-width:900px) {
+    .order-workspace { grid-template-columns:1fr; }
+    .order-cart { position:static; }
+    .pos-product-grid { max-height:260px; }
+}
+
 
 .modal-card {
     width: 100%;
@@ -212,6 +290,14 @@ body.modal-open {
 
     border-radius: 16px;
 }
+
+.menu-search-label { margin-bottom: 14px; }
+.menu-search-label input { min-height: 44px; }
+.stock-hint { min-height: 18px; margin: 7px 0 0; color: #7b6a5a; font-size: 12px; }
+.quantity-control { display: inline-flex; align-items: center; gap: 8px; margin-top: 7px; }
+.quantity-control button { width: 28px; height: 28px; border: 1px solid #eadfd3; border-radius: 8px; background: #fffaf5; color: #8c5a24; cursor: pointer; }
+.quantity-control button:disabled { opacity: .4; cursor: not-allowed; }
+.quantity-control strong { min-width: 20px; text-align: center; }
 
 
 .menu-input-row {
@@ -479,6 +565,8 @@ body.modal-open {
     border-radius: 12px;
 }
 
+#saveOrderBtn:disabled { opacity: .7; cursor: wait; }
+
 
 /* =========================================================
    CUSTOM MESSAGE
@@ -623,6 +711,17 @@ body.modal-open {
     .form-grid {
         grid-template-columns: 1fr;
     }
+
+    #orderModal .form-grid { grid-template-columns: 1fr; }
+    #orderModal .modal-card { width: calc(100vw - 20px); max-height: calc(100dvh - 24px); padding: 19px; }
+    .order-customer-grid { grid-template-columns:1fr 1fr; }
+    .order-table-field { grid-column:1/-1; }
+    .order-catalog-toolbar { grid-template-columns:1fr; }
+    .pos-product-grid { grid-template-columns:1fr 1fr; max-height:220px; }
+    #orderModal .order-workspace { grid-template-columns:1fr; }
+    #orderModal .order-cart { position:static; }
+    #orderModal .order-customer-grid { grid-template-columns:1fr 1fr; }
+    #orderModal .order-customer-grid label:first-child { grid-column:1/-1; }
 
 
     .menu-input-row {
@@ -780,6 +879,8 @@ body.modal-open {
 
                     <th>Total</th>
 
+                    <th>Pembayaran</th>
+
                     <th>Status</th>
 
                     <th>Aksi</th>
@@ -792,6 +893,11 @@ body.modal-open {
             <tbody>
 
                 @forelse($orders as $order)
+
+                    @php($paymentConfirmed = $order->payment_status === 'Dibayar' || $order->payment?->status === 'Berhasil')
+                    @php($latestGatewayAttempt = $order->payment?->attempts->sortByDesc('id')->first())
+                    @php($gatewayPayment = $latestGatewayAttempt !== null)
+                    @php($gatewayPaymentPending = $latestGatewayAttempt?->status === 'Pending')
 
                     <tr>
 
@@ -879,62 +985,73 @@ body.modal-open {
 
                         </td>
 
+                        <td>
+                            @if($order->payment)
+                                <strong>{{ $order->payment->payment_method }}</strong>
+                                <small style="display:block;color:{{ $paymentConfirmed ? '#2e8b57' : '#b06b00' }};">{{ $paymentConfirmed ? 'Lunas' : ($gatewayPayment ? ($gatewayPaymentPending ? 'Menunggu Midtrans' : 'QRIS perlu dibuat ulang') : ($order->payment->status === 'Gagal' ? 'Pembayaran gagal' : 'Menunggu konfirmasi')) }}</small>
+                            @else
+                                <small>Belum ada pembayaran</small>
+                            @endif
+                        </td>
+
 
                         {{-- STATUS --}}
                         <td>
 
                             <span
-                                class="badge {{ strtolower($order->status) }}"
+                                class="badge {{ str_replace(' ', '-', strtolower($order->status)) }}"
                             >
 
                                 {{ $order->status }}
 
                             </span>
-
-                            @if($order->payment_status === 'Dibayar')
-                                <small style="display:block; margin-top:4px; color:#2e8b57;">
-                                    Sudah Dibayar
-                                </small>
-                            @else
-                                <small style="display:block; margin-top:4px; color:#b06b00;">
-                                    Belum Dibayar
-                                </small>
-                            @endif
-
                         </td>
 
 
                         {{-- AKSI --}}
                         <td>
-
                             @if($order->table_number && $order->table_number !== 'Take Away' && in_array($order->status, ['Menunggu', 'Diproses', 'Selesai']))
                                 <button type="button" class="table-action" style="border:0;cursor:pointer;width:auto;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;background:#2e8b57;color:white;" onclick="openFinishTableModal({{ $order->id }}, @js($order->table_number), @js(route('kasir.orders.finishTable', $order->id)))">
                                     <i class="fa-solid fa-check"></i> Selesaikan Meja
                                 </button>
                             @endif
 
-                            @if($order->payment_status !== 'Dibayar')
+                            @if($paymentConfirmed)
+                                @if($gatewayPayment && !$order->kitchen_confirmed_at && $order->status === 'Menunggu')
+                                    <form method="POST" action="{{ route('kasir.orders.kitchen.confirm', $order->id) }}" style="display:inline-flex;">
+                                        @csrf
+                                        <button type="submit" class="table-action" title="Kirim pesanan lunas ke antrean Kitchen" style="border:0;cursor:pointer;width:auto;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;background:#e9f7ef;color:#237347;">
+                                            <i class="fa-solid fa-kitchen-set"></i> Konfirmasi ke Kitchen
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="table-action" title="Pembayaran lunas{{ $order->kitchen_confirmed_at ? ' dan sudah dikirim ke Kitchen' : '' }}" style="display:inline-flex;align-items:center;gap:6px;background:#e9f7ef;color:#237347;padding:8px 12px;border-radius:8px;font-weight:700;">
+                                        <i class="fa-solid fa-check-double"></i> {{ $order->kitchen_confirmed_at ? 'Sudah ke Kitchen' : 'Lunas' }}
+                                    </span>
+                                @endif
+                            @elseif($gatewayPayment && $gatewayPaymentPending)
+                                <form method="POST" action="{{ route('kasir.orders.payment.check', $order->id) }}" style="display:inline-flex;">
+                                    @csrf
+                                    <button type="submit" class="table-action" title="Periksa status transaksi ke Midtrans sebelum menandai lunas" style="border:0;cursor:pointer;width:auto;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;background:#fff5e5;color:#956014;">
+                                        <i class="fa-solid fa-rotate"></i> Cek Status QRIS
+                                    </button>
+                                </form>
+                            @elseif($gatewayPayment)
+                                <span class="table-action" title="Pembayaran QRIS Midtrans harus diverifikasi otomatis" style="display:inline-flex;align-items:center;gap:6px;background:#fff5e5;color:#956014;padding:8px 12px;border-radius:8px;font-weight:700;">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> QRIS gagal
+                                </span>
+                            @else
 
                                 <button
                                     type="button"
                                     class="table-action"
                                     title="Konfirmasi pembayaran"
                                     style="border:0; cursor:pointer; width:auto; padding:8px 12px; display:inline-flex; align-items:center; gap:6px;"
-                                    onclick="openConfirmPayment({{ $order->id }}, '{{ $order->order_number }}', {{ (float) $order->total }})"
+                                    onclick="openConfirmPayment({{ $order->id }}, @js($order->order_number), {{ (float) $order->total }}, @js($order->payment && $order->payment->status === 'Pending' ? $order->payment->payment_method : null), @js($order->items->map(fn ($item) => ['name' => $item->product_name, 'quantity' => $item->quantity, 'subtotal' => (float) $item->subtotal])->values()), @js($order->created_at->format('d/m/Y H:i')), @js($order->customer_name), @js($order->table_number ?: 'Take Away'))"
                                 >
                                     <i class="fa-solid fa-check"></i>
-                                    Konfirmasi
+                                    {{ $order->payment?->status === 'Pending' ? 'Lihat & Konfirmasi' : 'Konfirmasi' }}
                                 </button>
-
-                            @else
-
-                                <span
-                                    class="table-action"
-                                    title="Pesanan sudah dibayar"
-                                    style="opacity:.55; cursor:default;"
-                                >
-                                    <i class="fa-solid fa-check-double"></i>
-                                </span>
 
                             @endif
 
@@ -947,7 +1064,7 @@ body.modal-open {
                     <tr>
 
                         <td
-                            colspan="8"
+                            colspan="9"
                             style="text-align:center; padding:40px;"
                         >
 
@@ -994,11 +1111,11 @@ body.modal-open {
 {{-- MODAL KONFIRMASI PEMBAYARAN MANUAL --}}
 {{-- ========================================================= --}}
 <div class="modal" id="confirmPaymentModal">
-    <div class="modal-card" style="max-width:520px;">
+    <div class="modal-card" style="max-width:580px;">
         <div class="modal-head">
             <div>
                 <span class="eyebrow">KONFIRMASI PEMBAYARAN</span>
-                <h2>Konfirmasi Pesanan</h2>
+                <h2>Periksa & Konfirmasi</h2>
                 <p id="confirmPaymentOrder" style="margin-top:8px;color:#806f61;"></p>
             </div>
             <button type="button" onclick="closeConfirmPayment()">&times;</button>
@@ -1007,7 +1124,13 @@ body.modal-open {
         <form id="confirmPaymentForm" method="POST">
             @csrf
 
-            <label style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;color:#6f5a49;font-size:14px;font-weight:600;">
+            <div id="confirmPaymentSummary" style="margin:0 0 16px;padding:15px;border:1px solid #eadfd3;border-radius:14px;background:#fffaf5;">
+                <strong style="color:#493524;">Ringkasan pesanan</strong>
+                <p id="confirmPaymentMeta" style="margin:7px 0 12px;color:#806f61;font-size:13px;"></p>
+                <div id="existingPaymentItems" style="display:grid;gap:8px;"></div>
+            </div>
+
+            <label id="paymentMethodWrap" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;color:#6f5a49;font-size:14px;font-weight:600;">
                 Metode Pembayaran
                 <select name="payment_method" id="paymentMethod" required onchange="toggleCashInput()"
                         style="width:100%;min-height:50px;padding:0 15px;border:1px solid #eadfd3;border-radius:12px;background:#fff;color:#3b2b20;font-size:15px;">
@@ -1017,14 +1140,20 @@ body.modal-open {
                 </select>
             </label>
 
+            <div id="confirmedMethodSummary" hidden style="margin-bottom:16px;padding:12px 14px;border-radius:12px;background:#edf7ef;color:#28643d;">
+                <strong id="confirmedMethodText"></strong>
+                <small style="display:block;margin-top:4px;color:#52745a;">Pastikan pembayaran sudah diterima sebelum menekan konfirmasi.</small>
+            </div>
+            <small id="paymentInstruction" style="display:block;margin:-7px 0 16px;color:#806f61;">Periksa metode dan jumlah pembayaran sebelum konfirmasi.</small>
+
             <div id="cashInputWrap" style="display:none;margin-bottom:16px;">
                 <label style="display:flex;flex-direction:column;gap:8px;color:#6f5a49;font-size:14px;font-weight:600;">
                     Uang Diterima
-                    <input type="number" name="cash_received" id="cashReceived" min="0" step="0.01"
+                        <input type="number" name="cash_received" id="cashReceived" min="0" step="0.01" inputmode="decimal"
                            placeholder="Masukkan uang yang diterima"
                            style="width:100%;min-height:50px;padding:0 15px;border:1px solid #eadfd3;border-radius:12px;background:#fff;color:#3b2b20;font-size:15px;">
                 </label>
-                <small id="changePreview" style="display:block;margin-top:7px;color:#806f61;"></small>
+                <small id="changePreview" aria-live="polite" style="display:block;margin-top:7px;color:#806f61;font-weight:700;"></small>
             </div>
 
             <div class="order-total-box" style="margin-top:0;">
@@ -1032,14 +1161,15 @@ body.modal-open {
                 <strong id="confirmPaymentTotal">Rp 0</strong>
             </div>
 
-            <button type="submit" class="primary-btn full" style="border:0;cursor:pointer;">
+            <input type="hidden" name="payment_method" id="confirmedPaymentMethod" disabled>
+
+            <button id="confirmPaymentSubmit" type="submit" class="primary-btn full" style="border:0;cursor:pointer;">
                 <i class="fa-solid fa-check-double"></i>
-                Konfirmasi & Bayar
+                <span>Konfirmasi Pembayaran</span>
             </button>
         </form>
     </div>
 </div>
-
 
 {{-- ========================================================= --}}
 {{-- MODAL PESANAN BARU --}}
@@ -1093,233 +1223,86 @@ body.modal-open {
             @csrf
 
 
-            {{-- DATA CUSTOMER --}}
-            <div class="form-grid">
+            <section class="order-panel" style="margin-bottom:14px;">
+                <div class="order-panel-title">
+                    <span class="order-panel-icon"><i class="fa-solid fa-clipboard-list"></i></span>
+                    <div><h3>Info Pesanan</h3><p>Isi nama pelanggan dan pilih tipe pesanan.</p></div>
+                </div>
+                <div class="order-customer-grid">
+                    <label>Nama Pelanggan<input name="customer" required maxlength="100" placeholder="Contoh: Andi"></label>
+                    <label>Tipe Pesanan
+                        <select id="orderType" name="order_type" required onchange="updateTableOptions()">
+                            <option value="meja">Makan di tempat</option>
+                            <option value="take_away">Take Away</option>
+                        </select>
+                    </label>
+                    <label id="tableField" class="order-table-field">Nomor Meja
+                        <select id="tableSelect" name="table" required><option value="">Pilih meja</option></select>
+                    </label>
+                    <label>Metode Pembayaran
+                        <select name="payment_method" required>
+                            <option value="Cash">Cash</option>
+                            <option value="QRIS">QRIS</option>
+                        </select>
+                    </label>
+                </div>
+            </section>
 
+            <div class="order-workspace">
+                <section class="order-panel order-catalog">
+                    <div class="order-panel-title">
+                        <span class="order-panel-icon"><i class="fa-solid fa-mug-hot"></i></span>
+                        <div><h3>Katalog Menu</h3><p>Harga dan stok tersedia · {{ now()->format('d/m/Y') }}</p></div>
+                    </div>
 
-                {{-- NAMA CUSTOMER --}}
-                <label>
+                    <div class="order-catalog-toolbar">
+                        <input id="productSearch" type="search" placeholder="Cari menu..." autocomplete="off" aria-label="Cari menu">
+                        <select id="productCategoryFilter" aria-label="Filter kategori menu">
+                            <option value="">Semua kategori</option>
+                            @foreach(config('product_categories') as $category)
+                                <option value="{{ strtolower(str_replace(' ', '-', $category['value'])) }}">{{ $category['label'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                    Nama Pelanggan
-
-                    <input
-                        name="customer"
-                        required
-                        placeholder="Contoh: Andi"
-                    >
-
-                </label>
-
-
-                {{-- TIPE PESANAN --}}
-                <label>
-                    Tipe Pesanan
-                    <select id="orderType" name="order_type" required onchange="updateTableOptions()">
-                        <option value="meja">Meja</option>
-                        <option value="take_away">Take Away</option>
-                    </select>
-                </label>
-
-                {{-- NOMOR MEJA --}}
-                <label id="tableField">
-                    Nomor Meja
-                    <select id="tableSelect" name="table" required>
-                        <option value="">-- Pilih Nomor Meja --</option>
-                    </select>
-                </label>
-
-            </div>
-
-
-
-            {{-- ================================================= --}}
-            {{-- PILIH MENU --}}
-            {{-- ================================================= --}}
-
-            <div class="menu-selector">
-
-
-                <label>
-
-                    Pilih Menu
-
-                    <select
-                        id="productSelect"
-                        onchange="updateProductPrice()"
-                    >
-
-                        <option value="">
-                            -- Pilih Menu --
-                        </option>
-
-
-                        @foreach($products as $product)
-
-                            <option
-                                value="{{ $product->id }}"
+                    <div class="pos-product-grid" id="productCatalog">
+                        @forelse($products as $product)
+                            @php($productCategory = collect(config('product_categories'))->firstWhere('value', $product->category))
+                            <button type="button" class="pos-product-card"
+                                data-product-id="{{ $product->id }}"
                                 data-name="{{ $product->name }}"
                                 data-price="{{ $product->price }}"
-                            >
-
-                                {{ $product->name }}
-                                -
-                                Rp {{ number_format($product->price, 0, ',', '.') }}
-
-                            </option>
-
-                        @endforeach
-
-                    </select>
-
-                </label>
-
-
-                {{-- HARGA --}}
-                <div class="menu-input-row">
-
-
-                    <label>
-
-                        Harga
-
-                        <input
-                            type="text"
-                            id="productPrice"
-                            readonly
-                            placeholder="Rp 0"
-                        >
-
-                    </label>
-
-
-                    {{-- JUMLAH --}}
-                    <label>
-
-                        Jumlah
-
-                        <input
-                            type="number"
-                            id="productQuantity"
-                            min="1"
-                            value="1"
-                        >
-
-                    </label>
-
-
-                    {{-- TOMBOL TAMBAH --}}
-                    <button
-                        type="button"
-                        class="add-menu-btn"
-                        onclick="addProduct()"
-                    >
-
-                        <i class="fa-solid fa-plus"></i>
-
-                        Tambah
-
-                    </button>
-
-                </div>
-
-            </div>
-
-
-
-            {{-- ================================================= --}}
-            {{-- DAFTAR MENU YANG DIPILIH --}}
-            {{-- ================================================= --}}
-
-            <div class="selected-menu-box">
-
-                <div class="selected-menu-header">
-
-                    <div>
-
-                        <h3>
-                            Pesanan
-                        </h3>
-
-                        <p>
-                            Menu yang dipilih
-                        </p>
-
+                                data-stock="{{ $product->available_stock }}"
+                                data-category="{{ strtolower(str_replace(' ', '-', $product->category)) }}"
+                                onclick="addProductFromCard(this)">
+                                <span class="pos-product-category">{{ $productCategory['label'] ?? $product->category }}</span>
+                                <strong>{{ $product->name }}</strong>
+                                <span class="pos-product-card-foot">
+                                    <span class="pos-product-card-price">Rp {{ number_format((float) $product->price, 0, ',', '.') }}</span>
+                                    <small class="pos-product-stock">Stok {{ $product->available_stock }}</small>
+                                </span>
+                            </button>
+                        @empty
+                            <div class="order-catalog-empty">Belum ada menu yang tersedia.</div>
+                        @endforelse
+                        <div id="catalogNoResults" class="order-catalog-empty" hidden>Menu tidak ditemukan.</div>
                     </div>
+                </section>
 
-                </div>
-
-
-                <div id="selectedProducts">
-
-                    <div class="empty-menu">
-
-                        <i class="fa-solid fa-mug-hot"></i>
-
-                        <span>
-                            Belum ada menu dipilih
-                        </span>
-
+                <aside class="order-cart">
+                    <div class="order-cart-head">
+                        <div><h3>Keranjang</h3><p>Periksa jumlah sebelum simpan.</p></div>
+                        <span id="orderCartCount" class="order-cart-count">0 item</span>
                     </div>
-
-                </div>
-
+                    <div id="selectedProducts">
+                        <div class="empty-menu"><i class="fa-solid fa-basket-shopping"></i><span>Belum ada menu dipilih</span></div>
+                    </div>
+                    <div class="order-total-box"><span>Total pesanan</span><strong id="totalDisplay">Rp 0</strong></div>
+                    <input type="hidden" name="items" id="itemsInput">
+                    <input type="hidden" name="total" id="totalInput" value="0">
+                    <button class="primary-btn full" type="submit" id="saveOrderBtn"><i class="fa-solid fa-check"></i> Simpan Pesanan</button>
+                </aside>
             </div>
-
-
-
-            {{-- ================================================= --}}
-            {{-- TOTAL --}}
-            {{-- ================================================= --}}
-
-            <div class="order-total-box">
-
-                <span>
-                    Total Pembayaran
-                </span>
-
-                <strong id="totalDisplay">
-                    Rp 0
-                </strong>
-
-            </div>
-
-
-
-            {{-- ================================================= --}}
-            {{-- INPUT TERSEMBUNYI --}}
-            {{-- ================================================= --}}
-
-            <input
-                type="hidden"
-                name="items"
-                id="itemsInput"
-            >
-
-
-            <input
-                type="hidden"
-                name="total"
-                id="totalInput"
-                value="0"
-            >
-
-
-
-            {{-- ================================================= --}}
-            {{-- SIMPAN --}}
-            {{-- ================================================= --}}
-
-            <button
-                class="primary-btn full"
-                type="submit"
-                id="saveOrderBtn"
-            >
-
-                <i class="fa-solid fa-check"></i>
-
-                Simpan Pesanan
-
-            </button>
 
         </form>
 
@@ -1347,6 +1330,8 @@ body.modal-open {
     document.addEventListener('DOMContentLoaded', function () {
         generateTableOptions();
         updateTableOptions();
+        document.getElementById('productSearch')?.addEventListener('input', filterProductCatalog);
+        document.getElementById('productCategoryFilter')?.addEventListener('change', filterProductCatalog);
     });
 
 
@@ -1364,17 +1349,14 @@ body.modal-open {
         tableSelect.innerHTML = '<option value="">-- Pilih Nomor Meja --</option>';
         const occupiedTables = @json($occupiedTables ?? []);
 
-        for (let letterCode = 65; letterCode <= 90; letterCode++) {
-            const letter = String.fromCharCode(letterCode);
-            for (let number = 1; number <= 100; number++) {
-                const tableNumber = letter + String(number).padStart(2, '0');
-                const isOccupied = occupiedTables.includes(tableNumber);
-                const option = document.createElement('option');
-                option.value = tableNumber;
-                option.textContent = isOccupied ? `${tableNumber} — Sedang Dipakai` : `${tableNumber} — Tersedia`;
-                option.disabled = isOccupied;
-                tableSelect.appendChild(option);
-            }
+        for (let number = 1; number <= 20; number++) {
+            const tableNumber = 'A' + String(number).padStart(2, '0');
+            const isOccupied = occupiedTables.includes(tableNumber);
+            const option = document.createElement('option');
+            option.value = tableNumber;
+            option.textContent = isOccupied ? `${tableNumber} — Sedang Dipakai` : `${tableNumber} — Tersedia`;
+            option.disabled = isOccupied;
+            tableSelect.appendChild(option);
         }
         if (previousValue && !occupiedTables.includes(previousValue)) tableSelect.value = previousValue;
     }
@@ -1440,25 +1422,50 @@ body.modal-open {
         if (!document.querySelector('.modal.show')) document.body.classList.remove('modal-open');
     }
 
-    function openConfirmPayment(orderId, orderNumber, total) {
+    function openConfirmPayment(orderId, orderNumber, total, existingMethod = null, items = [], orderDate = '', customerName = '', tableNumber = '') {
         const modal = document.getElementById('confirmPaymentModal');
         const form = document.getElementById('confirmPaymentForm');
         const method = document.getElementById('paymentMethod');
         const cash = document.getElementById('cashReceived');
         const totalEl = document.getElementById('confirmPaymentTotal');
         const orderEl = document.getElementById('confirmPaymentOrder');
+        const methodWrap = document.getElementById('paymentMethodWrap');
+        const methodSummary = document.getElementById('confirmedMethodSummary');
+        const methodText = document.getElementById('confirmedMethodText');
+        const detailMeta = document.getElementById('confirmPaymentMeta');
+        const detailItems = document.getElementById('existingPaymentItems');
+        const hiddenMethod = document.getElementById('confirmedPaymentMethod');
+        const submitButton = document.getElementById('confirmPaymentSubmit');
 
         confirmPaymentTotalValue = Number(total) || 0;
         form.action = `{{ url('/kasir/orders') }}/${orderId}/confirm`;
         orderEl.textContent = `Pesanan ${orderNumber}`;
         totalEl.textContent = formatRupiah(confirmPaymentTotalValue);
-        method.value = '';
+        method.value = existingMethod || '';
+        method.disabled = Boolean(existingMethod);
+        methodWrap.hidden = Boolean(existingMethod);
+        methodSummary.hidden = !existingMethod;
+        methodText.textContent = existingMethod ? `Metode pembayaran: ${existingMethod}` : '';
+        hiddenMethod.value = existingMethod || '';
+        hiddenMethod.disabled = !existingMethod;
         cash.value = '';
+        cash.max = '';
+        submitButton.disabled = false;
+        submitButton.querySelector('span').textContent = existingMethod ? 'Konfirmasi Pembayaran' : 'Konfirmasi & Bayar';
         document.getElementById('changePreview').textContent = '';
+        document.getElementById('changePreview').style.color = '#806f61';
         toggleCashInput();
+        detailMeta.textContent = `${orderDate || 'Tanggal tidak tersedia'} · ${escapeOrderText(customerName || 'Pelanggan')} · ${escapeOrderText(tableNumber || 'Take Away')} · ${formatRupiah(confirmPaymentTotalValue)}`;
+        detailItems.innerHTML = items.length
+            ? items.map(item => `<div style="display:flex;justify-content:space-between;gap:12px;padding-bottom:7px;border-bottom:1px solid #efe5dc;"><span>${escapeOrderText(item.name)} × ${Number(item.quantity)}</span><strong>${formatRupiah(item.subtotal)}</strong></div>`).join('')
+            : '<span style="color:#806f61;">Rincian menu tidak tersedia.</span>';
 
         modal.classList.add('show');
         document.body.classList.add('modal-open');
+    }
+
+    function escapeOrderText(value) {
+        return String(value).replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[character]));
     }
 
     function closeConfirmPayment() {
@@ -1473,15 +1480,21 @@ body.modal-open {
         const wrap = document.getElementById('cashInputWrap');
         const cash = document.getElementById('cashReceived');
         const preview = document.getElementById('changePreview');
+        const instruction = document.getElementById('paymentInstruction');
 
         if (method === 'Cash') {
             wrap.style.display = 'block';
             cash.required = true;
+            instruction.textContent = 'Hitung uang yang diterima. Pastikan jumlahnya sama dengan atau lebih besar dari total.';
         } else {
             wrap.style.display = 'none';
             cash.required = false;
             cash.value = '';
+            cash.removeAttribute('max');
             preview.textContent = '';
+            instruction.textContent = method === 'QRIS'
+                ? 'Pastikan pembayaran QRIS berhasil diterima sebelum mengonfirmasi.'
+                : 'Pilih metode dan periksa total pembayaran sebelum konfirmasi.';
         }
     }
 
@@ -1493,6 +1506,7 @@ body.modal-open {
             change >= 0
                 ? `Kembalian: ${formatRupiah(change)}`
                 : `Kurang: ${formatRupiah(Math.abs(change))}`;
+        document.getElementById('changePreview').style.color = change >= 0 ? '#28643d' : '#b42318';
     });
 
     document.getElementById('confirmPaymentForm').addEventListener('submit', function(event) {
@@ -1508,14 +1522,22 @@ body.modal-open {
         if (method === 'Cash' && cash < confirmPaymentTotalValue) {
             event.preventDefault();
             showMessage('Uang yang diterima belum mencukupi.');
+            return;
         }
+
+        const submitButton = document.getElementById('confirmPaymentSubmit');
+        submitButton.disabled = true;
+        submitButton.querySelector('span').textContent = 'Memproses Pembayaran...';
     });
 
 
     function openModal() {
 
         document.getElementById('orderForm').reset();
+        document.getElementById('productSearch').value = '';
+        document.getElementById('productCategoryFilter').value = '';
         selectedProducts = [];
+        filterProductCatalog();
         renderProducts();
 
         document
@@ -1552,144 +1574,49 @@ body.modal-open {
 
 
 
-    /**
-     * ========================================================
-     * KETIKA MENU DIPILIH
-     * ========================================================
-     */
+    function filterProductCatalog() {
+        const query = (document.getElementById('productSearch')?.value || '').trim().toLowerCase();
+        const category = document.getElementById('productCategoryFilter')?.value || '';
+        const cards = Array.from(document.querySelectorAll('.pos-product-card'));
+        let visible = 0;
 
-    function updateProductPrice() {
+        cards.forEach(card => {
+            const matchesName = card.dataset.name.toLowerCase().includes(query);
+            const matchesCategory = !category || card.dataset.category === category;
+            card.hidden = !(matchesName && matchesCategory);
+            if (!card.hidden) visible++;
+        });
 
-        const select =
-            document.getElementById('productSelect');
-
-        const priceInput =
-            document.getElementById('productPrice');
-
-
-        if (!select.value) {
-
-            priceInput.value = '';
-
-            return;
-
-        }
-
-
-        const option =
-            select.options[select.selectedIndex];
-
-
-        const price =
-            Number(option.dataset.price);
-
-
-        priceInput.value =
-            formatRupiah(price);
-
+        const empty = document.getElementById('catalogNoResults');
+        if (empty) empty.hidden = cards.length === 0 || visible > 0;
     }
 
+    function addProductFromCard(card) {
+        if (!card || card.disabled) return;
 
-
-    /**
-     * ========================================================
-     * TAMBAH MENU
-     * ========================================================
-     */
-
-    function addProduct() {
-
-        const select =
-            document.getElementById('productSelect');
-
-        const quantityInput =
-            document.getElementById('productQuantity');
-
-
-        /**
-         * Pastikan menu dipilih
-         */
-        if (!select.value) {
-
-            showMessage(
-                'Silakan pilih menu terlebih dahulu.'
-            );
-
-            return;
-
-        }
-
-
-        const option =
-            select.options[select.selectedIndex];
-
-
-        const productId =
-            Number(select.value);
-
-
-        const productName =
-            option.dataset.name;
-
-
-        const price =
-            Number(option.dataset.price);
-
-
-        const quantity =
-            Math.max(
-                1,
-                Number(quantityInput.value) || 1
-            );
-
-
-        /**
-         * Cek apakah produk sudah ada
-         */
-        const existing =
-            selectedProducts.find(
-                item => item.product_id === productId
-            );
-
+        const productId = Number(card.dataset.productId);
+        const productName = card.dataset.name;
+        const price = Number(card.dataset.price);
+        const availableStock = Number(card.dataset.stock || 0);
+        const existing = selectedProducts.find(item => item.product_id === productId);
 
         if (existing) {
-
-            existing.quantity += quantity;
-
+            if (existing.quantity >= availableStock) {
+                showMessage(`Stok ${productName} yang tersedia hanya ${availableStock}.`);
+                return;
+            }
+            existing.quantity++;
         } else {
-
             selectedProducts.push({
-
                 product_id: productId,
-
                 product_name: productName,
-
-                price: price,
-
-                quantity: quantity
-
+                price,
+                available_stock: availableStock,
+                quantity: 1
             });
-
         }
 
-
-        /**
-         * Render ulang
-         */
         renderProducts();
-
-
-        /**
-         * Reset pilihan
-         */
-        select.value = '';
-
-        document
-            .getElementById('productPrice')
-            .value = '';
-
-        quantityInput.value = 1;
-
     }
 
 
@@ -1726,6 +1653,7 @@ body.modal-open {
             `;
 
             updateTotal();
+            syncProductCardStocks();
 
             return;
 
@@ -1755,8 +1683,14 @@ body.modal-open {
                             <small>
                                 ${formatRupiah(item.price)}
                                 ×
-                                ${item.quantity}
+                                ${item.quantity} · stok tersedia ${item.available_stock}
                             </small>
+
+                            <div class="quantity-control" aria-label="Ubah jumlah ${escapeHtml(item.product_name)}">
+                                <button type="button" onclick="updateSelectedQuantity(${index}, -1)" aria-label="Kurangi jumlah">−</button>
+                                <strong>${item.quantity}</strong>
+                                <button type="button" onclick="updateSelectedQuantity(${index}, 1)" aria-label="Tambah jumlah" ${item.quantity >= item.available_stock ? 'disabled' : ''}>+</button>
+                            </div>
 
                         </div>
 
@@ -1788,6 +1722,7 @@ body.modal-open {
 
 
         updateTotal();
+        syncProductCardStocks();
 
     }
 
@@ -1805,6 +1740,19 @@ body.modal-open {
 
         renderProducts();
 
+    }
+
+    function updateSelectedQuantity(index, difference) {
+        const item = selectedProducts[index];
+        if (!item) return;
+        const nextQuantity = item.quantity + difference;
+        if (nextQuantity < 1) return;
+        if (nextQuantity > item.available_stock) {
+            showMessage(`Stok ${item.product_name} yang tersedia hanya ${item.available_stock}.`);
+            return;
+        }
+        item.quantity = nextQuantity;
+        renderProducts();
     }
 
 
@@ -1839,6 +1787,9 @@ body.modal-open {
             .getElementById('totalInput')
             .value = total;
 
+        const itemCount = selectedProducts.reduce((count, item) => count + item.quantity, 0);
+        document.getElementById('orderCartCount').textContent = `${itemCount} item`;
+
 
         /**
          * Kirim data menu ke controller
@@ -1850,6 +1801,17 @@ body.modal-open {
                     selectedProducts
                 );
 
+    }
+
+    function syncProductCardStocks() {
+        document.querySelectorAll('.pos-product-card').forEach(card => {
+            const baseStock = Number(card.dataset.stock || 0);
+            const selected = selectedProducts.find(item => item.product_id === Number(card.dataset.productId));
+            const remaining = Math.max(0, baseStock - (selected?.quantity || 0));
+            const stockLabel = card.querySelector('.pos-product-stock');
+            if (stockLabel) stockLabel.textContent = `Sisa ${remaining}`;
+            card.disabled = remaining < 1;
+        });
     }
 
 
@@ -1992,11 +1954,9 @@ body.modal-open {
 
             // Pastikan daftar menu terbaru terkirim untuk semua tipe pesanan.
             updateTotal();
-
-            /**
-             * Update data terakhir
-             */
-            updateTotal();
+            const submitButton = document.getElementById('saveOrderBtn');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan Pesanan...';
 
         });
 

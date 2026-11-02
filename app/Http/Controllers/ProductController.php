@@ -22,7 +22,9 @@ class ProductController extends Controller
 
         // Filter kategori
         if ($request->filled('category')) {
-            $query->where('category', $request->category);
+            $request->category === 'Food'
+                ? $query->whereIn('category', ['Food', 'Makanan Berat'])
+                : $query->where('category', $request->category);
         }
 
         // Filter status
@@ -70,7 +72,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
 
-            'category' => 'required|in:Coffee,Non Coffee,Food',
+            'category' => ['required', 'in:' . implode(',', array_column(config('product_categories'), 'value'))],
 
             'price' => 'required|numeric|min:0',
 
@@ -144,7 +146,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
 
-            'category' => 'required|in:Coffee,Non Coffee,Food',
+            'category' => ['required', 'in:' . implode(',', array_column(config('product_categories'), 'value'))],
 
             'price' => 'required|numeric|min:0',
 

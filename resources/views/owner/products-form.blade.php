@@ -19,8 +19,8 @@
     <div class="pf-group">
         <label for="category">Kategori</label>
         <select id="category" name="category" required>
-            @foreach(['Coffee','Non Coffee','Food'] as $cat)
-                <option value="{{ $cat }}" {{ old('category', $product->category ?? '') == $cat ? 'selected' : '' }}>{{ $cat }}</option>
+            @foreach(config('product_categories') as $cat)
+                <option value="{{ $cat['value'] }}" {{ in_array(old('category', $product->category ?? ''), [$cat['value'], $cat['value'] === 'Food' ? 'Makanan Berat' : null], true) ? 'selected' : '' }}>{{ $cat['label'] }}</option>
             @endforeach
         </select>
         @error('category') <div class="pf-error">{{ $message }}</div> @enderror
