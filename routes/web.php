@@ -15,6 +15,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\MidtransWebhookController;
+use App\Http\Controllers\WhatsAppLoginWebhookController;
 
 /* WELCOME */
 Route::view('/', 'welcome')->name('welcome');
@@ -46,8 +47,22 @@ Route::prefix('customer')->name('customer.')->group(function () {
 Route::get('/customer/login', [AuthController::class, 'showLogin'])
     ->name('customer.login');
 
-Route::post('/customer/login', [AuthController::class, 'login'])
-    ->name('customer.login.store');
+Route::post('/customer/login/whatsapp/start', [AuthController::class, 'startWhatsAppLogin'])
+    ->middleware(['guest', 'throttle:5,1'])
+    ->name('customer.login.whatsapp.start');
+
+Route::post('/customer/login/whatsapp/poll', [AuthController::class, 'pollWhatsAppLogin'])
+    ->middleware(['guest', 'throttle:120,1'])
+    ->name('customer.login.whatsapp.poll');
+
+Route::get('/customer/login/whatsapp/return/{code}', [AuthController::class, 'returnFromWhatsApp'])
+    ->middleware('signed')
+    ->name('customer.login.whatsapp.return');
+
+Route::get('/webhooks/whatsapp', [WhatsAppLoginWebhookController::class, 'verify'])
+    ->name('webhooks.whatsapp.verify');
+Route::post('/webhooks/whatsapp', [WhatsAppLoginWebhookController::class, 'receive'])
+    ->name('webhooks.whatsapp.receive');
 
 Route::middleware('guest')->group(function () {
     Route::get('/customer/register', [AuthController::class, 'showRegister'])

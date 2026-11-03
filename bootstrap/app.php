@@ -13,12 +13,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
 
+        // Mengenali HTTPS dari proxy seperti ngrok
+        $middleware->trustProxies(at: '*');
+
         $middleware->validateCsrfTokens(except: [
             'payments/midtrans/notification',
+            'webhooks/whatsapp',
         ]);
 
         // Redirect user yang belum login
-        // berdasarkan area aplikasi yang diakses.
         $middleware->redirectGuestsTo(function ($request) {
 
             if (

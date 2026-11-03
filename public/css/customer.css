@@ -8142,3 +8142,45 @@ body.product-detail-open {
     from { transform: translateY(28px); opacity: .8; }
     to { transform: translateY(0); opacity: 1; }
 }
+
+/* WhatsApp-first customer sign-in */
+.customer-wa-login { width: 100%; max-width: 520px; min-height: 100vh; margin: 0 auto; padding: 0 20px 30px; display: flex; flex-direction: column; background: #fbf8f2; }
+.customer-wa-login__header { height: 58px; margin: 0 -20px; padding: 0 20px; display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; border-bottom: 1px solid #eee5d8; }
+.customer-wa-login__header a { color: #572e04; font-size: 22px; text-decoration: none; }
+.customer-wa-login__header strong { text-align: center; font-size: 15px; color: #572e04; letter-spacing: .02em; }
+.customer-wa-login__hero { text-align: center; margin: 22px 0 22px; }
+.customer-wa-login__brand { display: inline-flex; align-items: center; gap: 10px; margin: 4px auto 17px; color: #572e04; }
+.customer-wa-login__brand > span { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid #c69b66; border-radius: 50%; color: #763f06; font-size: 18px; }
+.customer-wa-login__brand strong { display: grid; text-align: left; font-family: Georgia, serif; font-size: 16px; letter-spacing: .13em; }
+.customer-wa-login__brand small { margin-top: 2px; color: #98734b; font-family: inherit; font-size: 9px; font-weight: 600; letter-spacing: .32em; }
+.customer-wa-login__art { height: 250px; max-width: 360px; position: relative; margin: 0 auto 22px; display: grid; place-items: center; overflow: hidden; border-radius: 34px 34px 86px 34px; background: linear-gradient(145deg, #f1e5d2, #f8efe3 62%, #e8d5bb); }
+.customer-wa-login__art::before { content: ""; position: absolute; width: 210px; height: 210px; border: 1px solid #d8c1a2; border-radius: 50%; box-shadow: 0 0 0 18px #fff6eb70, 0 0 0 36px #fff6eb40; }
+.customer-wa-login__chat { position: absolute; z-index: 2; left: 7%; top: 31%; display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 12px 12px 12px 3px; background: #763f06; color: #fff; font-weight: 600; font-size: 13px; text-align: left; box-shadow: 0 8px 20px #572e0430; }
+.customer-wa-login__chat i { font-size: 24px; }
+.customer-wa-login__cup { position: absolute; right: 13%; bottom: 14%; width: 112px; height: 78px; display: grid; place-items: center; border-radius: 12px 12px 42px 42px; background: #b97835; color: #fff7e9; font-size: 45px; transform: rotate(-5deg); box-shadow: inset 0 8px 0 #d9a56f; }
+.customer-wa-login__cup span { position: absolute; right: -19px; top: 17px; width: 28px; height: 34px; border: 8px solid #b97835; border-left: 0; border-radius: 0 20px 20px 0; }
+.customer-wa-login__badge { position: absolute; z-index: 3; right: 14%; top: 20%; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: #fffaf2; color: #763f06; font-size: 18px; box-shadow: 0 5px 15px #572e0420; }
+.customer-wa-login__spark { position: absolute; color: #b97835; font-size: 34px; }
+.customer-wa-login__spark--one { left: 8%; bottom: 24%; }
+.customer-wa-login__spark--two { right: 8%; top: 18%; font-size: 22px; color: #cda46f; }
+.customer-wa-login__hero h1 { margin: 0 0 8px; font-family: Georgia, serif; font-size: 22px; color: #572e04; }
+.customer-wa-login__hero p { max-width: 360px; margin: 0 auto; color: #646464; font-size: 14px; line-height: 1.5; }
+.customer-wa-login__button { width: 100%; min-height: 50px; margin-top: 8px; border: 0; border-radius: 10px; background: #763f06; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 5px 14px #572e0420; }
+.customer-wa-login__button:hover { background: #572e04; }
+.customer-wa-login__button i { margin-right: 7px; color: #68d391; font-size: 19px; }
+.customer-wa-login__hint { margin: 12px auto 0; color: #555; text-align: center; font-size: 13px; line-height: 1.4; }
+.customer-wa-login__hint--hidden { display: none; }
+.customer-wa-login__form { display: grid; gap: 10px; margin-top: 14px; }
+.customer-wa-login__form--hidden { display: none; }
+.customer-wa-login__form label { color: #333; font-size: 13px; font-weight: 600; }
+.customer-wa-login__form input { width: 100%; height: 48px; padding: 0 14px; border: 1px solid #ddd; border-radius: 9px; outline: none; font-size: 15px; }
+.customer-wa-login__form input:focus { border-color: #763f06; box-shadow: 0 0 0 3px #763f061a; }
+.customer-wa-login__form .customer-wa-login__button { margin-top: 2px; }
+.customer-wa-login__error { color: #b42318; font-size: 12px; }
+.customer-wa-login__otp-state { padding: 12px 14px; border: 1px solid #e7d7bf; border-radius: 9px; background: #f4ecdf; color: #572e04; font-size: 13px; line-height: 1.5; }
+.customer-wa-login__resend { margin-top: 14px; color: #555; font-size: 13px; }
+.customer-wa-login__resend summary { cursor: pointer; }
+.customer-wa-login__guest { margin: auto auto 0; padding: 44px 0 20px; color: #202020; font-size: 15px; font-weight: 700; text-align: center; text-decoration: none; }
+.customer-wa-login__terms { margin: 0 auto; color: #7a7a7a; text-align: center; font-size: 11px; line-height: 1.5; }
+.customer-wa-login__terms a { color: #a45118; }
+@media (min-height: 800px) { .customer-wa-login__guest { padding-top: 100px; } }

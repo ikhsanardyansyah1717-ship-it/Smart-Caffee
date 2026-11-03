@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
 
 class AuthController extends Controller
 {
@@ -19,27 +22,79 @@ class AuthController extends Controller
         return view('customer.login');
     }
 
-    public function login(Request $request): RedirectResponse
+    public function startWhatsAppLogin(Request $request)
+    {
+        abort_unless(config('services.whatsapp.login_number'), 503, 'Login WhatsApp belum dikonfigurasi.');
+
+        $code = strtoupper(Str::random(12));
+        $key = 'customer_whatsapp_login:' . $code;
+        Cache::put($key, [
+            'session_id' => $request->session()->getId(),
+            'status' => 'pending',
+            'user_id' => null,
+        ], now()->addMinutes(5));
+
+        $returnUrl = URL::temporarySignedRoute(
+            'customer.login.whatsapp.return',
+            now()->addMinutes(5),
+            ['code' => $code]
+        );
+        $message = "Hi! Saya ingin login ke Quattro Coffee.\n\nKode verifikasi: {$code}\n\nSetelah mengirim pesan, kembali ke browser untuk melanjutkan: {$returnUrl}";
+        $whatsAppUrl = 'https://api.whatsapp.com/send?phone='
+            . urlencode(config('services.whatsapp.login_number'))
+            . '&text=' . urlencode($message);
+
+        return response()->json([
+            'code' => $code,
+            'whatsapp_url' => $whatsAppUrl,
+        ]);
+    }
+
+    public function pollWhatsAppLogin(Request $request)
     {
         $data = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
+            'code' => ['required', 'regex:/^[A-Z0-9]{12}$/'],
         ]);
 
-        $user = User::where('email', $data['email'])
-            ->where('role', 'customer')
-            ->first();
+        $key = 'customer_whatsapp_login:' . $data['code'];
+        $challenge = Cache::get($key);
 
-        if (!$user || !Hash::check($data['password'], $user->password)) {
-            return back()
-                ->withErrors(['email' => 'Email atau kata sandi tidak sesuai.'])
-                ->withInput($request->only('email'));
+        abort_unless($challenge && hash_equals($challenge['session_id'], $request->session()->getId()), 404);
+
+        if ($challenge['status'] === 'pending') {
+            return response()->json(['status' => 'pending'], 202);
         }
+
+        if ($challenge['status'] === 'unlinked') {
+            Cache::forget($key);
+            return response()->json(['status' => 'unlinked'], 422);
+        }
+
+        $user = User::whereKey($challenge['user_id'])->where('role', 'customer')->first();
+        Cache::forget($key);
+        abort_unless($user, 404);
 
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('customer.profile'));
+        return response()->json([
+            'status' => 'authenticated',
+            'redirect_url' => redirect()->intended(route('customer.profile'))->getTargetUrl(),
+        ]);
+    }
+
+    public function returnFromWhatsApp(string $code)
+    {
+        return redirect()->route('customer.login', ['wa_code' => strtoupper($code)]);
+    }
+
+    private function normalizePhone(string $phone): ?string
+    {
+        $digits = preg_replace('/\D+/', '', $phone);
+        if (str_starts_with($digits, '0')) $digits = '62' . substr($digits, 1);
+        if (str_starts_with($digits, '8')) $digits = '62' . $digits;
+
+        return preg_match('/^62[0-9]{8,13}$/', $digits) ? $digits : null;
     }
 
     public function logout(Request $request): RedirectResponse

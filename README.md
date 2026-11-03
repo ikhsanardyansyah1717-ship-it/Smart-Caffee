@@ -21,6 +21,22 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Login pelanggan via WhatsApp
+
+Login pelanggan menggunakan alur click-to-chat: aplikasi menyiapkan pesan dengan kode unik, pelanggan mengirim pesan itu ke WhatsApp bisnis Quattro, lalu webhook mencocokkan nomor pengirim dengan nomor di profil dan melanjutkan login. Dibutuhkan domain publik dengan HTTPS agar Meta dapat memanggil webhook.
+
+Atur `.env`:
+
+```dotenv
+APP_URL=https://domain-publik-kamu
+WHATSAPP_LOGIN_NUMBER=6281234567890
+WHATSAPP_PHONE_NUMBER_ID=id_nomor_dari_meta
+WHATSAPP_WEBHOOK_VERIFY_TOKEN=rahasia_yang_kamu_buat
+WHATSAPP_APP_SECRET=app_secret_dari_meta
+```
+
+`WHATSAPP_LOGIN_NUMBER` memakai kode negara tanpa tanda `+`. Di Meta for Developers, tambahkan produk WhatsApp, atur webhook ke `https://domain-publik-kamu/webhooks/whatsapp`, gunakan nilai yang sama dengan `WHATSAPP_WEBHOOK_VERIFY_TOKEN`, lalu aktifkan langganan webhook **messages**. `WHATSAPP_APP_SECRET` dapat diambil dari pengaturan dasar aplikasi Meta. Nomor WhatsApp pengirim harus sudah terdaftar di profil pelanggan. Setelah mengubah `.env`, jalankan `php artisan config:clear`.
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.

@@ -25,7 +25,7 @@
     {{-- CSS Customer --}}
     <link
         rel="stylesheet"
-        href="{{ asset('css/customer.css') }}?v=20261021-13"
+       href="{{ asset('css/customer.css') }}?v=20261102-wa-login"
     >
 
     {{-- CSS tambahan --}}

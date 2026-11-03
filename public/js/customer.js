@@ -205,6 +205,7 @@ const appState = {
     history: []
 
 };
+window.appState = appState;
 
 let activeMenuCategory = 'all';
 let activeDetailProduct = null;

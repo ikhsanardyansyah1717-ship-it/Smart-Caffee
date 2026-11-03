@@ -102,51 +102,194 @@
 @endpush
 
 @push('scripts')
+
 <script>
-window.quattroUser = @json(['id' => auth()->id(), 'name' => auth()->user()?->name ?? 'Sahabat Quattro', 'email' => auth()->user()?->email]);
+window.quattroUser = @json([
+    'id' => auth()->id(),
+    'name' => auth()->user()?->name ?? 'Sahabat Quattro',
+    'email' => auth()->user()?->email
+]);
+
 window.quattroFavoriteIds = [];
 window.quattroProducts = @json($products);
 </script>
-<script src="{{ asset('js/customer.js') }}?v=11"></script>
+
+<script src="{{ asset('js/customer.js') }}?v=12"></script>
+
 <script>
+
+// =====================================================
+// RENDER CUSTOMER ORDER PAGE
+// =====================================================
+
 window.renderCustomerOrderPage = function () {
+
     const container = document.getElementById('checkout-order-items');
-    if (!container || !Array.isArray(appState.cart)) return;
-    const count = appState.cart.reduce((sum, item) => sum + Number(item.qty || 0), 0);
-    const subtotal = appState.cart.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0), 0);
+    const state = window.appState;
+
+    // Pastikan elemen dan state tersedia
+    if (
+        !container ||
+        !state ||
+        !Array.isArray(state.cart)
+    ) {
+        return;
+    }
+
+    // =====================================================
+    // HITUNG TOTAL PESANAN
+    // =====================================================
+
+    const count = state.cart.reduce(
+        (sum, item) => sum + Number(item.qty || 0),
+        0
+    );
+
+    const subtotal = state.cart.reduce(
+        (sum, item) =>
+            sum + Number(item.price || 0) * Number(item.qty || 0),
+        0
+    );
+
     const service = subtotal * 0.10;
     const total = subtotal + service;
-    document.getElementById('order-item-count').textContent = `(${count})`;
-    document.getElementById('checkout-order-count-label').textContent = `(${count} menu)`;
-    document.getElementById('checkout-order-subtotal').textContent = rupiah(subtotal);
-    document.getElementById('checkout-order-service').textContent = rupiah(service);
-    document.getElementById('checkout-order-total').textContent = rupiah(total);
-    document.getElementById('checkout-sticky-total').textContent = rupiah(total);
-    document.getElementById('checkout-order-empty').hidden = count > 0;
-    document.getElementById('continue-payment-button').disabled = count === 0;
-    container.innerHTML = appState.cart.map(item => `
+
+    // =====================================================
+    // UPDATE RINGKASAN PESANAN
+    // =====================================================
+
+    const itemCount = document.getElementById('order-item-count');
+    const countLabel = document.getElementById('checkout-order-count-label');
+    const subtotalElement = document.getElementById('checkout-order-subtotal');
+    const serviceElement = document.getElementById('checkout-order-service');
+    const totalElement = document.getElementById('checkout-order-total');
+    const stickyTotal = document.getElementById('checkout-sticky-total');
+    const emptyState = document.getElementById('checkout-order-empty');
+    const paymentButton = document.getElementById('continue-payment-button');
+
+    if (itemCount) {
+        itemCount.textContent = `(${count})`;
+    }
+
+    if (countLabel) {
+        countLabel.textContent = `(${count} menu)`;
+    }
+
+    if (subtotalElement) {
+        subtotalElement.textContent = rupiah(subtotal);
+    }
+
+    if (serviceElement) {
+        serviceElement.textContent = rupiah(service);
+    }
+
+    if (totalElement) {
+        totalElement.textContent = rupiah(total);
+    }
+
+    if (stickyTotal) {
+        stickyTotal.textContent = rupiah(total);
+    }
+
+    if (emptyState) {
+        emptyState.hidden = count > 0;
+    }
+
+    if (paymentButton) {
+        paymentButton.disabled = count === 0;
+    }
+
+    // =====================================================
+    // RENDER ITEM KERANJANG
+    // =====================================================
+
+    container.innerHTML = state.cart.map(item => `
+
         <article class="checkout-order-item">
+
             <div class="checkout-order-item-main">
+
                 <h3>${escapeHtml(item.name)}</h3>
-                ${item.customization?.note ? `<p>${escapeHtml(item.customization.note)}</p>` : ''}
+
+                ${
+                    item.customization?.note
+                        ? `<p>${escapeHtml(item.customization.note)}</p>`
+                        : ''
+                }
+
             </div>
-            <span class="checkout-order-item-price">${rupiah(Number(item.price || 0) * Number(item.qty || 0))}</span>
+
+            <span class="checkout-order-item-price">
+                ${rupiah(Number(item.price || 0) * Number(item.qty || 0))}
+            </span>
+
             <div class="checkout-order-item-controls">
-                <strong>${rupiah(item.price)}</strong>
+
+                <strong>
+                    ${rupiah(Number(item.price || 0))}
+                </strong>
+
                 <div class="order-qty-controls">
-                    <button type="button" aria-label="Kurangi ${escapeHtml(item.name)}" onclick="updateProductCartQty(${Number(item.id)}, -1)">−</button>
+
+                    <button
+                        type="button"
+                        aria-label="Kurangi ${escapeHtml(item.name)}"
+                        onclick="updateProductCartQty(${Number(item.id)}, -1)"
+                    >
+                        −
+                    </button>
+
                     <span>${Number(item.qty || 0)}</span>
-                    <button type="button" aria-label="Tambah ${escapeHtml(item.name)}" onclick="updateProductCartQty(${Number(item.id)}, 1)">+</button>
+
+                    <button
+                        type="button"
+                        aria-label="Tambah ${escapeHtml(item.name)}"
+                        onclick="updateProductCartQty(${Number(item.id)}, 1)"
+                    >
+                        +
+                    </button>
+
                 </div>
+
             </div>
+
         </article>
+
     `).join('');
+
 };
 
-function continueToPayment() {
-    if (!appState.cart.length) return;
-    sessionStorage.setItem('quattro_order_note', document.getElementById('order-note')?.value.trim() || '');
+
+// =====================================================
+// INITIALIZE CUSTOMER ORDER PAGE
+// =====================================================
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    window.renderCustomerOrderPage();
+
+});
+
+// =====================================================
+// CONTINUE TO PAYMENT
+// =====================================================
+
+window.continueToPayment = function () {
+
+    if (!Array.isArray(window.appState?.cart) || !window.appState.cart.length) {
+        showToast('Keranjang masih kosong.');
+        return;
+    }
+
+    sessionStorage.setItem(
+        'quattro_order_note',
+        document.getElementById('order-note')?.value.trim() || ''
+    );
+
     window.location.href = @json(route('customer.payment'));
-}
+
+};
+
 </script>
+
 @endpush
