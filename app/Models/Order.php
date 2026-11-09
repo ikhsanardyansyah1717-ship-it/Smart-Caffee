@@ -12,6 +12,7 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'user_id',
+        'branch_id',
         'customer_name',
         'customer_phone',
         'customer_email',
@@ -41,6 +42,11 @@ class Order extends Model
     /**
      * Order milik satu user/customer
      */
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

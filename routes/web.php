@@ -8,6 +8,7 @@ use App\Http\Controllers\KitchenController;
 use App\Http\Controllers\OwnerController;
 use App\Http\Controllers\KasirController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\BranchController;
 use App\Http\Controllers\ProductAvailabilityController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CustomerManagementController;
@@ -25,6 +26,8 @@ Route::post('/payments/midtrans/notification', MidtransWebhookController::class)
 
 /* CUSTOMER GUEST */
 Route::prefix('customer')->name('customer.')->group(function () {
+    Route::post('/branches/select', [BranchController::class, 'select'])->name('branches.select');
+    Route::post('/branches/nearest', [BranchController::class, 'nearest'])->name('branches.nearest');
     Route::get('/home', [CustomerController::class, 'home'])->name('home');
     Route::get('/history', [CustomerController::class, 'orders'])->name('history');
     Route::get('/orders', [CustomerController::class, 'checkoutPage'])->name('orders');
@@ -135,6 +138,7 @@ Route::middleware(['auth', 'role:owner'])
     ->prefix('owner')
     ->name('owner.')
     ->group(function () {
+        Route::get('/branches', [BranchController::class, 'index'])->name('branches.index');
         Route::get('/dashboard', [OwnerController::class, 'dashboard'])
             ->name('dashboard');
 

@@ -22,6 +22,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use App\Models\Branch;
 
 class CustomerController extends Controller
 {
@@ -70,13 +71,23 @@ class CustomerController extends Controller
         $this->applyCustomerAvailableStock($products);
         $categories = config('product_categories');
 
+        // Cabang aktif yang dipilih customer; default Bandung 1.
+        $branches = Branch::where('is_active', true)->orderBy('name')->get();
+        $selectedBranch = Branch::whereKey(session('branch_id'))->where('is_active', true)->first()
+            ?? Branch::where('code', 'BDG-001')->where('is_active', true)->first()
+            ?? $branches->first();
+
+        if ($selectedBranch) {
+            session(['branch_id' => $selectedBranch->id]);
+        }
+
         $favoriteIds = Auth::check()
             ? Favorite::where('user_id', Auth::id())->pluck('product_id')->map(fn ($id) => (int) $id)->all()
             : array_map('intval', session('guest_favorite_ids', []));
 
         return view(
             'customer.home',
-            compact('products', 'favoriteIds', 'categories')
+            compact('products', 'favoriteIds', 'categories', 'branches', 'selectedBranch')
         );
     }
 
@@ -693,6 +704,8 @@ class CustomerController extends Controller
 
                 'user_id' =>
                     Auth::id(),
+
+                'branch_id' => session('branch_id'),
 
                 'customer_name' =>
                     trim($data['customer_name'] ?? Auth::user()?->name ?? ''),
