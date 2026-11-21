@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
+use App\Models\EmployeeSalaryPayment;
 use App\Services\FinancialReportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,6 +66,10 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense): RedirectResponse
     {
+        if (EmployeeSalaryPayment::where('expense_id', $expense->id)->exists()) {
+            return back()->with('error', 'Catatan pembayaran gaji tidak dapat dihapus dari sini agar riwayat gaji dan laporan tetap sesuai.');
+        }
+
         $expense->delete();
 
         return back()->with('success', 'Catatan berhasil dihapus.');

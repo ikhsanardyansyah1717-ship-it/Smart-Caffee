@@ -15,6 +15,11 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'employee_default_passwords' => [
+        'kasir' => env('EMPLOYEE_KASIR_DEFAULT_PASSWORD', 'kasir123'),
+        'kitchen' => env('EMPLOYEE_KITCHEN_DEFAULT_PASSWORD', 'kitchen123'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
@@ -65,7 +70,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'Asia/Jakarta'),
 
     /*
     |--------------------------------------------------------------------------

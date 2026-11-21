@@ -27,6 +27,10 @@ class Order extends Model
         'cancelled_by',
         'cancelled_at',
         'kitchen_confirmed_at',
+        'kitchen_started_by',
+        'kitchen_completed_by',
+        'kitchen_started_at',
+        'kitchen_completed_at',
     ];
 
     protected $casts = [
@@ -66,5 +70,15 @@ class Order extends Model
     public function payment(): HasOne
     {
         return $this->hasOne(Payment::class);
+    }
+
+    public function kitchenStarter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'kitchen_started_by');
+    }
+
+    public function kitchenCompleter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'kitchen_completed_by');
     }
 }

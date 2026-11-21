@@ -12,14 +12,7 @@
     </div>
 
     <div class="top-actions">
-        {{-- PERIODE TANGGAL --}}
-        <form method="GET" action="{{ route('kasir.dashboard') }}" style="display:flex; align-items:center; gap:8px;">
-            <div style="display:flex; align-items:center; gap:7px; padding:9px 12px; border:1px solid #eadbce; border-radius:10px; background:#fff;">
-                <i class="fa-regular fa-calendar" style="color:#9b5b16;"></i>
-                <input type="date" name="date" value="{{ $tanggal }}" style="border:0; outline:0; background:transparent; color:#5b3518; font-size:13px; cursor:pointer;">
-            </div>
-            <button type="submit" class="outline-btn" style="height:42px; cursor:pointer;">Tampilkan</button>
-        </form>
+        @include('owner.partials.period-picker')
 
         {{-- LIVE --}}
         <span class="live"><i class="fa-solid fa-circle"></i> Live</span>
@@ -31,7 +24,7 @@
     </div>
 </header>
 
-<p class="dashboard-period-caption">Periode transaksi: {{ \Carbon\Carbon::parse($tanggal)->format('d/m/Y') }} · Data stok terbaru {{ now()->format('d/m/Y H:i') }}</p>
+<p class="dashboard-period-caption">Periode transaksi: {{ $periodLabel }} · Data stok terbaru {{ now()->format('d/m/Y H:i') }}</p>
 
 <div class="dashboard-search-bar search-box">
     <i class="fa-solid fa-magnifying-glass"></i>
@@ -47,13 +40,13 @@
 
 {{-- STATISTIK --}}
 <section class="stats-grid">
-    {{-- Pesanan Tanggal Terpilih --}}
+    {{-- Pesanan Periode Terpilih --}}
     <div class="stat-card">
         <div class="stat-icon brown"><i class="fa-solid fa-receipt"></i></div>
         <div>
-            <span>Pesanan Tanggal Terpilih</span>
+            <span>Pesanan Periode Ini</span>
             <strong>{{ $pesananHariIni }}</strong>
-            <small>Total pesanan pada tanggal terpilih</small>
+            <small>Total pesanan pada periode terpilih</small>
         </div>
     </div>
 
@@ -67,11 +60,11 @@
         </div>
     </div>
 
-    {{-- Penjualan Tanggal Terpilih --}}
+    {{-- Penjualan Periode Terpilih --}}
     <div class="stat-card">
         <div class="stat-icon green"><i class="fa-solid fa-money-bill-wave"></i></div>
         <div>
-            <span>Penjualan Tanggal Terpilih</span>
+            <span>Penjualan Periode Ini</span>
             <strong>Rp {{ number_format($penjualanHariIni, 0, ',', '.') }}</strong>
             <small>Total transaksi lunas</small>
         </div>
@@ -95,7 +88,7 @@
         <div class="panel-head">
             <div>
                 <h2>Pesanan Terbaru</h2>
-                <p>Transaksi pada tanggal {{ \Carbon\Carbon::parse($tanggal)->format('d/m/Y') }}.</p>
+                <p>Transaksi pada periode {{ $periodLabel }}.</p>
             </div>
             <a href="{{ route('kasir.orders') }}" class="outline-btn">Lihat Semua</a>
         </div>
@@ -143,9 +136,9 @@
         </div>
 
         <div class="sales-highlight">
-            <span>Total pendapatan pada {{ \Carbon\Carbon::parse($tanggal)->format('d/m/Y') }}</span>
+            <span>Total pendapatan pada {{ $periodLabel }}</span>
             <strong>Rp {{ number_format($penjualanHariIni, 0, ',', '.') }}</strong>
-            <small><i class="fa-solid fa-arrow-trend-up"></i> Penjualan tanggal terpilih</small>
+            <small><i class="fa-solid fa-arrow-trend-up"></i> Penjualan periode terpilih</small>
         </div>
 
         <div class="mini-list">

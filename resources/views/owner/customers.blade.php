@@ -173,7 +173,7 @@
                     type="text"
                     name="q"
                     value="{{ request('q') }}"
-                    placeholder="Cari pelanggan..."
+                    placeholder="Cari nama, email, atau nomor HP..."
                     autocomplete="off"
                 >
 
@@ -214,6 +214,10 @@
 
                         <th>
                             Email
+                        </th>
+
+                        <th>
+                            Nomor HP
                         </th>
 
                         <th>
@@ -267,8 +271,6 @@
 
                             </td>
 
-
-
                             {{-- =================================
                                  EMAIL
                             ================================== --}}
@@ -281,6 +283,8 @@
                                 </span>
 
                             </td>
+
+                            <td>{{ $customer->phone ?: '—' }}</td>
 
 
 
@@ -326,7 +330,7 @@
                         <tr>
 
                             <td
-                                colspan="4"
+                                colspan="5"
                                 class="table-empty"
                             >
 

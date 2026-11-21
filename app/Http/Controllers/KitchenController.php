@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Services\FinancialReportService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 
 class KitchenController extends Controller
 {
@@ -13,8 +13,12 @@ class KitchenController extends Controller
      */
     public function dashboard(Request $request)
     {
-        $request->validate(['date' => ['nullable', 'date_format:Y-m-d']]);
-        $date = $request->input('date', now()->toDateString());
+        [$periodStart, $periodEnd] = FinancialReportService::resolvePeriod(
+            $request->query('month'),
+            $request->query('start'),
+            $request->query('end')
+        );
+        $periodLabel = FinancialReportService::periodLabel($periodStart, $periodEnd);
         $orders = Order::with([
                 'items.product',
                 'payment'
@@ -26,14 +30,14 @@ class KitchenController extends Controller
                 'Diproses',
                 'Selesai'
             ])
-            ->whereDate('created_at', $date)
+            ->whereBetween('created_at', [$periodStart, $periodEnd])
             ->latest()
             ->get();
 
         $menuAverages = collect();
         Order::with('items')->whereNotNull('kitchen_started_at')
             ->whereNotNull('kitchen_completed_at')
-            ->where('kitchen_completed_at', '<=', Carbon::parse($date)->endOfDay())
+            ->whereBetween('kitchen_completed_at', [$periodStart, $periodEnd])
             ->whereIn('status', ['Selesai', 'Sudah Diambil'])
             ->get()->each(function ($order) use ($menuAverages) {
                 $minutes = abs($order->kitchen_completed_at->getTimestamp() - $order->kitchen_started_at->getTimestamp()) / 60;
@@ -49,7 +53,7 @@ class KitchenController extends Controller
 
         return view(
             'kitchen.dashboard',
-            compact('orders', 'date', 'menuAverages')
+            compact('orders', 'periodStart', 'periodEnd', 'periodLabel', 'menuAverages')
         );
     }
 
@@ -147,6 +151,7 @@ class KitchenController extends Controller
         $order->update([
             'status' => 'Diproses',
             'kitchen_started_at' => now(),
+            'kitchen_started_by' => auth()->id(),
         ]);
 
         return redirect()
@@ -169,6 +174,7 @@ class KitchenController extends Controller
         $order->update([
             'status' => 'Selesai',
             'kitchen_completed_at' => now(),
+            'kitchen_completed_by' => auth()->id(),
         ]);
 
         return redirect()

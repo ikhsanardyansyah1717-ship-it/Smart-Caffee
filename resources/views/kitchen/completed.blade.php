@@ -2,6 +2,17 @@
 
 @section('title', 'Siap Diambil - Quattro Coffee')
 
+@push('styles')
+<style>
+.kitchen-page .status-pill.status-ready{display:inline-flex;align-items:center;gap:6px;border:1px solid #d5e1f7;border-radius:999px;background:#edf3ff;color:#315b9d;font-weight:800}
+.kitchen-page .pickup-actions .done-text{display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 15px;border:1px solid #dce7f8;border-radius:12px;background:linear-gradient(135deg,#f3f7ff,#eaf1fc);color:#315b9d;font-size:12px;font-weight:750}
+.kitchen-page .pickup-actions .done-text i{color:#4978c6}
+.kitchen-page .pickup-actions .action-btn.btn-success{min-height:44px;border:1px solid rgba(32,132,82,.16);border-radius:12px;background:linear-gradient(135deg,rgba(229,244,235,.96),rgba(216,239,225,.88));color:#19804d;font-size:12px;font-weight:750;box-shadow:0 5px 13px rgba(23,109,67,.08);backdrop-filter:blur(8px)}
+.kitchen-page .pickup-actions .action-btn.btn-success:hover{background:linear-gradient(135deg,#e3f3e9,#d4ecdd);box-shadow:0 8px 16px rgba(23,109,67,.12)}
+@media(prefers-reduced-motion:reduce){.kitchen-page .pickup-actions .action-btn.btn-success{transition:none}}
+</style>
+@endpush
+
 @section('content')
 
 <div class="kitchen-page">
@@ -122,6 +133,7 @@
                     </div>
 
                     <span class="status-pill status-ready">
+                        <i class="fa-solid fa-bell" aria-hidden="true"></i>
                         Siap Diambil
                     </span>
 
@@ -159,7 +171,7 @@
 
                         <i class="fa-solid fa-circle-check"></i>
 
-                        Pesanan siap diambil
+                        Status pesanan: siap diambil
 
                     </div>
 

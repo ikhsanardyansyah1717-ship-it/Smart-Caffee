@@ -2,9 +2,79 @@
 
 @section('title', 'Dashboard Owner - Quattro Coffee')
 
+@push('styles')
+<style>
+.owner-dashboard{display:grid;align-content:start;gap:24px;padding:4px 2px 30px}
+.owner-dashboard .page-head{align-items:center;margin:0;padding:4px 2px 2px}
+.owner-dashboard .page-head h1{margin:7px 0 6px;font-size:32px;letter-spacing:-1.25px}
+.owner-dashboard .page-head p{max-width:560px;line-height:1.6}
+.owner-dashboard .head-actions{gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.owner-dashboard .stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin:0}
+.owner-dashboard .stat-card{position:relative;overflow:hidden;min-width:0;min-height:126px;padding:21px;border-color:#eee2d5;border-radius:20px;background:linear-gradient(145deg,#fff 0%,#fffdf9 100%);box-shadow:0 8px 24px rgba(77,48,18,.045);transition:transform .2s ease,box-shadow .2s ease}
+.owner-dashboard .stat-card::before{position:absolute;top:0;right:18px;left:18px;height:3px;border-radius:0 0 5px 5px;background:linear-gradient(90deg,#754000,#d99a51 58%,transparent);content:"";opacity:.75}
+.owner-dashboard .stat-card:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(77,48,18,.09)}
+.owner-dashboard .stat-card>div:last-child{min-width:0}
+.owner-dashboard .stat-icon{width:48px;height:48px;border-radius:16px;font-size:18px}
+.owner-dashboard .stat-label{font-size:12px;font-weight:600;letter-spacing:.2px}
+.owner-dashboard .stat-value{margin-top:7px;font-size:clamp(19px,1.7vw,25px);letter-spacing:-.45px;line-height:1.2;overflow-wrap:anywhere}
+.owner-dashboard .stat-note{margin-top:7px;color:#9a8068;font-size:11px;line-height:1.45}
+.owner-dashboard .two-col{grid-template-columns:minmax(0,1.55fr) minmax(320px,.95fr);gap:22px;align-items:stretch}
+.owner-dashboard .panel{min-width:0;padding:24px;border-color:#eee2d5;border-radius:21px;box-shadow:0 8px 26px rgba(77,48,18,.045)}
+.owner-dashboard .panel-head{align-items:center;gap:14px;margin-bottom:20px}
+.owner-dashboard .panel-head h2{font-size:17px;letter-spacing:-.2px}
+.owner-dashboard .panel-head p{font-size:12px;line-height:1.55}
+.owner-dashboard .panel-link{white-space:nowrap;padding:9px 12px;border:1px solid #eadcc9;border-radius:11px;background:#fffaf4}
+.owner-dashboard .panel-link:hover{background:#f7ecdf}
+.owner-dashboard .weekly-sales-panel{display:flex;flex-direction:column}
+.owner-dashboard .chart{height:260px;gap:10px;margin-top:auto;padding:24px 8px 0;border-color:#eadfd1;scrollbar-color:#d9c4a8 transparent;scrollbar-width:thin}
+.owner-dashboard .bar-item{min-width:34px!important;gap:9px}
+.owner-dashboard .bar{width:min(34px,72%);min-height:5px;background:linear-gradient(180deg,#d99a51 0%,#784108 100%);border-radius:9px 9px 3px 3px;box-shadow:0 4px 9px rgba(117,64,0,.12);transition:filter .2s,transform .2s}
+.owner-dashboard .bar-item:hover .bar{filter:brightness(1.08);transform:scaleX(1.06)}
+.owner-dashboard .bar-label{font-size:10px;white-space:nowrap}
+.owner-dashboard .chart-empty{margin:auto}
+.owner-dashboard .operational-panel-head{align-items:flex-start}
+.owner-dashboard .operational-eyebrow{font-size:9px;letter-spacing:1.35px}
+.owner-dashboard .operational-heading h2{margin-top:5px}
+.owner-dashboard .operational-panel{padding:25px}
+.owner-dashboard .operational-panel-head{align-items:center;margin-bottom:18px}
+.owner-dashboard .operational-live{padding:7px 11px;border:1px solid #dceee3;background:#f1faf4;font-size:11px}
+.owner-dashboard .operational-list{display:grid;gap:10px;margin-top:0}
+.owner-dashboard .operational-item{position:relative;grid-template-columns:42px minmax(0,1fr) 42px;min-height:72px;gap:13px;padding:12px 13px;border:1px solid #eee5da;border-radius:15px;background:#fff;box-shadow:0 3px 10px rgba(68,45,23,.025);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.owner-dashboard .operational-item:hover{padding:12px 13px;border-color:#e2d2be;border-radius:15px;background:#fff;transform:translateY(-1px);box-shadow:0 8px 18px rgba(68,45,23,.065)}
+.owner-dashboard .operational-icon{width:40px;height:40px;border-radius:13px;font-size:15px}
+.owner-dashboard .operational-name{min-width:0;gap:5px}
+.owner-dashboard .operational-name strong{font-size:12px;line-height:1.35}
+.owner-dashboard .operational-name span{font-size:10px;line-height:1.45}
+.owner-dashboard .operational-number{display:flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0;border:1px solid #f0e5d6;border-radius:12px;background:#fbf6ef;color:#69400f;font-size:15px;font-variant-numeric:tabular-nums}
+.owner-dashboard .operational-item.waiting .operational-number{border-color:#f3e2c4;background:#fff7e9;color:#a86912}
+.owner-dashboard .operational-item.processing .operational-number{border-color:#eadbca;background:#f8f1e8;color:#80501d}
+.owner-dashboard .operational-item.ready .operational-number{border-color:#d8eee4;background:#eff9f4;color:#168653}
+.owner-dashboard .operational-item.menu .operational-number{border-color:#eadfd2;background:#f7f1e9;color:#754000}
+.owner-dashboard .top-customers-panel,.owner-dashboard .transaction-panel{margin:0!important}
+.owner-dashboard .table-wrap{border:1px solid #f0e7dd;border-radius:14px}
+.owner-dashboard table{min-width:650px}
+.owner-dashboard th{padding:13px 14px;background:#fdfbf8;font-size:10px}
+.owner-dashboard td{padding:14px;font-size:12px}
+.owner-dashboard tbody tr{transition:background .15s ease}
+.owner-dashboard tbody tr:hover{background:#fffcf7}
+.owner-dashboard .transaction-panel .panel-head{display:grid;grid-template-columns:minmax(0,1fr) auto auto}
+.owner-dashboard .transaction-panel .search{max-width:310px!important;margin:0}
+.owner-dashboard .transaction-panel .panel-link{justify-self:end}
+.owner-dashboard .weekly-sales-panel .panel-head{align-items:center}
+.owner-dashboard .weekly-sales-panel .owner-trend-chart{width:100%;margin-top:2px}
+.owner-dashboard .weekly-sales-panel .trend-chart-meta{min-height:22px}
+.owner-dashboard .weekly-sales-panel .trend-chart-meta small{padding:5px 9px;border:1px solid #f0e5d7;border-radius:999px;background:#fffaf4;color:#90765b;white-space:nowrap}
+@media(max-width:1180px){.owner-dashboard .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.owner-dashboard .two-col{grid-template-columns:minmax(0,1fr) minmax(280px,.8fr)}}
+@media(max-width:900px){.owner-dashboard .two-col{grid-template-columns:1fr}.owner-dashboard .weekly-sales-panel{min-height:330px}.owner-dashboard .operational-panel{min-height:0}}
+@media(max-width:680px){.owner-dashboard{gap:18px;padding:0 0 22px}.owner-dashboard .page-head{display:block;padding:0}.owner-dashboard .page-head h1{font-size:26px}.owner-dashboard .head-actions{justify-content:flex-start;margin-top:14px}.owner-dashboard .panel{padding:19px;border-radius:18px}.owner-dashboard .panel-head{align-items:flex-start}.owner-dashboard .transaction-panel .panel-head{grid-template-columns:1fr auto}.owner-dashboard .transaction-panel .search{grid-column:1/-1;grid-row:2;max-width:none!important;width:100%}.owner-dashboard .transaction-panel .panel-link{grid-column:2;grid-row:1}}
+@media(max-width:520px){.owner-dashboard .stats{grid-template-columns:1fr;gap:12px}.owner-dashboard .stat-card{min-height:100px;padding:17px}.owner-dashboard .stat-value{font-size:22px}.owner-dashboard .panel-head{flex-direction:column;align-items:stretch}.owner-dashboard .panel-head>.panel-link{align-self:flex-start}.owner-dashboard .transaction-panel .panel-head{display:flex}.owner-dashboard .transaction-panel .search{order:3}.owner-dashboard .transaction-panel .panel-link{align-self:flex-start}.owner-dashboard .chart{height:230px}.owner-dashboard .operational-panel-head{flex-direction:row;align-items:flex-start;justify-content:space-between}.owner-dashboard .operational-panel .operational-live{flex:0 0 auto}.owner-dashboard .operational-item{padding:11px}}
+@media(prefers-reduced-motion:reduce){.owner-dashboard .stat-card,.owner-dashboard .bar{transition:none}}
+</style>
+@endpush
+
 @section('content')
 
-<div class="grid">
+<div class="grid owner-dashboard">
 
     {{-- =========================================================
          HEADER
@@ -245,73 +315,7 @@
             {{-- =================================================
                  DATA GRAFIK
             ================================================== --}}
-            @php
-
-                $weeklyTrend = $weeklyTrend ?? collect();
-
-                $maxWeekly = $weeklyTrend->max('total') ?: 1;
-
-            @endphp
-
-
-
-            <div class="chart" style="overflow-x:auto;justify-content:flex-start;">
-
-                @forelse($weeklyTrend as $day)
-
-                    @php
-
-                        $total = (float) ($day['total'] ?? 0);
-
-                        $label = $day['label'] ?? '';
-
-                        $height = $total > 0
-                            ? max(
-                                12,
-                                round(
-                                    ($total / $maxWeekly) * 100
-                                )
-                            )
-                            : 4;
-
-                    @endphp
-
-
-                    <div class="bar-item" style="min-width:30px;">
-
-                        <div
-                            class="bar"
-                            style="--h:{{ $height }}%"
-                            title="Rp {{ number_format(
-                                $total,
-                                0,
-                                ',',
-                                '.'
-                            ) }}"
-                        ></div>
-
-
-                        <span class="bar-label">
-                            {{ $label }}
-                        </span>
-
-                    </div>
-
-                @empty
-
-                    <div class="chart-empty">
-
-                        <i class="fa-solid fa-chart-column"></i>
-
-                        <span>
-                            Belum ada data penjualan.
-                        </span>
-
-                    </div>
-
-                @endforelse
-
-            </div>
+            @include('owner.partials.sales-trend-chart', ['chartData' => $weeklyTrend ?? collect(), 'chartId' => 'dashboard-sales'])
 
         </section>
 
@@ -517,7 +521,7 @@
 
 
 
-    <section class="panel" style="margin-bottom:22px;">
+    <section class="panel top-customers-panel">
         <div class="panel-head">
             <div>
                 <h2>Pelanggan dengan Pesanan Terbanyak</h2>
@@ -702,21 +706,22 @@
                             ====================================== --}}
                             <td>
 
-                                @if(
-                                    $order->payment &&
-                                    $order->payment->cashier_name
-                                )
+                                @php
+                                    $cashierName = $order->payment?->cashier_name
+                                        ?: ($order->user?->role === 'kasir' ? $order->user->name : null);
+                                @endphp
+                                @if($cashierName)
 
                                     <span class="transaction-cashier">
 
-                                        {{ $order->payment->cashier_name }}
+                                        {{ $cashierName }}
 
                                     </span>
 
                                 @else
 
                                     <span class="transaction-empty-value">
-                                        -
+                                        {{ $order->payment?->payment_method === 'QRIS' ? 'Online' : 'Belum tercatat' }}
                                     </span>
 
                                 @endif

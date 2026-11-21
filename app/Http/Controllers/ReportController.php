@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ReportExport;
+use App\Exports\CustomerExport;
+use App\Models\User;
 use App\Services\FinancialReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -62,8 +64,21 @@ class ReportController extends Controller
         $topProducts = $financialReport->topProducts($start, $end);
         $periodLabel = FinancialReportService::periodLabel($start, $end);
 
-        $pdf = Pdf::loadView('owner.reports-pdf', compact('financialSummary', 'topProducts', 'periodLabel'));
+        $pdf = Pdf::loadView('owner.reports-pdf', compact('financialSummary', 'topProducts', 'periodLabel'))
+            ->setPaper('a4', 'landscape');
 
         return $pdf->download('laporan-bisnis-' . $start->format('Ymd') . '-' . $end->format('Ymd') . '.pdf');
+    }
+
+    public function exportCustomers()
+    {
+        return Excel::download(
+            new CustomerExport(User::query()
+                ->where('role', 'customer')
+                ->withCount('orders')
+                ->orderBy('name')
+                ->get()),
+            'data-pelanggan-' . now()->format('Ymd') . '.xlsx'
+        );
     }
 }

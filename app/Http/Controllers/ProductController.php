@@ -20,13 +20,6 @@ class ProductController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        // Filter kategori
-        if ($request->filled('category')) {
-            $request->category === 'Food'
-                ? $query->whereIn('category', ['Food', 'Makanan Berat'])
-                : $query->where('category', $request->category);
-        }
-
         // Filter status
         if ($request->filled('status')) {
             if ($request->status === 'active') {
@@ -38,7 +31,15 @@ class ProductController extends Controller
             }
         }
 
-        $products = $query->latest()->get();
+        $products = $query->get()->sort(function ($a, $b) {
+            $rank = collect(config('product_categories'))
+                ->pluck('value')
+                ->flip();
+            $categoryA = $rank[$a->category] ?? count($rank);
+            $categoryB = $rank[$b->category] ?? count($rank);
+
+            return ($categoryA <=> $categoryB) ?: strcasecmp($a->name, $b->name);
+        })->values();
 
         return view('owner.products.index', compact('products'));
     }
@@ -47,7 +48,7 @@ class ProductController extends Controller
     /**
      * Menampilkan form tambah produk
      */
-    public function create()
+    public function create(Request $request)
     {
         $iconOptions = [
             'fa-mug-hot' => 'Coffee',
@@ -57,10 +58,12 @@ class ProductController extends Controller
             'fa-cake-candles' => 'Cake',
         ];
 
-        return view(
-            'owner.products.create',
-            compact('iconOptions')
-        );
+        $validCategories = collect(config('product_categories'))->pluck('value')->all();
+        $selectedCategory = in_array($request->query('category'), $validCategories, true)
+            ? $request->query('category')
+            : null;
+
+        return view('owner.products.create', compact('iconOptions', 'selectedCategory'));
     }
 
 
@@ -69,6 +72,8 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        $this->normalizePrices($request);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
 
@@ -143,6 +148,8 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
+        $this->normalizePrices($request);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
 
@@ -209,5 +216,15 @@ class ProductController extends Controller
         return redirect()
             ->route('owner.products.index')
             ->with('success', 'Produk berhasil dihapus.');
+    }
+
+    private function normalizePrices(Request $request): void
+    {
+        foreach (['price', 'cost_price'] as $field) {
+            $value = $request->input($field);
+            if (is_string($value) && trim($value) !== '') {
+                $request->merge([$field => preg_replace('/\D+/', '', $value)]);
+            }
+        }
     }
 }

@@ -11,15 +11,20 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\ProductAvailabilityController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\CustomerManagementController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeSalaryController;
+use App\Http\Controllers\EmployeeLeaveController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\OwnerSettingsController;
 use App\Http\Controllers\MidtransWebhookController;
 use App\Http\Controllers\WhatsAppLoginWebhookController;
 
 /* WELCOME */
 Route::view('/', 'welcome')->name('welcome');
+Route::get('/product-images/{product}', [ProductImageController::class, 'show'])->name('products.image');
 
 Route::post('/payments/midtrans/notification', MidtransWebhookController::class)
     ->name('payments.midtrans.notification');
@@ -35,6 +40,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/products/{product}/reviews', [CustomerController::class, 'productReviews'])->name('products.reviews');
     Route::post('/products/{product}/reviews', [CustomerController::class, 'storeProductReview'])->name('products.reviews.store');
     Route::post('/orders', [CustomerController::class, 'storeOrder'])->name('orders.store');
+    Route::get('/orders/{order}/bank-transfer', [CustomerController::class, 'bankTransferInstructions'])->name('orders.bank-transfer');
     Route::post('/orders/{order}/payment/retry', [CustomerController::class, 'retryPayment'])->name('orders.payment.retry');
     Route::post('/orders/{order}/cancel', [CustomerController::class, 'cancelOrder'])->name('orders.cancel');
     Route::get('/orders/{order}/payment', [CustomerController::class, 'openPayment'])->name('orders.payment.open');
@@ -45,7 +51,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::post('/favorites/toggle', [CustomerController::class, 'toggleFavorite'])->name('favorites.toggle');
     Route::get('/orders/history', [CustomerController::class, 'orderHistory'])->name('orders.history');
     Route::get('/profile', [CustomerController::class, 'profile'])->name('profile');
-    Route::view('/privacy', 'customer.privacy')->name('privacy');
+    Route::get('/privacy', [CustomerController::class, 'privacyPolicy'])->name('privacy');
 });
 Route::get('/customer/login', [AuthController::class, 'showLogin'])
     ->name('customer.login');
@@ -118,6 +124,9 @@ Route::middleware(['auth', 'role:kitchen'])
         Route::get('/history', [KitchenController::class, 'history'])
             ->name('history');
 
+        Route::get('/leave', [EmployeeLeaveController::class, 'employeeIndex'])->name('leave');
+        Route::post('/leave', [EmployeeLeaveController::class, 'store'])->name('leave.store');
+
         Route::post('/orders/{id}/process', [KitchenController::class, 'process'])
             ->name('orders.process');
 
@@ -152,7 +161,16 @@ Route::middleware(['auth', 'role:owner'])
             ->name('sales.export.pdf');
 
         Route::resource('/products', ProductController::class);
+        Route::get('/settings', [OwnerSettingsController::class, 'edit'])->name('settings');
+        Route::put('/settings', [OwnerSettingsController::class, 'update'])->name('settings.update');
+        Route::put('/settings/privacy-policy', [OwnerSettingsController::class, 'updatePrivacyPolicy'])->name('settings.privacy-policy.update');
         Route::resource('/employees', EmployeeController::class);
+        Route::post('/employees/{employee}/reset-password', [EmployeeController::class, 'resetPassword'])->name('employees.reset-password');
+        Route::get('/leaves', [EmployeeLeaveController::class, 'ownerIndex'])->name('leaves.index');
+        Route::patch('/leaves/{leaveRequest}', [EmployeeLeaveController::class, 'review'])->name('leaves.review');
+        Route::get('/salaries', [EmployeeSalaryController::class, 'index'])->name('salaries.index');
+        Route::put('/salaries/{employee}', [EmployeeSalaryController::class, 'update'])->name('salaries.update');
+        Route::post('/salaries/payments', [EmployeeSalaryController::class, 'recordPayment'])->name('salaries.payments.store');
         Route::resource('/customers', CustomerManagementController::class);
 
         Route::get('/reports', [ReportController::class, 'index'])
@@ -169,6 +187,9 @@ Route::middleware(['auth', 'role:owner'])
 
         Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])
             ->name('reports.export.excel');
+
+        Route::get('/reports/export/customers', [ReportController::class, 'exportCustomers'])
+            ->name('reports.export.customers');
 
         Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])
             ->name('reports.export.pdf');
@@ -207,6 +228,9 @@ Route::middleware(['auth', 'role:kasir'])
 
         Route::get('/history', [KasirController::class, 'history'])
             ->name('history');
+
+        Route::get('/leave', [EmployeeLeaveController::class, 'employeeIndex'])->name('leave');
+        Route::post('/leave', [EmployeeLeaveController::class, 'store'])->name('leave.store');
 
         // Pengelolaan ketersediaan produk dan stok.
         Route::get('/products/availability', [ProductAvailabilityController::class, 'index'])

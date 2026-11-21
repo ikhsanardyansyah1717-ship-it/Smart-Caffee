@@ -14,7 +14,7 @@
         <div class="receipt-brand"><span class="receipt-logo"><i class="fa-solid fa-mug-hot"></i></span><div><small>QUATTRO COFFEE</small><strong>Pesanan pilihanmu</strong></div></div>
         <div class="receipt-divider"><span></span><i class="fa-solid fa-circle"></i><span></span></div>
         <div class="receipt-pickup"><span><i class="fa-solid fa-bag-shopping"></i> Ambil di outlet</span><strong><i class="fa-solid fa-check"></i> Diambil sekarang</strong></div>
-        <p>Pembayaran QRIS diproses aman. Setelah berhasil, status pesanan diperbarui otomatis.</p>
+        <p>Pilih QRIS atau transfer bank untuk menyelesaikan pesanan.</p>
     </section>
 
     <section class="payment-customer-info">
@@ -30,13 +30,26 @@
     </section>
 
     <section class="payment-method-page">
-        <div class="payment-section-title"><span>02</span><div><h2>Metode pembayaran</h2><p>Pilih QRIS untuk menyelesaikan transaksi</p></div></div>
+        <div class="payment-section-title"><span>02</span><div><h2>Metode pembayaran</h2><p>Pilih cara pembayaran pesananmu</p></div></div>
         <label class="payment-method payment-qris-only" for="payment-qris">
             <input type="radio" name="payment_method" id="payment-qris" value="QRIS" checked>
             <span class="payment-method-icon qris-icon"><i class="fa-solid fa-qrcode"></i></span>
             <span class="payment-method-info"><strong>QRIS</strong><span>Scan QR dari aplikasi pembayaran kamu</span></span>
             <span class="payment-check"><i class="fa-solid fa-check"></i></span>
         </label>
+        <label class="payment-method payment-bank-method {{ !$bankConfigured ? 'is-disabled' : '' }}" for="payment-bank-transfer">
+            <input type="radio" name="payment_method" id="payment-bank-transfer" value="Bank Transfer" {{ !$bankConfigured ? 'disabled' : '' }}>
+            <span class="payment-method-icon qris-icon"><i class="fa-solid fa-building-columns"></i></span>
+            <span class="payment-method-info"><strong>Transfer Bank</strong><span>{{ $bankConfigured ? 'Bayar melalui rekening bank Quattro Coffee' : 'Rekening belum diatur oleh Owner' }}</span></span>
+            <span class="payment-check"><i class="fa-solid fa-check"></i></span>
+        </label>
+        @if($bankConfigured)
+            <div class="bank-transfer-preview" id="bank-transfer-preview" hidden>
+                <span>Rekening tujuan transfer</span>
+                <strong>{{ $bank['bank_name'] }} · {{ $bank['bank_account_number'] }}</strong>
+                <small>a.n. {{ $bank['bank_account_holder'] }}</small>
+            </div>
+        @endif
     </section>
 
     <div class="payment-secure-note"><i class="fa-solid fa-lock"></i><span><strong>Pembayaran aman</strong><small>Pastikan nama dan total pesanan sudah benar.</small></span></div>
@@ -44,7 +57,7 @@
     <div class="payment-page-spacer"></div>
     <footer class="payment-page-bottom">
         <div><span>Total Pembayaran</span><strong id="payment-page-total">Rp 0</strong></div>
-        <button type="button" id="pay-qris-button" onclick="submitQrisPayment()">Bayar</button>
+        <button type="button" id="pay-payment-button" onclick="submitSelectedPayment()">Bayar</button>
     </footer>
 </main>
 <div id="toast" class="toast"><span id="toast-message"></span></div>
@@ -59,7 +72,7 @@
 .payment-kicker{color:#87500f;font-size:8px;font-weight:800;letter-spacing:1.4px}.secure-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:13px;background:#ece8de;color:#713b05}
 .payment-receipt-card{position:relative;overflow:hidden;margin-bottom:22px;padding:17px;border:1px solid #eee4d8;border-radius:18px;background:#fffdf9;color:#211a14;box-shadow:0 6px 18px #30231808}
 .receipt-brand{display:flex;align-items:center;gap:11px}.receipt-logo{display:grid;place-items:center;width:38px;height:38px;border-radius:13px;background:#f5eee4;color:#8b4f22}.receipt-brand div{display:grid;gap:3px}.receipt-brand small{color:#b85c43;font-size:8px;font-weight:800;letter-spacing:1.5px}.receipt-brand strong{font-family:Georgia,serif;font-size:15px}.receipt-divider{display:flex;align-items:center;gap:8px;margin:15px -23px 13px;color:#a99782;font-size:6px}.receipt-divider span{height:1px;flex:1;border-top:1px dashed #e8dfd4}.receipt-pickup{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:10px}.receipt-pickup>span{color:#674a2d}.receipt-pickup>span i{margin-right:5px;color:#b85c43}.receipt-pickup strong{color:#547451;font-size:9px}.receipt-pickup strong i{margin-right:3px}.payment-receipt-card>p{margin:10px 0 0;color:#81766a;font-size:9px;line-height:1.4}
-.payment-customer-info{padding:0 2px 20px}.payment-section-title{display:flex;align-items:center;gap:10px;margin-bottom:12px}.payment-section-title>span{display:grid;place-items:center;width:30px;height:30px;border:1px solid #e0d5c5;border-radius:10px;color:#713b05;font-family:Georgia,serif;font-size:11px;font-weight:700}.payment-section-title h2{margin:0;color:#211a14;font-family:Georgia,serif;font-size:15px}.payment-section-title p{margin:3px 0 0;color:#81766a;font-size:9px}
+.payment-customer-info{padding:0 2px 22px;margin-bottom:20px;border-bottom:1px solid #e9dfd3}.payment-section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid #eee6dc}.payment-section-title>span{display:grid;place-items:center;width:30px;height:30px;border:1px solid #e0d5c5;border-radius:10px;color:#713b05;font-family:Georgia,serif;font-size:11px;font-weight:700}.payment-section-title h2{margin:0;color:#211a14;font-family:Georgia,serif;font-size:15px}.payment-section-title p{margin:3px 0 0;color:#81766a;font-size:9px}
 .payment-customer-info label{display:block;margin:12px 0 5px;color:#674a2d;font-size:10px;font-weight:700}
 .payment-customer-info label span{color:#c44834}
 .payment-customer-info label small{color:var(--text-muted)}
@@ -67,7 +80,7 @@
 .payment-page-input{height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;border:1px solid #e8e0d6;border-radius:12px;background:#fff;color:#8d7b68}
 .payment-page-input i{width:16px;text-align:center;font-size:13px}
 .payment-page-input input{width:100%;height:100%;border:0;outline:0;background:transparent;color:#211a14;font:inherit;font-size:11px}
-.payment-method-page{margin:0 -2px;padding:17px 14px 16px;border:1px solid #eee4d8;border-radius:17px;background:#fffdf9}.payment-method-page .payment-section-title{margin-bottom:13px}.payment-qris-only{margin:0!important;border:1px solid #e4ddd2!important;border-radius:14px!important;background:#fff!important}
+.payment-method-page{margin:0 -2px;padding:17px 14px 16px;border:1px solid #eee4d8;border-radius:17px;background:#fffdf9}.payment-method-page .payment-section-title{margin-bottom:13px}.payment-method{position:relative;display:flex;align-items:center;gap:12px;margin:0 0 9px;padding:12px 14px;border:1px solid #e4ddd2;border-radius:14px;background:#fff;cursor:pointer}.payment-method:last-of-type{margin-bottom:0}.payment-method input{position:absolute;opacity:0}.payment-method-icon{display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:13px;background:#f0eafa;color:#7250a3}.payment-method-info{display:grid;gap:4px;flex:1}.payment-method-info strong{font-size:12px;color:#211a14}.payment-method-info>span{font-size:10px;color:#81766a}.payment-check{display:grid;place-items:center;width:22px;height:22px;border:1px solid #d8caba;border-radius:50%;color:transparent}.payment-method:has(input:checked){border-color:#9a6740;box-shadow:0 0 0 2px #9a67401a}.payment-method:has(input:checked) .payment-check{background:#75452d;border-color:#75452d;color:#fff}.payment-method.is-disabled{opacity:.55;cursor:not-allowed}.bank-transfer-preview{display:grid;gap:5px;margin-top:10px;padding:13px;border-radius:12px;background:#f8f2e9;color:#71502e}.bank-transfer-preview span,.bank-transfer-preview small{font-size:10px}.bank-transfer-preview strong{font-size:13px;color:#302216}
 .payment-secure-note{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 13px;border:1px solid #e4ddd2;border-radius:13px;background:#fff;color:#713b05}.payment-secure-note>i{font-size:14px}.payment-secure-note span{display:grid;gap:3px}.payment-secure-note strong{font-size:10px}.payment-secure-note small{color:#81766a;font-size:9px}
 .payment-page-spacer{height:90px}
 .payment-page-bottom{position:fixed;z-index:100;right:0;bottom:0;left:0;max-width:760px;min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 auto;padding:10px 18px calc(10px + env(safe-area-inset-bottom));border-top:1px solid #e8e0d6;background:#fff;box-shadow:0 -8px 24px #30231815}
@@ -89,11 +102,38 @@ window.quattroProducts = @json($products);
 <script src="{{ asset('js/customer.js') }}?v=19"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    const contactStorageKey = 'quattro_checkout_contact_v1';
+    const fields = ['customer-name', 'customer-phone', 'customer-email'];
+    try {
+        const savedContact = JSON.parse(sessionStorage.getItem(contactStorageKey) || '{}');
+        fields.forEach(id => {
+            if (savedContact[id]) document.getElementById(id).value = savedContact[id];
+        });
+    } catch (error) {
+        sessionStorage.removeItem(contactStorageKey);
+    }
+    const saveContact = () => {
+        const values = {};
+        fields.forEach(id => values[id] = document.getElementById(id)?.value || '');
+        sessionStorage.setItem(contactStorageKey, JSON.stringify(values));
+    };
+    fields.forEach(id => document.getElementById(id)?.addEventListener('input', saveContact));
     document.getElementById('payment-page-total').textContent = rupiah(getCheckoutTotal());
-    document.getElementById('pay-qris-button').disabled = !appState.cart.length;
+    document.getElementById('pay-payment-button').disabled = !appState.cart.length;
+    document.querySelectorAll('input[name="payment_method"]').forEach(input => input.addEventListener('change', updatePaymentSelection));
+    updatePaymentSelection();
 });
 
-async function submitQrisPayment() {
+function updatePaymentSelection() {
+    const transfer = document.getElementById('payment-bank-transfer')?.checked;
+    const preview = document.getElementById('bank-transfer-preview');
+    const button = document.getElementById('pay-payment-button');
+    if (preview) preview.hidden = !transfer;
+    if (button) button.textContent = transfer ? 'Buat Pesanan' : 'Bayar';
+}
+
+async function submitSelectedPayment() {
+    const method = document.querySelector('input[name="payment_method"]:checked')?.value;
     const name = document.getElementById('customer-name').value.trim();
     const phone = document.getElementById('customer-phone').value.trim();
     const email = document.getElementById('customer-email').value.trim();
@@ -113,11 +153,11 @@ async function submitQrisPayment() {
         showToast('Masukkan email yang valid untuk menerima struk');
         return;
     }
-    if (!document.getElementById('payment-qris').checked) {
-        showToast('Pilih pembayaran QRIS');
+    if (!['QRIS', 'Bank Transfer'].includes(method)) {
+        showToast('Pilih metode pembayaran');
         return;
     }
-    await checkout({ payment_method: 'QRIS', customer_name: name, customer_phone: normalizedPhone, customer_email: email });
+    await checkout({ payment_method: method, customer_name: name, customer_phone: normalizedPhone, customer_email: email });
 }
 </script>
 @endpush

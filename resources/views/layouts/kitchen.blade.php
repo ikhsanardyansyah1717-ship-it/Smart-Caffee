@@ -127,6 +127,10 @@
 
                 </a>
 
+                <a href="{{ route('kitchen.leave') }}" class="side-link {{ request()->routeIs('kitchen.leave*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-calendar-plus"></i><span>Pengajuan Cuti</span>
+                </a>
+
             </nav>
 
 
@@ -139,12 +143,10 @@
 
                 <div>
 
-                    <strong>
-                        Kitchen Staff
-                    </strong>
+                    <strong>{{ auth()->user()->username ?? auth()->user()->name }}</strong>
 
                     <small>
-                        Quattro Coffee
+                        {{ auth()->user()->employee?->shift ?? 'Shift belum diatur' }} · Kitchen
                     </small>
 
                 </div>

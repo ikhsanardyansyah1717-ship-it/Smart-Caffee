@@ -20,7 +20,8 @@ class CustomerManagementController extends Controller
             ->when($request->get('q'), function ($query, $term) {
                 $query->where(function ($q) use ($term) {
                     $q->where('name', 'like', "%{$term}%")
-                      ->orWhere('email', 'like', "%{$term}%");
+                      ->orWhere('email', 'like', "%{$term}%")
+                      ->orWhere('phone', 'like', "%{$term}%");
                 });
             })
             ->latest()

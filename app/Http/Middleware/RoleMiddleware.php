@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\EmployeeLeaveRequest;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
@@ -17,6 +19,15 @@ class RoleMiddleware
         // Belum login
         if (!$request->user()) {
             return redirect()->route('customer.home');
+        }
+
+        if (in_array($request->user()->role, ['kasir', 'kitchen'], true) && EmployeeLeaveRequest::whereHas('employee', fn ($query) => $query->where('user_id', $request->user()->id))
+            ->where('status', 'Disetujui')->whereDate('start_date', '<=', today())->whereDate('end_date', '>=', today())->exists()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('admin.login')->with('error', 'Akses akun dinonaktifkan sementara selama cuti yang disetujui.');
         }
 
         // Role user tidak sesuai

@@ -883,6 +883,8 @@ body.modal-open {
 
                     <th>Status</th>
 
+                    <th>Waktu Proses</th>
+
                     <th>Aksi</th>
 
                 </tr>
@@ -898,6 +900,7 @@ body.modal-open {
                     @php($latestGatewayAttempt = $order->payment?->attempts->sortByDesc('id')->first())
                     @php($gatewayPayment = $latestGatewayAttempt !== null)
                     @php($gatewayPaymentPending = $latestGatewayAttempt?->status === 'Pending')
+                    @php($processingStartedAt = $order->kitchen_started_at ?? ($order->status === 'Diproses' ? $order->updated_at : null))
 
                     <tr>
 
@@ -1008,6 +1011,18 @@ body.modal-open {
                         </td>
 
 
+                        {{-- DURASI PROSES DARI KITCHEN --}}
+                        <td>
+                            @if($order->status === 'Diproses' && $processingStartedAt)
+                                <span class="cashier-order-timer" data-started-at="{{ $processingStartedAt->toIso8601String() }}"><i class="fa-regular fa-clock"></i> <span class="timer-label">Menghitung...</span></span>
+                            @elseif(in_array($order->status, ['Selesai', 'Sudah Diambil']) && $order->kitchen_started_at && $order->kitchen_completed_at)
+                                @php($elapsedSeconds = abs($order->kitchen_completed_at->getTimestamp() - $order->kitchen_started_at->getTimestamp()))
+                                <span class="cashier-order-timer is-complete"><i class="fa-regular fa-circle-check"></i> {{ intdiv($elapsedSeconds, 60) }} mnt {{ $elapsedSeconds % 60 }} dtk</span>
+                            @else
+                                <span class="cashier-order-time-muted">{{ $order->status === 'Menunggu' ? 'Belum diproses' : '—' }}</span>
+                            @endif
+                        </td>
+
                         {{-- AKSI --}}
                         <td>
                             @if($order->table_number && $order->table_number !== 'Take Away' && in_array($order->status, ['Menunggu', 'Diproses', 'Selesai']))
@@ -1064,7 +1079,7 @@ body.modal-open {
                     <tr>
 
                         <td
-                            colspan="9"
+                            colspan="10"
                             style="text-align:center; padding:40px;"
                         >
 
@@ -1137,6 +1152,7 @@ body.modal-open {
                     <option value="">-- Pilih Metode Pembayaran --</option>
                     <option value="Cash">Cash</option>
                     <option value="QRIS">QRIS</option>
+                    <option value="Bank Transfer">Transfer Bank</option>
                 </select>
             </label>
 
@@ -1986,5 +2002,36 @@ body.modal-open {
     );
 
 </script>
+
+@push('styles')
+<style>
+    .cashier-order-timer{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #f0d6b8;border-radius:999px;background:#fff6e9;color:#82500f;font-size:12px;font-weight:750;white-space:nowrap}
+    .cashier-order-timer.is-complete{border-color:#d9e7dc;background:#f1f7f2;color:#55725e}
+    .cashier-order-time-muted{color:#9b8a79;font-size:12px}
+</style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.cashier-order-timer[data-started-at]').forEach(function (timer) {
+        const startedAt = new Date(timer.dataset.startedAt).getTime();
+        const label = timer.querySelector('.timer-label');
+        if (!label || Number.isNaN(startedAt)) return;
+        const update = function () {
+            const seconds = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const remainder = seconds % 60;
+            label.textContent = hours > 0
+                ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`
+                : `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
+        };
+        update();
+        window.setInterval(update, 1000);
+    });
+});
+</script>
+@endpush
 
 @endsection

@@ -10,7 +10,7 @@ use App\Services\FinancialReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
@@ -58,7 +58,7 @@ class OwnerController extends Controller
         $menuAktif = Product::where('is_available', true)->count();
         $weeklyTrend = $this->dailySalesTrend($periodStart, $periodEnd);
 
-        $transaksiTerbaru = Order::with('payment')
+        $transaksiTerbaru = Order::with(['payment', 'user'])
             ->whereHas('payment', function ($query) use ($periodStart, $periodEnd) {
                 $query->where('status', 'Berhasil')
                     ->whereBetween('paid_at', [$periodStart, $periodEnd]);
@@ -85,110 +85,34 @@ class OwnerController extends Controller
      */
     public function sales(Request $request): View
     {
-        [
-            $startOfMonth,
-            $endOfMonth,
-            $selectedMonth,
-            $selectedDate
-        ] = $this->resolvePeriod($request);
+        [$periodStart, $periodEnd] = FinancialReportService::resolvePeriod($request->query('month'), $request->query('start'), $request->query('end'));
+        $selectedMonth = $periodStart->format('Y-m');
+        $periodLabel = FinancialReportService::periodLabel($periodStart, $periodEnd);
+        $financialSummary = app(FinancialReportService::class)->summary($periodStart, $periodEnd);
 
-        $financialSummary = app(FinancialReportService::class)->summary(
-            $startOfMonth,
-            $endOfMonth
-        );
-        $periodLabel = FinancialReportService::periodLabel($startOfMonth, $endOfMonth);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | OMZET PERIODE
-        |--------------------------------------------------------------------------
-        | Sama dengan Dashboard:
-        | payments.status = Berhasil
-        | payments.paid_at = periode yang dipilih
-        */
         $omzetBulanIni = DB::table('payments')
             ->where('status', 'Berhasil')
-            ->whereBetween('paid_at', [
-                $startOfMonth,
-                $endOfMonth
-            ])
+            ->whereBetween('paid_at', [$periodStart, $periodEnd])
             ->sum('amount');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | TRANSAKSI PERIODE
-        |--------------------------------------------------------------------------
-        */
         $transaksiBulanIni = DB::table('payments')
             ->where('status', 'Berhasil')
-            ->whereBetween('paid_at', [
-                $startOfMonth,
-                $endOfMonth
-            ])
+            ->whereBetween('paid_at', [$periodStart, $periodEnd])
             ->count();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | RATA-RATA ORDER
-        |--------------------------------------------------------------------------
-        */
         $rataRataOrder = $transaksiBulanIni > 0
             ? $omzetBulanIni / $transaksiBulanIni
             : 0;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | GRAFIK HARIAN
-        |--------------------------------------------------------------------------
-        */
-        $dailyTrend = $this->dailySalesTrend(
-            $startOfMonth,
-            $endOfMonth
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | METODE PEMBAYARAN
-        |--------------------------------------------------------------------------
-        */
+        $dailyTrend = $this->dailySalesTrend($periodStart, $periodEnd);
         $metodePembayaran = DB::table('payments')
             ->where('status', 'Berhasil')
-            ->whereIn('payment_method', ['QRIS', 'Cash'])
-            ->whereBetween('paid_at', [
-                $startOfMonth,
-                $endOfMonth
-            ])
-            ->selectRaw(
-                'payment_method, COUNT(*) as jumlah'
-            )
+            ->whereIn('payment_method', ['QRIS', 'Cash', 'Bank Transfer'])
+            ->whereBetween('paid_at', [$periodStart, $periodEnd])
+            ->selectRaw('payment_method, COUNT(*) as jumlah')
             ->groupBy('payment_method')
             ->pluck('jumlah', 'payment_method');
-
-
         $totalMetode = $metodePembayaran->sum();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | RIWAYAT PENJUALAN
-        |--------------------------------------------------------------------------
-        */
-        $riwayatPenjualan = Order::with('payment')
-            ->whereHas('payment', function ($query) use (
-                $startOfMonth,
-                $endOfMonth
-            ) {
-                $query
-                    ->where('status', 'Berhasil')
-                    ->whereBetween('paid_at', [
-                        $startOfMonth,
-                        $endOfMonth
-                    ]);
+        $riwayatPenjualan = Order::with(['payment', 'user'])
+            ->whereHas('payment', function ($query) use ($periodStart, $periodEnd) {
+                $query->where('status', 'Berhasil')->whereBetween('paid_at', [$periodStart, $periodEnd]);
             })
             ->latest()
             ->limit(20)
@@ -204,7 +128,8 @@ class OwnerController extends Controller
             'totalMetode',
             'riwayatPenjualan',
             'selectedMonth',
-            'selectedDate',
+            'periodStart',
+            'periodEnd',
             'financialSummary',
             'periodLabel'
         ));
@@ -218,19 +143,12 @@ class OwnerController extends Controller
      */
     public function exportSalesExcel(Request $request)
     {
-        [
-            $startOfMonth,
-            $endOfMonth,
-            $selectedMonth
-        ] = $this->resolvePeriod($request);
-
+        [$startOfMonth, $endOfMonth] = FinancialReportService::resolvePeriod($request->query('month'), $request->query('start'), $request->query('end'));
+        $filenamePeriod = $startOfMonth->format('Ymd') . '-' . $endOfMonth->format('Ymd');
 
         return Excel::download(
-            new SalesExport(
-                $startOfMonth,
-                $endOfMonth
-            ),
-            'laporan-penjualan-' . $selectedMonth . '.xlsx'
+            new SalesExport($startOfMonth, $endOfMonth),
+            'laporan-penjualan-' . $filenamePeriod . '.xlsx'
         );
     }
 
@@ -242,43 +160,15 @@ class OwnerController extends Controller
      */
     public function exportSalesPdf(Request $request): Response
     {
-        [
-            $startOfMonth,
-            $endOfMonth,
-            $selectedMonth
-        ] = $this->resolvePeriod($request);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | OMZET
-        |--------------------------------------------------------------------------
-        */
+        [$startOfMonth, $endOfMonth] = FinancialReportService::resolvePeriod($request->query('month'), $request->query('start'), $request->query('end'));
+        $filenamePeriod = $startOfMonth->format('Ymd') . '-' . $endOfMonth->format('Ymd');
         $omzetBulanIni = DB::table('payments')
             ->where('status', 'Berhasil')
-            ->whereBetween('paid_at', [
-                $startOfMonth,
-                $endOfMonth
-            ])
+            ->whereBetween('paid_at', [$startOfMonth, $endOfMonth])
             ->sum('amount');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | TRANSAKSI
-        |--------------------------------------------------------------------------
-        */
         $orders = Order::with('payment')
-            ->whereHas('payment', function ($query) use (
-                $startOfMonth,
-                $endOfMonth
-            ) {
-                $query
-                    ->where('status', 'Berhasil')
-                    ->whereBetween('paid_at', [
-                        $startOfMonth,
-                        $endOfMonth
-                    ]);
+            ->whereHas('payment', function ($query) use ($startOfMonth, $endOfMonth) {
+                $query->where('status', 'Berhasil')->whereBetween('paid_at', [$startOfMonth, $endOfMonth]);
             })
             ->latest()
             ->get();
@@ -287,9 +177,7 @@ class OwnerController extends Controller
         $transaksiBulanIni = $orders->count();
 
 
-        $periodLabel = $startOfMonth
-            ->locale('id')
-            ->translatedFormat('F Y');
+        $periodLabel = FinancialReportService::periodLabel($startOfMonth, $endOfMonth);
 
 
         $pdf = Pdf::loadView(
@@ -303,9 +191,7 @@ class OwnerController extends Controller
         );
 
 
-        return $pdf->download(
-            'laporan-penjualan-' . $selectedMonth . '.pdf'
-        );
+        return $pdf->download('laporan-penjualan-' . $filenamePeriod . '.pdf');
     }
 
 
@@ -314,41 +200,6 @@ class OwnerController extends Controller
      * RESOLVE PERIOD
      * ============================================================
      */
-    private function resolvePeriod(Request $request): array
-    {
-        $selectedDate = $request->get(
-            'tanggal',
-            now()->format('Y-m-d')
-        );
-
-
-        try {
-
-            $date = Carbon::createFromFormat(
-                'Y-m-d',
-                $selectedDate
-            );
-
-        } catch (\Exception $e) {
-
-            $date = now();
-
-            $selectedDate = $date->format('Y-m-d');
-        }
-
-
-        $selectedMonth = $date->format('Y-m');
-
-
-        return [
-            $date->copy()->startOfMonth(),
-            $date->copy()->endOfMonth(),
-            $selectedMonth,
-            $selectedDate,
-        ];
-    }
-
-
     /**
      * ============================================================
      * DAILY SALES TREND
@@ -360,10 +211,16 @@ class OwnerController extends Controller
     ) {
         $trend = collect();
 
-        $cursor = $start->copy();
+        $cursor = $start->copy()->startOfDay();
+        $latestVisibleDate = $end->copy()->min(now())->endOfDay();
+
+        // Jangan tampilkan tanggal masa depan pada periode bulan berjalan.
+        if ($cursor->gt($latestVisibleDate)) {
+            return $trend;
+        }
 
 
-        while ($cursor->lte($end)) {
+        while ($cursor->lte($latestVisibleDate)) {
 
             $total = DB::table('payments')
                 ->where('status', 'Berhasil')
@@ -376,6 +233,7 @@ class OwnerController extends Controller
 
             $trend->push([
                 'label' => $cursor->translatedFormat('d M'),
+                'date' => $cursor->toDateString(),
                 'total' => (float) $total,
             ]);
 

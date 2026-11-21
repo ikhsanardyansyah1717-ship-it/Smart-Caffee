@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/owner.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/owner-charts.css') }}">
     @stack('styles')
 </head>
 <body>
@@ -32,11 +33,20 @@
             <a href="{{ route('owner.employees.index') }}" class="owner-link {{ request()->routeIs('owner.employees.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-users"></i><span>Karyawan</span>
             </a>
+            <a href="{{ route('owner.leaves.index') }}" class="owner-link {{ request()->routeIs('owner.leaves.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-calendar-check"></i><span>Pengajuan Cuti</span>
+            </a>
+            <a href="{{ route('owner.salaries.index') }}" class="owner-link {{ request()->routeIs('owner.salaries.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-money-check-dollar"></i><span>Daftar Gaji</span>
+            </a>
             <a href="{{ route('owner.customers.index') }}" class="owner-link {{ request()->routeIs('owner.customers.*') ? 'active' : '' }}">
                 <i class="fa-solid fa-user-group"></i><span>Pelanggan</span>
             </a>
             <a href="{{ route('owner.reports') }}" class="owner-link {{ request()->routeIs('owner.reports') ? 'active' : '' }}">
                 <i class="fa-solid fa-file-lines"></i><span>Laporan</span>
+            </a>
+            <a href="{{ route('owner.settings') }}" class="owner-link {{ request()->routeIs('owner.settings*') ? 'active' : '' }}">
+                <i class="fa-solid fa-sliders"></i><span>Pengaturan</span>
             </a>
             <a href="{{ route('owner.expenses') }}" class="owner-link {{ request()->routeIs('owner.expenses*') ? 'active' : '' }}">
                 <i class="fa-solid fa-money-bill-transfer"></i><span>Catatan Keuangan</span>

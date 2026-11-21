@@ -22,6 +22,9 @@
 @if (session('success'))
     <div style="margin-bottom:16px;padding:12px 16px;border-radius:12px;background:#e8f5ee;color:#1f6b45;font-size:14px;">{{ session('success') }}</div>
 @endif
+@if (session('error'))
+    <div style="margin-bottom:16px;padding:12px 16px;border-radius:12px;background:#fdecec;color:#a32121;font-size:14px;">{{ session('error') }}</div>
+@endif
 @if ($errors->any())
     <div style="margin-bottom:16px;padding:12px 16px;border-radius:12px;background:#fdecec;color:#a32121;font-size:14px;">
         @foreach ($errors->all() as $error)<div>{{ $error }}</div>@endforeach

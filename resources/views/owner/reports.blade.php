@@ -6,6 +6,7 @@
     <div><span class="eyebrow">BUSINESS REPORT</span><h1>Laporan</h1><p>Buat dan pantau laporan operasional serta keuangan.</p></div>
     <div class="head-actions">
         @include('owner.partials.period-picker')
+        <a href="{{ route('owner.reports.export.customers') }}" class="btn btn-light"><i class="fa-solid fa-users"></i> Ekspor Pelanggan</a>
         <a href="{{ route('owner.reports.export.excel', ['start' => $start->toDateString(), 'end' => $end->toDateString()]) }}" class="btn btn-light"><i class="fa-solid fa-file-excel"></i> Excel</a>
         <a href="{{ route('owner.reports.export.pdf', ['start' => $start->toDateString(), 'end' => $end->toDateString()]) }}" class="btn btn-primary"><i class="fa-solid fa-file-pdf"></i> PDF</a>
     </div>

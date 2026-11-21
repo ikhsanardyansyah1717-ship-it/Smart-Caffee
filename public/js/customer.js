@@ -105,10 +105,23 @@ function normalizeCategory(category) {
     const normalized = String(category)
         .toLowerCase()
         .trim()
-        .replace(/\s+/g, '-');
+        .replace(/&/g, ' and ')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
 
-    if (['makanan-berat', 'food'].includes(normalized)) return 'food';
-    if (['non-coffee', 'noncoffee'].includes(normalized)) return 'non-coffee';
+    const aliases = {
+        coffee: ['coffee', 'coffees', 'kopi', 'minuman-kopi'],
+        'non-coffee': ['non-coffee', 'noncoffee', 'non-kopi', 'minuman-non-kopi'],
+        food: ['food', 'foods', 'makanan', 'makanan-berat', 'makanan-utama', 'menu-utama', 'main-course'],
+        snack: ['snack', 'snacks', 'camilan', 'cemilan', 'makanan-ringan'],
+        bakery: ['bakery', 'bakery-and-pastry', 'bakery-pastry', 'pastry', 'roti'],
+        dessert: ['dessert', 'desserts', 'pencuci-mulut', 'hidangan-penutup']
+    };
+
+    for (const [canonical, values] of Object.entries(aliases)) {
+        if (values.includes(normalized)) return canonical;
+    }
+
     return normalized;
 
 }
@@ -395,6 +408,17 @@ function renderMenu(items) {
     }
 
     if (!items.length) {
+        const categoryName = {
+            coffee: 'Coffee',
+            'non-coffee': 'Non Coffee',
+            food: 'Makanan Berat',
+            snack: 'Snack',
+            bakery: 'Bakery & Pastry',
+            dessert: 'Dessert'
+        }[normalizeCategory(activeMenuCategory)];
+        const emptyMessage = categoryName
+            ? `Belum ada menu untuk kategori ${categoryName}`
+            : 'Menu tidak ditemukan';
 
         container.innerHTML = `
 
@@ -403,7 +427,7 @@ function renderMenu(items) {
                 <i class="fa-solid fa-mug-hot"></i>
 
                 <p>
-                    Menu tidak ditemukan
+                    ${emptyMessage}
                 </p>
 
             </div>
@@ -829,7 +853,7 @@ async function loadProductReviews(productId) {
         list.innerHTML = data.reviews?.length
             ? data.reviews.map(review => `
                 <article class="product-review-card">
-                    <div><strong>${escapeHtml(review.customer_name || 'Pelanggan Quattro')}</strong><span>★ ${Number(review.rating)} / 5</span></div>
+                    <div><strong>${escapeHtml(review.customer_name || 'Pelanggan')}</strong><span>★ ${Number(review.rating)} / 5</span></div>
                     <p>${escapeHtml(review.comment)}</p>
                     <small>${escapeHtml(review.created_at || '')}</small>
                 </article>
@@ -2138,7 +2162,10 @@ if (unavailableItems.length) {
         closePaymentModalIfExists();
 
 
-        if (data.payment_url) {
+        if (data.bank_transfer_url) {
+            showToast('Pesanan dibuat. Menampilkan rekening transfer...');
+            setTimeout(() => { window.location.href = data.bank_transfer_url; }, 400);
+        } else if (data.payment_url) {
             showToast('Pesanan dibuat. Membuka pembayaran QRIS...');
             setTimeout(() => { window.location.href = data.payment_url; }, 500);
         } else {
@@ -2399,6 +2426,15 @@ async function renderHistory() {
                             </div>
                             <div class="history-order-actions">
                                 <a class="history-qris-pay" href="/customer/orders/${Number(order.id)}/payment">${order.payment_deadline && Date.parse(order.payment_deadline) > Date.now() ? 'Bayar Sekarang' : 'Buat QR Baru'}</a>
+                                ${order.can_cancel_order ? `<button type="button" class="history-cancel-order" onclick="openCancelOrderDialog(${Number(order.id)})"><i class="fa-regular fa-circle-xmark" aria-hidden="true"></i> Batalkan</button>` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${String(order.payment_method || '').toUpperCase() === 'BANK TRANSFER' && order.payment_status !== 'Dibayar' && order.status !== 'Dibatalkan' ? `
+                        <div class="history-payment-action">
+                            <div class="history-order-actions">
+                                <a class="history-qris-pay" href="/customer/orders/${Number(order.id)}/bank-transfer">Lihat rekening transfer</a>
                                 ${order.can_cancel_order ? `<button type="button" class="history-cancel-order" onclick="openCancelOrderDialog(${Number(order.id)})"><i class="fa-regular fa-circle-xmark" aria-hidden="true"></i> Batalkan</button>` : ''}
                             </div>
                         </div>

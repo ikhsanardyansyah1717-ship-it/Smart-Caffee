@@ -11,6 +11,7 @@ use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Services\MidtransSnapService;
 use App\Services\MidtransPaymentStatusService;
+use App\Services\FinancialReportService;
 
 class KasirController extends Controller
 {
@@ -63,42 +64,43 @@ class KasirController extends Controller
      */
     public function dashboard(Request $request)
     {
-        $request->validate([
-            'date' => ['nullable', 'date_format:Y-m-d'],
-        ]);
+        [$periodStart, $periodEnd] = FinancialReportService::resolvePeriod(
+            $request->query('month'),
+            $request->query('start'),
+            $request->query('end')
+        );
+        $periodLabel = FinancialReportService::periodLabel($periodStart, $periodEnd);
 
-        $tanggal = $request->input('date', now()->toDateString());
-
-        $pesananHariIni = Order::whereDate('created_at', $tanggal)
+        $pesananHariIni = Order::whereBetween('created_at', [$periodStart, $periodEnd])
             ->count();
 
-        $menungguBayar = Order::whereDate('created_at', $tanggal)
+        $menungguBayar = Order::whereBetween('created_at', [$periodStart, $periodEnd])
             ->where('payment_status', 'Belum Dibayar')
             ->count();
 
-        $penjualanHariIni = Payment::whereDate('paid_at', $tanggal)
+        $penjualanHariIni = Payment::whereBetween('paid_at', [$periodStart, $periodEnd])
             ->where('status', 'Berhasil')
             ->sum('amount');
 
-        $transaksiSelesai = Payment::whereDate('paid_at', $tanggal)
+        $transaksiSelesai = Payment::whereBetween('paid_at', [$periodStart, $periodEnd])
             ->where('status', 'Berhasil')
             ->count();
 
-        $pelangganHariIni = Order::whereHas('payment', function ($query) use ($tanggal) {
-                $query->whereDate('paid_at', $tanggal)
+        $pelangganHariIni = Order::whereHas('payment', function ($query) use ($periodStart, $periodEnd) {
+                $query->whereBetween('paid_at', [$periodStart, $periodEnd])
                     ->where('status', 'Berhasil');
             })
             ->whereNotNull('customer_name')
             ->distinct('customer_name')
             ->count('customer_name');
 
-        $pesananPrioritas = Order::whereDate('created_at', $tanggal)
+        $pesananPrioritas = Order::whereBetween('created_at', [$periodStart, $periodEnd])
             ->where('status', 'Menunggu')
             ->where('payment_status', 'Dibayar')
             ->count();
 
         $orders = Order::with(['items', 'payment'])
-            ->whereDate('created_at', $tanggal)
+            ->whereBetween('created_at', [$periodStart, $periodEnd])
             ->latest()
             ->take(5)
             ->get();
@@ -135,7 +137,9 @@ class KasirController extends Controller
             'stockWarnings',
             'stockWarningCount',
             'productAvailability',
-            'tanggal'
+            'periodStart',
+            'periodEnd',
+            'periodLabel'
         ));
     }
 
@@ -230,15 +234,16 @@ class KasirController extends Controller
     public function confirmManualPayment(Request $request, $id)
     {
         $validated = $request->validate([
-            'payment_method' => ['nullable', 'string', 'in:Cash,QRIS'],
+            'payment_method' => ['nullable', 'string', 'in:Cash,QRIS,Bank Transfer'],
             'cash_received' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $paymentMethod = $validated['payment_method'] ?? null;
         $cashReceived = (float) ($validated['cash_received'] ?? 0);
+        $cashier = $request->user();
 
         try {
-            DB::transaction(function () use ($id, $paymentMethod, $cashReceived) {
+            DB::transaction(function () use ($id, $paymentMethod, $cashReceived, $cashier) {
                 $order = Order::with('items')->whereKey($id)->lockForUpdate()->firstOrFail();
                 $payment = $order->payment()->lockForUpdate()->first();
 
@@ -289,6 +294,8 @@ class KasirController extends Controller
                         'payment_method' => $confirmedMethod,
                         'status' => 'Berhasil',
                         'paid_at' => now(),
+                        'cashier_id' => $cashier?->id,
+                        'cashier_name' => $cashier?->name,
                     ]);
                 } else {
                     Payment::create([
@@ -297,6 +304,8 @@ class KasirController extends Controller
                         'amount' => $order->total,
                         'status' => 'Berhasil',
                         'paid_at' => now(),
+                        'cashier_id' => $cashier?->id,
+                        'cashier_name' => $cashier?->name,
                     ]);
                 }
 
@@ -404,7 +413,7 @@ public function history()
             'order_type' => ['required', 'in:meja,take_away'],
             'customer' => ['required', 'string', 'max:100'],
             'table' => ['required', 'string', 'max:50'],
-            'payment_method' => ['required', 'in:Cash,QRIS'],
+            'payment_method' => ['required', 'in:Cash,QRIS,Bank Transfer'],
             'items' => ['required', 'json'],
         ]);
 

@@ -10,6 +10,8 @@ class Payment extends Model
 {
     protected $fillable = [
         'order_id',
+        'cashier_id',
+        'cashier_name',
         'payment_method',
         'amount',
         'status',
@@ -27,6 +29,11 @@ class Payment extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function cashier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cashier_id');
     }
 
     public function attempts(): HasMany

@@ -107,6 +107,10 @@
                 <span>Riwayat</span>
             </a>
 
+            <a href="{{ route('kasir.leave') }}" class="side-link {{ request()->routeIs('kasir.leave*') ? 'active' : '' }}">
+                <i class="fa-solid fa-calendar-plus"></i><span>Pengajuan Cuti</span>
+            </a>
+
         </nav>
 
 
@@ -122,8 +126,8 @@
                 </div>
 
                 <div>
-                    <strong>Kasir Staff</strong>
-                    <small>Quattro Coffee</small>
+                    <strong>{{ auth()->user()->username ?? auth()->user()->name }}</strong>
+                    <small>{{ auth()->user()->employee?->shift ?? 'Shift belum diatur' }} · Kasir</small>
                 </div>
 
             </div>

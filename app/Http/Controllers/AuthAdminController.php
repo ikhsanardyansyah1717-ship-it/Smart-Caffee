@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\EmployeeLeaveRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -34,6 +35,11 @@ class AuthAdminController extends Controller
             return back()
                 ->withErrors(['username' => 'Username/email atau password salah.'])
                 ->withInput($request->only('username'));
+        }
+
+        if (in_array($user->role, ['kasir', 'kitchen'], true) && EmployeeLeaveRequest::whereHas('employee', fn ($query) => $query->where('user_id', $user->id))
+            ->where('status', 'Disetujui')->whereDate('start_date', '<=', today())->whereDate('end_date', '>=', today())->exists()) {
+            return back()->withErrors(['username' => 'Akses akun dinonaktifkan sementara selama cuti yang disetujui.']);
         }
 
         Auth::login($user, $request->boolean('remember'));

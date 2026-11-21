@@ -32,11 +32,7 @@
     </div>
 
     <div class="top-actions">
-        <form method="GET" action="{{ route('kitchen.dashboard') }}" class="period-form">
-            <label for="dashboard-date"><i class="fa-regular fa-calendar"></i><span>Periode</span></label>
-            <input id="dashboard-date" type="date" name="date" value="{{ $date }}">
-            <button class="outline-btn" type="submit">Tampilkan</button>
-        </form>
+        @include('owner.partials.period-picker')
         <span class="live">
             <i class="fa-solid fa-circle"></i> Live
         </span>
@@ -47,7 +43,7 @@
     </div>
 </header>
 
-<p class="period-caption">Data dashboard untuk {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}</p>
+<p class="period-caption">Data dashboard untuk periode {{ $periodLabel }}.</p>
 <section class="stats-grid">
 
     <div class="stat-card">
@@ -206,7 +202,7 @@
                     <i class="fa-solid fa-receipt"></i>
 
                     <p>
-                        Tidak ada pesanan aktif pada {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}.
+                        Tidak ada pesanan aktif pada periode {{ $periodLabel }}.
                     </p>
 
                 </div>
@@ -224,7 +220,7 @@
 
             <div>
                 <h2>Status Kitchen</h2>
-                <p>Ringkasan aktivitas pada {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}.</p>
+                <p>Ringkasan aktivitas pada periode {{ $periodLabel }}.</p>
             </div>
 
         </div>
@@ -269,7 +265,7 @@
             @empty
                 <p>Belum ada pesanan selesai untuk dihitung.</p>
             @endforelse
-            @if($menuAverages->isNotEmpty())<small>Berdasarkan pesanan selesai sampai {{ \Illuminate\Support\Carbon::parse($date)->format('d/m/Y') }}.</small>@endif
+            @if($menuAverages->isNotEmpty())<small>Berdasarkan pesanan selesai pada periode {{ $periodLabel }}.</small>@endif
         </div>
 
     </div>

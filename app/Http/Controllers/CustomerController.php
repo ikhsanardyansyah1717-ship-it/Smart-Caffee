@@ -9,8 +9,10 @@ use App\Models\Favorite;
 use App\Models\Payment;
 use App\Models\PaymentAttempt;
 use App\Models\ProductReview;
+use App\Models\User;
 use App\Services\MidtransSnapService;
 use App\Services\MidtransPaymentStatusService;
+use App\Services\SiteSettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -63,11 +65,18 @@ class CustomerController extends Controller
      */
     public function home(): View
     {
+        $categoryRank = collect(config('product_categories'))->pluck('value')->flip();
         $products = $this->customerProductsQuery()->withAvg('reviews', 'rating')
             ->withCount('reviews')
-            ->orderBy('category')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->sort(function ($a, $b) use ($categoryRank) {
+                $rankA = $categoryRank[$a->category] ?? count($categoryRank);
+                $rankB = $categoryRank[$b->category] ?? count($categoryRank);
+
+                return ($rankA <=> $rankB) ?: strcasecmp($a->name, $b->name);
+            })
+            ->values();
         $this->applyCustomerAvailableStock($products);
         $categories = config('product_categories');
 
@@ -101,7 +110,12 @@ class CustomerController extends Controller
     {
         $ordersQuery = Order::with(['items.review', 'payment.attempts']);
         if (Auth::check()) {
-            $ordersQuery->where('user_id', Auth::id());
+            $customer = Auth::user();
+            $ordersQuery->where(function ($query) use ($customer) {
+                $query->where('user_id', $customer->id);
+                if ($customer->email) $query->orWhere('customer_email', $customer->email);
+                if ($customer->phone) $query->orWhere('customer_phone', $customer->phone);
+            });
         } else {
             $guestToken = request()->cookie('quattro_guest_token')
                 ?: $this->validGuestToken(request()->header('X-Guest-Token'));
@@ -155,20 +169,45 @@ class CustomerController extends Controller
     }
 
     /** Halaman informasi pemesan dan pembayaran QRIS. */
-    public function paymentPage(): View
+    public function paymentPage(SiteSettingsService $settings): View
     {
         $products = $this->customerProductsQuery()->orderBy('category')->orderBy('name')->get();
         $this->applyCustomerAvailableStock($products);
 
-        return view('customer.payment', compact('products'));
+        $bank = $settings->bankDetails();
+        $bankConfigured = $settings->hasBankAccount();
+
+        return view('customer.payment', compact('products', 'bank', 'bankConfigured'));
+    }
+
+    public function privacyPolicy(SiteSettingsService $settings): View
+    {
+        return view('customer.privacy', ['privacyPolicy' => $settings->privacyPolicy()]);
     }
 
     public function productReviews(Product $product)
     {
         $reviews = $product->reviews()
+            ->with(['user:id,email', 'orderItem.order:id,customer_email'])
             ->latest()
             ->limit(8)
-            ->get(['id', 'customer_name', 'rating', 'comment', 'created_at']);
+            ->get(['id', 'user_id', 'order_item_id', 'customer_name', 'rating', 'comment', 'created_at'])
+            ->map(function (ProductReview $review) {
+                $customerName = $review->customer_name;
+                if (blank($review->customer_name) || in_array(mb_strtolower(trim($review->customer_name)), ['pelanggan quattro', 'pelanggan quatro'], true)) {
+                    $customerName = $review->user?->email
+                        ?: $review->orderItem?->order?->customer_email
+                        ?: 'Pelanggan';
+                }
+
+                return [
+                    'id' => $review->id,
+                    'customer_name' => $customerName,
+                    'rating' => $review->rating,
+                    'comment' => $review->comment,
+                    'created_at' => $review->created_at,
+                ];
+            });
 
         return response()->json([
             'average' => round((float) $product->reviews()->avg('rating'), 1),
@@ -213,7 +252,11 @@ class CustomerController extends Controller
         }
 
         $reviewData = [
-            'customer_name' => Auth::user()?->name ?? 'Pelanggan Quattro',
+            'customer_name' => Auth::user()?->email
+                ?: $orderItem->order->customer_email
+                ?: Auth::user()?->name
+                ?: $orderItem->order->customer_name
+                ?: 'Pelanggan',
             'rating' => $data['rating'],
             'comment' => trim($data['comment']),
             'product_id' => $product->id,
@@ -523,7 +566,7 @@ class CustomerController extends Controller
     {
         $request->merge([
             'customer_phone' => preg_replace('/[\s().-]+/', '', (string) $request->input('customer_phone', '')),
-            'customer_email' => trim((string) $request->input('customer_email', '')),
+            'customer_email' => strtolower(trim((string) $request->input('customer_email', ''))),
         ]);
         $data = $request->validate([
 
@@ -570,9 +613,13 @@ class CustomerController extends Controller
 
             'payment_method' => [
                 'required',
-                'in:QRIS'
+                'in:QRIS,Bank Transfer'
             ],
         ]);
+
+        if ($data['payment_method'] === 'Bank Transfer' && !app(SiteSettingsService::class)->hasBankAccount()) {
+            return response()->json(['message' => 'Pembayaran transfer bank belum tersedia. Owner perlu mengatur rekening terlebih dahulu.'], 422);
+        }
 
 
         $guestToken = Auth::check()
@@ -632,6 +679,47 @@ class CustomerController extends Controller
                 }
             }
 
+
+            $customerUser = Auth::user()?->role === 'customer' ? Auth::user() : null;
+            if (!$customerUser && !Auth::check()) {
+                $emailUser = User::where('email', $data['customer_email'])->lockForUpdate()->first();
+                $phoneUser = User::where(function ($query) use ($data) {
+                    $query->where('phone', $data['customer_phone'])
+                        ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '(', ''), ')', '') = ?", [$data['customer_phone']]);
+                })->lockForUpdate()->first();
+                if ($emailUser && $phoneUser && $emailUser->id !== $phoneUser->id) {
+                    abort(422, 'Email dan nomor HP tercatat pada akun berbeda. Periksa kembali data pemesan.');
+                }
+
+                $matchedUser = $emailUser ?: $phoneUser;
+                if ($matchedUser?->role === 'customer') {
+                    $customerUser = $matchedUser;
+                } elseif (!$matchedUser) {
+                    $customerUser = User::create([
+                        'name' => trim($data['customer_name']),
+                        'email' => $data['customer_email'],
+                        'phone' => $data['customer_phone'],
+                        'password' => Str::random(48),
+                        'role' => 'customer',
+                    ]);
+                }
+            }
+
+            if ($customerUser) {
+                $customerUser->name = trim($data['customer_name'] ?? $customerUser->name);
+                $emailTaken = User::where('email', $data['customer_email'])->where('id', '!=', $customerUser->id)->exists();
+                $phoneTaken = User::where('phone', $data['customer_phone'])->where('id', '!=', $customerUser->id)->exists();
+                if (!$emailTaken) $customerUser->email = $data['customer_email'];
+                if (!$phoneTaken) $customerUser->phone = $data['customer_phone'];
+                $customerUser->save();
+
+                Order::whereNull('user_id')->where(function ($query) use ($data) {
+                    $query->where('customer_email', $data['customer_email'])
+                        ->orWhere('customer_phone', $data['customer_phone']);
+                })->update(['user_id' => $customerUser->id]);
+            }
+
+            $customerUserId = $customerUser?->id ?? Auth::id();
 
             /**
              * =================================================
@@ -702,8 +790,7 @@ class CustomerController extends Controller
                 'order_number' =>
                     $orderNumber,
 
-                'user_id' =>
-                    Auth::id(),
+                'user_id' => $customerUserId,
 
                 'branch_id' => session('branch_id'),
 
@@ -822,7 +909,7 @@ class CustomerController extends Controller
         $paymentUrl = null;
         $paymentDeadline = null;
         $midtrans = app(MidtransSnapService::class);
-        if ($midtrans->isConfigured()) {
+        if ($order->payment?->payment_method === 'QRIS' && $midtrans->isConfigured()) {
             try {
                 $attempt = $midtrans->createSession($order->payment);
                 $paymentUrl = $attempt->payment_url;
@@ -853,6 +940,10 @@ class CustomerController extends Controller
 
             'payment_deadline' => $paymentDeadline,
 
+            'bank_transfer_url' => $order->payment?->payment_method === 'Bank Transfer'
+                ? route('customer.orders.bank-transfer', $order)
+                : null,
+
         ], 201);
 
         if ($guestToken) {
@@ -860,6 +951,18 @@ class CustomerController extends Controller
         }
 
         return $response;
+    }
+
+    public function bankTransferInstructions(Request $request, Order $order, SiteSettingsService $settings): View|RedirectResponse
+    {
+        abort_unless($this->customerCanAccessOrder($request, $order), 404);
+        abort_unless($order->payment?->payment_method === 'Bank Transfer', 404);
+
+        if (!$settings->hasBankAccount()) {
+            return redirect()->route('customer.history')->with('payment_notice', 'Informasi rekening bank belum tersedia. Hubungi Quattro Coffee.');
+        }
+
+        return view('customer.bank-transfer', ['order' => $order, 'bank' => $settings->bankDetails()]);
     }
 
     /**
@@ -872,7 +975,12 @@ class CustomerController extends Controller
         $ordersQuery = Order::with(['items.review', 'payment.attempts']);
         $guestToken = null;
         if (Auth::check()) {
-            $ordersQuery->where('user_id', Auth::id());
+            $customer = Auth::user();
+            $ordersQuery->where(function ($query) use ($customer) {
+                $query->where('user_id', $customer->id);
+                if ($customer->email) $query->orWhere('customer_email', $customer->email);
+                if ($customer->phone) $query->orWhere('customer_phone', $customer->phone);
+            });
         } else {
             $guestToken = request()->cookie('quattro_guest_token')
                 ?: $this->validGuestToken(request()->header('X-Guest-Token'));
@@ -959,7 +1067,7 @@ class CustomerController extends Controller
 
                         'can_cancel_order' => $order->status === 'Menunggu'
                             && $paymentStatus !== 'Dibayar'
-                            && strtoupper((string) $payment?->payment_method) === 'QRIS',
+                            && in_array(strtoupper((string) $payment?->payment_method), ['QRIS', 'BANK TRANSFER'], true),
 
                         'payment_method' =>
                             $order->payment
