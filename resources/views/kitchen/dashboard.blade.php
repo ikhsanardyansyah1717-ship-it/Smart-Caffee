@@ -74,7 +74,7 @@
         </div>
 
         <div>
-            <span>Siap Diambil</span>
+            <span>Sudah Selesai</span>
             <strong id="stat-ready">{{ $readyOrders }}</strong>
         </div>
     </div>

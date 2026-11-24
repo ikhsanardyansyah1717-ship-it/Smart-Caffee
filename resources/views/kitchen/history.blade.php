@@ -122,7 +122,7 @@
                     </div>
 
                     <span class="status-pill status-history">
-                        {{ $order->status === 'Sudah Diambil' ? 'Sudah Diambil' : 'Dibatalkan' }}
+                        {{ in_array($order->status, ['Selesai', 'Sudah Selesai', 'Sudah Diambil']) ? 'Sudah Selesai' : 'Dibatalkan' }}
                     </span>
 
                 </div>
@@ -159,7 +159,7 @@
 
                         <i class="fa-solid fa-circle-check"></i>
 
-                        Pesanan sudah diambil pelanggan
+                        Pesanan sudah selesai diproses oleh Kitchen
 
                     </div>
 
