@@ -196,7 +196,7 @@ body {
 /* Stats Cards */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     margin-bottom: 20px;
 }
@@ -343,9 +343,15 @@ body {
     color: var(--green);
 }
 
-.status-history {
-    background: #eeeae5;
-    color: var(--muted);
+.status-history,
+.status-history-completed {
+    background: #e7f5ed;
+    color: var(--green);
+}
+
+.status-history-cancelled {
+    background: #fff0ed;
+    color: #b54735;
 }
 
 .customer {
@@ -718,6 +724,14 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
     align-items: stretch;
     gap: 16px;
+}
+
+.kitchen-page .history-order-grid {
+    align-items: start;
+}
+
+.kitchen-page .history-order-grid .kitchen-order-card {
+    height: auto;
 }
 
 .kitchen-page .kitchen-order-card {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Product;
 use App\Services\FinancialReportService;
 use Illuminate\Http\Request;
 
@@ -50,10 +51,11 @@ class KitchenController extends Controller
                 }
             });
         $menuAverages = $menuAverages->map(fn ($row) => round($row['total'] / $row['orders'], 1))->sortKeys();
+        $activeMenuCount = Product::where('is_available', true)->count();
 
         return view(
             'kitchen.dashboard',
-            compact('orders', 'periodStart', 'periodEnd', 'periodLabel', 'menuAverages')
+            compact('orders', 'periodStart', 'periodEnd', 'periodLabel', 'menuAverages', 'activeMenuCount')
         );
     }
 

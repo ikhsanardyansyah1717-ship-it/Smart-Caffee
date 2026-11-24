@@ -156,13 +156,6 @@
                 </div>
 
 
-                <div class="order-actions kitchen-order-actions">
-                    <div class="done-text">
-                        <i class="fa-solid fa-circle-check"></i>
-                        Pesanan sudah selesai diproses
-                    </div>
-                </div>
-
             </div>
 
         @empty

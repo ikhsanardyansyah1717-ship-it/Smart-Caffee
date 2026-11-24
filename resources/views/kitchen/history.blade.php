@@ -38,7 +38,7 @@
 </header>
 
 
-<div class="filter-bar">
+<div class="filter-bar history-filter-bar">
 
     <div class="search">
 
@@ -51,22 +51,6 @@
         >
 
     </div>
-
-    <select id="priority-filter">
-
-        <option value="all">
-            Semua Prioritas
-        </option>
-
-        <option value="priority">
-            Prioritas
-        </option>
-
-        <option value="normal">
-            Normal
-        </option>
-
-    </select>
 
 </div>
 
@@ -92,13 +76,12 @@
     </div>
 
 
-    <div id="order-list" class="order-grid">
+    <div id="order-list" class="order-grid history-order-grid">
 
         @forelse($orders as $order)
 
             <div
                 class="order-card kitchen-order-card"
-                data-priority="{{ $order->priority ?? 'normal' }}"
             >
 
                 <div class="order-top">
@@ -121,7 +104,8 @@
 
                     </div>
 
-                    <span class="status-pill status-history">
+                    <span class="status-pill {{ in_array($order->status, ['Selesai', 'Sudah Selesai', 'Sudah Diambil']) ? 'status-history-completed' : 'status-history-cancelled' }}">
+                        <i class="fa-solid {{ in_array($order->status, ['Selesai', 'Sudah Selesai', 'Sudah Diambil']) ? 'fa-circle-check' : 'fa-ban' }}" aria-hidden="true"></i>
                         {{ in_array($order->status, ['Selesai', 'Sudah Selesai', 'Sudah Diambil']) ? 'Sudah Selesai' : 'Dibatalkan' }}
                     </span>
 
@@ -153,18 +137,6 @@
                 </div>
 
 
-                <div class="order-actions kitchen-order-actions">
-
-                    <div class="done-text">
-
-                        <i class="fa-solid fa-circle-check"></i>
-
-                        Pesanan sudah selesai diproses oleh Kitchen
-
-                    </div>
-
-                </div>
-
             </div>
 
         @empty
@@ -195,7 +167,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         updatePageCount();
         setupSearch();
-        setupPriorityFilter();
     });
 </script>
 

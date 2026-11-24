@@ -17,11 +17,6 @@
         ? round(($readyOrders / $totalOrders) * 100)
         : 0;
 
-    $priorityOrders = 0;
-
-    if (\Illuminate\Support\Facades\Schema::hasColumn('orders', 'priority')) {
-        $priorityOrders = $orders->where('priority', 'priority')->count();
-    }
 @endphp
 
 <header class="topbar">
@@ -76,17 +71,6 @@
         <div>
             <span>Sudah Selesai</span>
             <strong id="stat-ready">{{ $readyOrders }}</strong>
-        </div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-icon red">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-        </div>
-
-        <div>
-            <span>Prioritas</span>
-            <strong id="stat-priority">{{ $priorityOrders }}</strong>
         </div>
     </div>
 
@@ -253,7 +237,7 @@
             <div>
                 <i class="fa-solid fa-fire"></i>
                 <span>Menu aktif</span>
-                <strong>{{ $orders->flatMap->items->pluck('product_name')->unique()->count() }} menu</strong>
+                <strong>{{ $activeMenuCount }} menu</strong>
             </div>
 
         </div>
