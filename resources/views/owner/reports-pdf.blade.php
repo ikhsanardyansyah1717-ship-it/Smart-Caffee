@@ -59,22 +59,30 @@
 
     <h2 class="section-title">Penjualan dan Laba per Produk</h2>
     <table class="products">
-        <thead><tr><th>Produk</th><th class="number">Terjual</th><th class="number">Harga Jual / Unit</th><th class="number">Harga Modal / Unit</th><th class="number">Laba Kotor / Unit</th><th class="number">Total Laba Kotor</th></tr></thead>
+        <thead><tr><th>Produk</th><th class="number">Terjual</th><th class="number">Harga Jual / Unit</th><th class="number">Laba per Produk</th><th class="number">Laba Kotor</th><th class="number">Laba Bersih</th></tr></thead>
         <tbody>
+            @php
+                $productRevenueTotal = max(1, (float) $topProducts->sum('total_sales'));
+            @endphp
             @forelse($topProducts as $product)
+                @php
+                    $productQuantity = max(1, (int) $product->total_qty);
+                    $productNetProfit = round((float) $financialSummary['laba_bersih'] * ((float) $product->total_sales / $productRevenueTotal));
+                @endphp
                 <tr>
                     <td>{{ $product->product_name }}</td>
                     <td class="number">{{ number_format($product->total_qty, 0, ',', '.') }}</td>
-                    <td class="number">Rp {{ number_format(round($product->total_sales / max(1, $product->total_qty)), 0, ',', '.') }}</td>
-                    <td class="number">Rp {{ number_format(round($product->total_cost / max(1, $product->total_qty)), 0, ',', '.') }}</td>
-                    <td class="number">Rp {{ number_format(round($product->total_profit / max(1, $product->total_qty)), 0, ',', '.') }}</td>
+                    <td class="number">Rp {{ number_format(round($product->total_sales / $productQuantity), 0, ',', '.') }}</td>
                     <td class="number">Rp {{ number_format($product->total_profit, 0, ',', '.') }}</td>
+                    <td class="number">Rp {{ number_format(round($product->total_profit / $productQuantity), 0, ',', '.') }}</td>
+                    <td class="number">Rp {{ number_format($productNetProfit, 0, ',', '.') }}</td>
                 </tr>
             @empty
                 <tr><td colspan="6" class="empty">Belum ada penjualan produk pada periode ini.</td></tr>
             @endforelse
         </tbody>
     </table>
+    <p class="formula">Laba per produk = (harga jual rata-rata − harga modal rata-rata) × jumlah terjual. Laba kotor = laba per produk ÷ jumlah terjual. Laba bersih produk = laba bersih periode × porsi omzet produk.</p>
     <div class="footer"><span>Quattro Coffee · Laporan internal</span><span class="right">Dicetak {{ now()->format('d/m/Y H:i') }}</span></div>
 </body>
 </html>

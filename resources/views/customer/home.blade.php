@@ -241,7 +241,7 @@
     <div class="section-header category-section-heading">
         <div>
             <h4>Kategori</h4>
-            <p>Pilih sesuai seleramu</p>
+            <p>Pilih menu favoritmu</p>
         </div>
     </div>
 
@@ -382,7 +382,7 @@
 </script>
 
 
-<script src="{{ asset('js/customer.js') }}?v=13"></script>
+<script src="{{ asset('js/customer.js') }}?v=20261125-checkout-loading-3"></script>
 {{-- =====================================================
     PROMO AUTO SLIDER
 ===================================================== --}}

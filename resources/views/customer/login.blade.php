@@ -25,7 +25,7 @@
     <button class="customer-wa-login__button" id="customer-wa-login-start" type="button">
         <i class="fa-brands fa-whatsapp"></i> Log In via WhatsApp
     </button>
-    <p class="customer-wa-login__hint">WhatsApp akan terbuka dengan pesan verifikasi. Kirim pesannya, lalu kembali ke sini.</p>
+    <p class="customer-wa-login__hint">Gunakan nomor yang terdaftar di akun, kirim pesan verifikasi, lalu tunggu di halaman ini. Login otomatis memerlukan WhatsApp Business dan webhook yang aktif.</p>
     <div
     class="customer-wa-login__state"
     id="customer-wa-login-state"
@@ -424,6 +424,8 @@ const showStatus = (
     async function poll(code) {
         if (polling) return;
         polling = true;
+        const startedAt = Date.now();
+        let pendingStatusShown = false;
 
         while (polling) {
             try {
@@ -435,6 +437,17 @@ const showStatus = (
                 const result = await response.json();
 
                 if (response.status === 202 && result.status === 'pending') {
+                    if (!pendingStatusShown) {
+                        showStatus('Menunggu pesan diterima WhatsApp Business Quattro. Pastikan nomor akun yang digunakan sudah benar.', 'loading', 'Menunggu verifikasi');
+                        pendingStatusShown = true;
+                    }
+                    if (Date.now() - startedAt > 4 * 60 * 1000) {
+                        showStatus('Pesan belum diterima sistem. Periksa koneksi WhatsApp Business dan webhook, lalu coba lagi.', 'error', 'Login belum terverifikasi');
+                        polling = false;
+                        startButton.hidden = false;
+                        startButton.disabled = false;
+                        return;
+                    }
                     await new Promise(resolve => setTimeout(resolve, 1800));
                     continue;
                 }
@@ -452,11 +465,13 @@ const showStatus = (
                 }
                 polling = false;
                 startButton.hidden = false;
+                startButton.disabled = false;
                 return;
             } catch (error) {
-                showStatus('Koneksi terputus. Periksa koneksi internet lalu coba lagi.');
+                showStatus('Sesi verifikasi terputus. Silakan mulai login WhatsApp lagi.', 'error', 'Login terputus');
                 polling = false;
                 startButton.hidden = false;
+                startButton.disabled = false;
             }
         }
     }
@@ -474,7 +489,7 @@ const showStatus = (
             if (!response.ok) throw new Error('start_failed');
 
             const result = await response.json();
-            showStatus('Kirim pesan yang sudah disiapkan di WhatsApp. Kami akan melanjutkan login setelah pesan diterima.');
+            showStatus('Kirim pesan yang sudah disiapkan. Login berlanjut otomatis setelah pesan diterima WhatsApp Business.');
             if (chatTab) {
                 chatTab.location = result.whatsapp_url;
             } else {

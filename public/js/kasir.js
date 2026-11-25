@@ -44,11 +44,43 @@ function rupiah(number) {
     return 'Rp ' + Number(number).toLocaleString('id-ID');
 }
 function processPayment() {
-    if (!selectedTotal) return alert('Pilih pesanan terlebih dahulu.');
+    if (!selectedTotal) return window.showAppNotification('Pilih pesanan terlebih dahulu.', 'error');
     const received = Number(document.getElementById('cashInput').value || 0);
     const method = document.getElementById('paymentMethod').value;
     if (method === 'Cash' && received < selectedTotal) {
-        return alert('Uang diterima belum mencukupi.');
+        return window.showAppNotification('Uang diterima belum mencukupi.', 'error');
     }
-    alert('Pembayaran berhasil diproses.');
+    window.showAppNotification('Pembayaran berhasil diproses.', 'success');
 }
+
+
+let kasirLiveSyncInFlight = false;
+async function refreshKasirLiveSections() {
+    const selectors = ['.stats-grid', '.sales-highlight', '.mini-list', '#cashierDashboardOrders tbody', '#cashierDashboardProducts tbody', '#ordersTable tbody'];
+    const targets = selectors.map(selector => document.querySelector(selector)).filter(Boolean);
+    if (!targets.length || kasirLiveSyncInFlight || document.visibilityState !== 'visible') return;
+    kasirLiveSyncInFlight = true;
+    try {
+        const response = await fetch(window.location.href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'ngrok-skip-browser-warning': 'true' },
+            credentials: 'same-origin', cache: 'no-store'
+        });
+        if (!response.ok) return;
+        const parsed = new DOMParser().parseFromString(await response.text(), 'text/html');
+        targets.forEach(target => {
+            const fresh = parsed.querySelector(selectors.find(selector => document.querySelector(selector) === target));
+            if (fresh) target.innerHTML = fresh.innerHTML;
+        });
+        const dashboardSearch = document.getElementById('cashierDashboardSearch');
+        if (dashboardSearch) dashboardSearch.dispatchEvent(new Event('input', { bubbles: true }));
+        const orderSearch = document.getElementById('orderSearch');
+        if (orderSearch) filterTable('orderSearch', 'ordersTable');
+    } catch (error) {
+        console.warn('Pembaruan data Kasir gagal.', error);
+    } finally {
+        kasirLiveSyncInFlight = false;
+    }
+}
+window.addEventListener('quattro:data-changed', event => {
+    if (['orders', 'payments', 'products'].includes(event.detail?.type)) refreshKasirLiveSections();
+});

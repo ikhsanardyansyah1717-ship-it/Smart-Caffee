@@ -16,7 +16,8 @@
     $completedPercent = $totalOrders > 0
         ? round(($readyOrders / $totalOrders) * 100)
         : 0;
-
+    $maxMenuMinutes = max((float) $menuAverages->max(), 0.1);
+    $rankedMenuAverages = $menuAverages->sort();
 @endphp
 
 <header class="topbar">
@@ -152,7 +153,7 @@
                         @if($order->status === 'Diproses')
                             @php
                                 $startedAt = $order->kitchen_started_at ?? $order->updated_at;
-                            @endphp
+@endphp
                             <div class="order-timer" data-started-at="{{ $startedAt?->toIso8601String() }}"><i class="fa-regular fa-clock"></i> <span class="timer-label">Waktu proses 00:00</span></div>
                             <form action="{{ route('kitchen.orders.complete', $order->id) }}" method="POST">
                                 @csrf
@@ -198,17 +199,18 @@
     </div>
 
 
-    <div class="panel">
+    <div class="panel kitchen-status-panel">
 
         <div class="panel-head">
 
             <div>
                 <h2>Status Kitchen</h2>
-                <p>Ringkasan aktivitas pada periode {{ $periodLabel }}.</p>
+                <p>Ringkasan kinerja pesanan pada periode {{ $periodLabel }}.</p>
             </div>
 
         </div>
 
+        <div class="kitchen-completion">
         <div class="progress-row">
 
             <span>Pesanan selesai</span>
@@ -226,7 +228,10 @@
             ></span>
         </div>
 
-        <div class="mini-list">
+        <div class="kitchen-completion-caption"><strong>{{ $readyOrders }} selesai</strong><span>dari {{ $totalOrders }} pesanan</span></div>
+        </div>
+
+        <div class="mini-list kitchen-status-metrics">
 
             <div>
                 <i class="fa-solid fa-clock"></i>
@@ -236,25 +241,62 @@
 
             <div>
                 <i class="fa-solid fa-fire"></i>
-                <span>Menu aktif</span>
+                <span>Menu tersedia</span>
                 <strong>{{ $activeMenuCount }} menu</strong>
             </div>
 
         </div>
 
-        <div class="menu-average-list">
-            <h3>Rata-rata waktu per menu</h3>
-            @forelse($menuAverages as $menu => $minutes)
-                <div><span>{{ $menu }}</span><strong>{{ $minutes }} menit</strong></div>
-            @empty
-                <p>Belum ada pesanan selesai untuk dihitung.</p>
-            @endforelse
-            @if($menuAverages->isNotEmpty())<small>Berdasarkan pesanan selesai pada periode {{ $periodLabel }}.</small>@endif
+        <p class="active-menu-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Produk yang tersedia setelah memperhitungkan stok dan pesanan belum dibayar.</p>
+
+<section class="kitchen-menu-performance">
+    <div class="panel-head">
+        <div>
+            <h2>Waktu Proses per Menu</h2>
+            <p>Rata-rata durasi dari pesanan mulai diproses hingga selesai pada periode {{ $periodLabel }}.</p>
         </div>
+        <span class="order-count">{{ $menuAverages->count() }} menu</span>
+    </div>
+
+    <div class="menu-average-content">
+        <div class="menu-average-rows">
+            @forelse($menuAverages as $menu => $minutes)
+                <div class="menu-average-row">
+                    <div class="menu-average-row-head"><span>{{ $menu }}</span><strong>{{ $minutes }} menit</strong></div>
+                    <div class="menu-average-track"><span style="width: {{ max(8, round(($minutes / $maxMenuMinutes) * 100)) }}%"></span></div>
+                </div>
+            @empty
+                <p class="menu-average-empty">Belum ada pesanan selesai untuk dihitung pada periode ini.</p>
+            @endforelse
+        </div>
+
+        @if($menuAverages->isNotEmpty())
+            <aside class="menu-insights" aria-label="Sorotan waktu proses menu">
+                <div class="menu-insight-block">
+                    <span class="menu-insight-label"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Paling cepat</span>
+                    <strong>{{ $rankedMenuAverages->keys()->first() }}</strong>
+                    <span class="menu-insight-time">{{ $rankedMenuAverages->first() }} menit</span>
+                </div>
+                <div class="menu-insight-divider"></div>
+                <div class="menu-insight-block">
+                    <span class="menu-insight-label"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Waktu terlama</span>
+                    <strong>{{ $rankedMenuAverages->keys()->last() }}</strong>
+                    <span class="menu-insight-time">{{ $rankedMenuAverages->last() }} menit</span>
+                </div>
+            </aside>
+        @endif
+    </div>
+</section>
+
+
 
     </div>
 
+
+
 </section>
+
+
 
 </div>
 

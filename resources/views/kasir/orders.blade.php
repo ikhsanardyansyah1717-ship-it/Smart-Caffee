@@ -4,6 +4,101 @@
 
 @push('styles')
 <style>
+#ordersTable{width:100%;min-width:1530px;table-layout:fixed}
+#ordersTable th,#ordersTable td{padding:12px 10px;vertical-align:middle}
+#ordersTable th:nth-child(1),#ordersTable td:nth-child(1){width:180px}
+#ordersTable th:nth-child(2),#ordersTable td:nth-child(2){width:125px}
+#ordersTable th:nth-child(3),#ordersTable td:nth-child(3){width:137px}
+#ordersTable th:nth-child(4),#ordersTable td:nth-child(4){width:90px}
+#ordersTable th:nth-child(5),#ordersTable td:nth-child(5){width:165px;white-space:normal}
+#ordersTable th:nth-child(6),#ordersTable td:nth-child(6){width:105px}
+#ordersTable th:nth-child(7),#ordersTable td:nth-child(7){width:155px;white-space:normal}
+#ordersTable th:nth-child(8),#ordersTable td:nth-child(8){width:130px}
+#ordersTable th:nth-child(9),#ordersTable td:nth-child(9){width:168px}
+#ordersTable th:nth-child(10),#ordersTable td:nth-child(10){width:275px}
+#ordersTable tbody tr{height:72px}
+#ordersTable tbody td{font-size:11px}
+#ordersTable tbody tr{height:auto}
+#ordersTable th:nth-child(8),#ordersTable th:nth-child(9),#ordersTable th:nth-child(10){text-align:center}
+#ordersTable td:nth-child(8),#ordersTable td:nth-child(9),#ordersTable td:nth-child(10){text-align:center}
+#ordersTable .badge{box-sizing:border-box;width:108px;min-width:108px;justify-content:center}
+#ordersTable .cashier-order-timer,#ordersTable .cashier-order-time-muted{box-sizing:border-box;width:146px;min-height:34px;justify-content:center}
+#ordersTable .order-actions{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;width:100%}
+#ordersTable .order-action-form{width:100%;justify-content:center}
+#ordersTable .order-actions .order-action-button,#ordersTable .order-actions .order-action-state{box-sizing:border-box;width:180px!important;min-width:0;max-width:100%!important;min-height:36px;margin:0 auto;justify-self:auto;text-align:center}
+.orders-panel{padding:18px;border:1px solid #eadfd3;border-radius:16px;background:#fff;box-shadow:0 8px 24px rgba(82,55,31,.035)}
+.orders-panel .panel-head{align-items:center;gap:18px;margin-bottom:16px}
+.orders-panel .panel-head h2{margin:0 0 4px;font-size:16px;letter-spacing:-.2px}
+.orders-panel .panel-head p{font-size:11px;line-height:1.45}
+.orders-panel .table-wrap{overflow:auto;border:1px solid #f0e8df;border-radius:12px;background:#fff;scrollbar-color:#d9c8b5 #f8f5f1;scrollbar-width:thin}
+#ordersTable{min-width:1530px;border-collapse:separate;border-spacing:0}
+#ordersTable th{position:sticky;top:0;z-index:1;padding:12px 11px;border-bottom:1px solid #e9dfd5;background:#fbf8f4;color:#8f7d6b;font-size:9px;font-weight:800;letter-spacing:.045em;text-transform:uppercase}
+#ordersTable td{padding:13px 11px;border-bottom:1px solid #f0eae4;line-height:1.4}
+#ordersTable tbody tr:last-child td{border-bottom:0}
+#ordersTable tbody tr:hover td{background:#fffdf9}
+#ordersTable .badge{min-width:82px;min-height:26px;padding:5px 10px;border:1px solid transparent;border-radius:999px;font-size:10px;font-weight:750;line-height:1.1}
+#ordersTable .badge.menunggu{background:#f7ecdf;color:#85500f;border-color:#efdfcc}
+#ordersTable .badge.diproses{background:#fff1df;color:#9a5b0b;border-color:#f3dfc4}
+#ordersTable .badge.selesai,#ordersTable .badge.sudah-diambil{background:#eaf4ec;color:#35734b;border-color:#d9e9dc}
+#ordersTable .badge.dibatalkan{background:#fae8e5;color:#b84238;border-color:#f2d2cd}
+#ordersTable td:nth-child(1) strong{font-size:10px;letter-spacing:.01em}
+#ordersTable td:nth-child(1) small,#ordersTable td:nth-child(2) small{margin-top:4px;line-height:1.3}
+#ordersTable .order-actions{gap:7px;align-content:center}
+#ordersTable .order-action-state{min-height:34px;padding:7px 9px;border:1px solid #d9ebdf;border-radius:10px;font-size:10px;line-height:1.25}
+#ordersTable .order-action-state.is-cancelled{background:#fae8e5;color:#b84238;border-color:#f2d2cd}
+#ordersTable .order-action-state.is-failed{background:#fae8e5;color:#b84238;border-color:#f2d2cd}
+#ordersTable .order-action-state.is-cancelled,#ordersTable .order-action-state.is-failed{justify-self:center;width:max-content;min-width:150px;max-width:100%;margin:0 auto}
+#ordersTable .order-action-button{min-height:35px;border-radius:10px!important;font-size:10px;line-height:1.25}
+@media(max-width:900px){.orders-panel{padding:14px}.orders-panel .panel-head{align-items:flex-start;flex-wrap:wrap}.orders-panel .table-wrap{border-radius:10px}}
+#ordersTable .badge{display:inline-flex;align-items:center;justify-content:center;min-width:72px;min-height:25px;padding:5px 10px;border-radius:999px;font-size:10px;font-weight:700;line-height:1.15;white-space:nowrap}
+#ordersTable .badge.dibatalkan{background:#fae8e5;color:#b84238;border:1px solid #f2d2cd}
+#ordersTable .badge.menunggu{background:#f5e8da;color:#8B4F08;border:1px solid #efddc8}
+#ordersTable td:nth-child(1) strong,#ordersTable td:nth-child(3){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ordersTable .order-items-summary{display:grid;gap:3px;max-height:38px;overflow:hidden;line-height:16px}
+#ordersTable .order-items-summary div{display:flex;align-items:baseline;gap:4px;min-width:0;white-space:nowrap}
+#ordersTable .order-items-summary strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ordersTable .order-items-summary span,#ordersTable .order-items-summary small{flex:none;font-size:10px}
+#ordersTable td:last-child form{display:flex!important;align-items:center;justify-content:center;width:100%;margin:3px 0}
+#ordersTable .table-action{box-sizing:border-box;display:flex!important;align-items:center;justify-content:center;min-height:36px;width:min(100%,180px)!important;max-width:100%;margin:3px auto;padding:8px 10px!important;border:1px solid transparent!important;border-radius:9px;font-size:11px;line-height:1.25;white-space:normal;text-align:center}
+.order-place-text{font-size:inherit;font-weight:400;line-height:inherit;white-space:nowrap}
+.order-place-text.is-takeaway{color:#2863a5}
+.order-place-text.is-dinein{color:#28754a}
+#confirmPaymentModal .modal-card{width:min(760px,calc(100vw - 32px));overflow-y:auto}
+#confirmPaymentModal [hidden]{display:none!important}
+.transfer-proof-preview{margin:-2px 0 17px;padding:16px;border:1px solid #eadfd3;border-radius:16px;background:linear-gradient(145deg,#fffaf4,#fff)}
+.transfer-proof-heading{display:flex;align-items:center;gap:11px;margin-bottom:13px}
+.transfer-proof-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#f4e7d6;color:#8b4d08;font-size:17px}
+.transfer-proof-heading strong,.transfer-proof-heading small{display:block}
+.transfer-proof-heading strong{color:#493524;font-size:14px}
+.transfer-proof-heading small{margin-top:3px;color:#8c7968;font-size:11px;font-weight:400}
+.transfer-proof-frame{display:grid;place-items:center;min-height:180px;max-height:390px;overflow:auto;padding:10px;border:1px solid #eee4da;border-radius:12px;background:#f6f2ed}
+.transfer-proof-frame img{display:block;width:100%;max-height:360px;object-fit:contain;border-radius:8px}
+.transfer-proof-empty{display:grid;justify-items:center;gap:8px;padding:28px 18px;color:#806f61;text-align:center}
+.transfer-proof-empty i{font-size:26px;color:#b49470}
+.transfer-proof-empty strong{color:#493524;font-size:14px}
+.transfer-proof-empty span{max-width:380px;font-size:12px;line-height:1.5}
+@media(max-width:700px){#confirmPaymentModal .modal-card{width:calc(100vw - 24px);max-height:calc(100dvh - 24px);padding:19px}.transfer-proof-frame{min-height:140px}}
+@media(max-width:900px){#ordersTable{min-width:1530px}}
+.order-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:6px;width:100%}
+.order-action-form{display:flex;min-width:0;margin:0}
+.order-actions .is-wide{grid-column:1/-1}
+.order-actions .order-action-button{width:100%!important;max-width:none;min-height:36px;margin:0;padding:7px 8px!important;font-size:10px}
+.order-action-state{box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:36px;padding:6px 8px;border-radius:9px;background:#e9f7ef;color:#237347;font-size:10px;font-weight:700;text-align:center}
+.order-action-state.is-cancelled{background:#fae8e5;color:#b84238;border:1px solid #f2d2cd}
+.finish-table-action{background:#2e8b57!important;color:#fff!important}
+.pickup-action{background:#fff2dc!important;color:#8a550a!important;border-color:#f0dcbd!important}
+.kitchen-action{background:#e9f7ef!important;color:#237347!important}
+.payment-action{background:#fff5e5!important;color:#956014!important}
+.order-items-details summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 5px;align-items:center;cursor:pointer;list-style:none}
+.order-items-details summary::-webkit-details-marker{display:none}
+.order-items-details summary strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order-items-details summary small{grid-column:1/-1;color:#9a8068;font-size:10px}
+.order-items-details[open] summary{margin-bottom:6px}
+.order-items-expanded{display:grid;gap:5px;max-height:150px;overflow:auto;padding:8px;border:1px solid #eee2d7;border-radius:8px;background:#fffdfa}
+.order-items-expanded div{display:flex;justify-content:space-between;gap:8px;font-size:10px;white-space:nowrap}
+.order-items-expanded strong{overflow:hidden;text-overflow:ellipsis}</style>
+
+<style>
 /* =========================================================
    MODAL PESANAN BARU
    ========================================================= */
@@ -92,6 +187,7 @@ body.modal-open {
 .order-catalog-toolbar input, .order-catalog-toolbar select { min-height:42px!important; }
 .pos-product-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; max-height:430px; overflow-y:auto; padding:2px; }
 .pos-product-card { display:flex; flex-direction:column; align-items:flex-start; gap:6px; min-width:0; padding:13px; border:1px solid #eee2d7; border-radius:14px; background:#fff; text-align:left; cursor:pointer; transition:transform .15s,border-color .15s,box-shadow .15s; }
+.pos-product-card[hidden],#productCatalog .order-catalog-empty[hidden]{display:none!important;}
 .pos-product-card:hover { transform:translateY(-2px); border-color:#c9955c; box-shadow:0 8px 20px #70451314; }
 .pos-product-card:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 .pos-product-card strong { overflow:hidden; max-width:100%; color:#3b2b20; font-size:14px; text-overflow:ellipsis; white-space:nowrap; }
@@ -760,7 +856,24 @@ body.modal-open {
     }
 
 }
-</style>
+.order-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:6px;width:100%}
+.order-action-form{display:flex;min-width:0;margin:0}
+.order-actions .is-wide{grid-column:1/-1}
+.order-actions .order-action-button{width:100%!important;max-width:none;min-height:36px;margin:0;padding:7px 8px!important;font-size:10px}
+.order-action-state{box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:36px;padding:6px 8px;border-radius:9px;background:#e9f7ef;color:#237347;font-size:10px;font-weight:700;text-align:center}
+.order-action-state.is-cancelled{background:#fae8e5;color:#b84238;border:1px solid #f2d2cd}
+.finish-table-action{background:#2e8b57!important;color:#fff!important}
+.pickup-action{background:#fff2dc!important;color:#8a550a!important;border-color:#f0dcbd!important}
+.kitchen-action{background:#e9f7ef!important;color:#237347!important}
+.payment-action{background:#fff5e5!important;color:#956014!important}
+.order-items-details summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 5px;align-items:center;cursor:pointer;list-style:none}
+.order-items-details summary::-webkit-details-marker{display:none}
+.order-items-details summary strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order-items-details summary small{grid-column:1/-1;color:#9a8068;font-size:10px}
+.order-items-details[open] summary{margin-bottom:6px}
+.order-items-expanded{display:grid;gap:5px;max-height:150px;overflow:auto;padding:8px;border:1px solid #eee2d7;border-radius:8px;background:#fffdfa}
+.order-items-expanded div{display:flex;justify-content:space-between;gap:8px;font-size:10px;white-space:nowrap}
+.order-items-expanded strong{overflow:hidden;text-overflow:ellipsis}</style>
 @endpush
 
 @section('content')
@@ -828,7 +941,7 @@ body.modal-open {
 {{-- DAFTAR PESANAN --}}
 {{-- ========================================================= --}}
 
-<div class="panel">
+<div class="panel orders-panel">
 
     <div class="panel-head">
 
@@ -940,43 +1053,36 @@ body.modal-open {
                         {{-- MEJA --}}
                         <td>
                             @if($order->table_number === 'Take Away' || !$order->table_number)
-                                <span style="display:inline-block;padding:5px 9px;border-radius:8px;background:#f8eee2;color:#9a5709;font-weight:700;">Take Away</span>
+                                <span class="order-place-text is-takeaway">Take Away</span>
                             @else
-                                {{ $order->table_number }}
+                                <span class="order-place-text is-dinein">{{ $order->table_number }}</span>
                             @endif
-                            @if($order->table_number && $order->table_number !== 'Take Away' && in_array($order->status, ['Menunggu', 'Diproses', 'Selesai']))
+                            @if($order->table_number && $order->table_number !== 'Take Away' && in_array($order->status, ['Menunggu', 'Diproses', 'Selesai', 'Sudah Diambil']) && !$order->table_finished_at)
                                 <small style="display:block;margin-top:5px;color:#b06b00;font-weight:700;">Sedang Dipakai</small>
-                            @elseif($order->table_number && $order->table_number !== 'Take Away' && $order->status === 'Sudah Diambil')
+                            @elseif($order->table_number && $order->table_number !== 'Take Away' && $order->table_finished_at)
                                 <small style="display:block;margin-top:5px;color:#2e8b57;font-weight:700;">Tersedia</small>
                             @endif
                         </td>
 
 
                         {{-- PESANAN --}}
-                        <td>
-
-                            @forelse($order->items as $item)
-
-                                <div style="margin-bottom: 4px;">
-
-                                    <strong>
-                                        {{ $item->product_name }}
-                                    </strong>
-
-                                    <span>
-                                        × {{ $item->quantity }}
-                                    </span>
-
-                                </div>
-
-                            @empty
-
-                                <span>
-                                    Tidak ada item
-                                </span>
-
-                            @endforelse
-
+                        <td class="order-items-cell">
+                            @if($order->items->isNotEmpty())
+                                <details class="order-items-details">
+                                    <summary>
+                                        <strong>{{ $order->items->first()->product_name }}</strong>
+                                        <span>× {{ $order->items->first()->quantity }}</span>
+                                        @if($order->items->count() > 1)<small>+ {{ $order->items->count() - 1 }} menu lainnya</small>@endif
+                                    </summary>
+                                    <div class="order-items-expanded">
+                                        @foreach($order->items as $item)
+                                            <div><strong>{{ $item->product_name }}</strong><span>× {{ $item->quantity }}</span></div>
+                                        @endforeach
+                                    </div>
+                                </details>
+                            @else
+                                <span>Tidak ada item</span>
+                            @endif
                         </td>
 
 
@@ -1005,7 +1111,7 @@ body.modal-open {
                                 class="badge {{ str_replace(' ', '-', strtolower($order->status)) }}"
                             >
 
-                                {{ $order->status }}
+                                {{ $order->status === 'Diproses' ? 'Sedang Diproses' : $order->status }}
 
                             </span>
                         </td>
@@ -1019,57 +1125,78 @@ body.modal-open {
                                 @php($elapsedSeconds = abs($order->kitchen_completed_at->getTimestamp() - $order->kitchen_started_at->getTimestamp()))
                                 <span class="cashier-order-timer is-complete"><i class="fa-regular fa-circle-check"></i> {{ intdiv($elapsedSeconds, 60) }} mnt {{ $elapsedSeconds % 60 }} dtk</span>
                             @else
-                                <span class="cashier-order-time-muted">{{ $order->status === 'Menunggu' ? 'Belum diproses' : '—' }}</span>
+                                <span class="cashier-order-time-muted {{ $order->status === 'Dibatalkan' ? 'is-cancelled' : '' }}">{{ $order->status === 'Menunggu' ? 'Menunggu diproses' : ($order->status === 'Dibatalkan' ? 'Tidak diproses' : 'Durasi tidak tercatat') }}</span>
                             @endif
                         </td>
 
                         {{-- AKSI --}}
                         <td>
-                            @if($order->table_number && $order->table_number !== 'Take Away' && in_array($order->status, ['Menunggu', 'Diproses', 'Selesai']))
-                                <button type="button" class="table-action" style="border:0;cursor:pointer;width:auto;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;background:#2e8b57;color:white;" onclick="openFinishTableModal({{ $order->id }}, @js($order->table_number), @js(route('kasir.orders.finishTable', $order->id)))">
-                                    <i class="fa-solid fa-check"></i> Selesaikan Meja
-                                </button>
-                            @endif
-
-                            @if($paymentConfirmed)
-                                @if($gatewayPayment && !$order->kitchen_confirmed_at && $order->status === 'Menunggu')
-                                    <form method="POST" action="{{ route('kasir.orders.kitchen.confirm', $order->id) }}" style="display:inline-flex;">
+                            <div class="order-actions">
+                                @if($order->status === 'Dibatalkan')
+                                    @if($gatewayPayment && !$gatewayPaymentPending && !$paymentConfirmed && $order->payment?->payment_method === 'QRIS')
+                                    <span class="order-action-state is-failed is-wide"><i class="fa-solid fa-triangle-exclamation"></i> QRIS gagal</span>
+                                @else
+                                    <span class="order-action-state is-cancelled is-wide"><i class="fa-solid fa-ban"></i> Pesanan dibatalkan</span>
+                                @endif
+                                @else
+                                @if($paymentConfirmed && $order->status === 'Selesai')
+                                    <form class="order-action-form" method="POST" action="{{ route('kasir.orders.pickup', $order->id) }}">
                                         @csrf
-                                        <button type="submit" class="table-action" title="Kirim pesanan lunas ke antrean Kitchen" style="border:0;cursor:pointer;width:auto;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;background:#e9f7ef;color:#237347;">
-                                            <i class="fa-solid fa-kitchen-set"></i> Konfirmasi ke Kitchen
+                                        <button type="submit" class="table-action order-action-button pickup-action">
+                                            <i class="fa-solid fa-bell-concierge"></i> Siap Diambil
                                         </button>
                                     </form>
-                                @else
-                                    <span class="table-action" title="Pembayaran lunas{{ $order->kitchen_confirmed_at ? ' dan sudah dikirim ke Kitchen' : '' }}" style="display:inline-flex;align-items:center;gap:6px;background:#e9f7ef;color:#237347;padding:8px 12px;border-radius:8px;font-weight:700;">
-                                        <i class="fa-solid fa-check-double"></i> {{ $order->kitchen_confirmed_at ? 'Sudah ke Kitchen' : 'Lunas' }}
+                                @elseif($order->table_finished_at)
+                                    <span class="order-action-state pickup-confirmed">
+                                        <i class="fa-solid fa-circle-check"></i> Pesanan selesai
                                     </span>
                                 @endif
-                            @elseif($gatewayPayment && $gatewayPaymentPending)
-                                <form method="POST" action="{{ route('kasir.orders.payment.check', $order->id) }}" style="display:inline-flex;">
-                                    @csrf
-                                    <button type="submit" class="table-action" title="Periksa status transaksi ke Midtrans sebelum menandai lunas" style="border:0;cursor:pointer;width:auto;padding:8px 12px;display:inline-flex;align-items:center;gap:6px;background:#fff5e5;color:#956014;">
-                                        <i class="fa-solid fa-rotate"></i> Cek Status QRIS
+
+                                @if($order->table_number && $order->table_number !== 'Take Away'
+                                    && $order->status === 'Sudah Diambil' && !$order->table_finished_at)
+                                    <button type="button" class="table-action order-action-button finish-table-action"
+                                        onclick="openFinishTableModal({{ $order->id }}, @js($order->table_number), @js(route('kasir.orders.finishTable', $order->id)))">
+                                        <i class="fa-solid fa-check"></i> Selesaikan Meja
                                     </button>
-                                </form>
-                            @elseif($gatewayPayment)
-                                <span class="table-action" title="Pembayaran QRIS Midtrans harus diverifikasi otomatis" style="display:inline-flex;align-items:center;gap:6px;background:#fff5e5;color:#956014;padding:8px 12px;border-radius:8px;font-weight:700;">
-                                    <i class="fa-solid fa-triangle-exclamation"></i> QRIS gagal
-                                </span>
-                            @else
+                                @endif
 
-                                <button
-                                    type="button"
-                                    class="table-action"
-                                    title="Konfirmasi pembayaran"
-                                    style="border:0; cursor:pointer; width:auto; padding:8px 12px; display:inline-flex; align-items:center; gap:6px;"
-                                    onclick="openConfirmPayment({{ $order->id }}, @js($order->order_number), {{ (float) $order->total }}, @js($order->payment && $order->payment->status === 'Pending' ? $order->payment->payment_method : null), @js($order->items->map(fn ($item) => ['name' => $item->product_name, 'quantity' => $item->quantity, 'subtotal' => (float) $item->subtotal])->values()), @js($order->created_at->format('d/m/Y H:i')), @js($order->customer_name), @js($order->table_number ?: 'Take Away'))"
-                                >
-                                    <i class="fa-solid fa-check"></i>
-                                    {{ $order->payment?->status === 'Pending' ? 'Lihat & Konfirmasi' : 'Konfirmasi' }}
-                                </button>
+                                @if($order->status === 'Sudah Diambil' && (!$order->table_number || $order->table_number === 'Take Away') && !$order->table_finished_at)
+                                    <span class="order-action-state is-complete is-wide"><i class="fa-solid fa-circle-check"></i> Pesanan selesai</span>
+                                @endif
 
-                            @endif
-
+                                @if($paymentConfirmed)
+                                    @if(!$order->kitchen_confirmed_at && $order->status === 'Menunggu')
+                                        <form class="order-action-form is-wide" method="POST" action="{{ route('kasir.orders.kitchen.confirm', $order->id) }}">
+                                            @csrf
+                                            <button type="submit" class="table-action order-action-button kitchen-action">
+                                                <i class="fa-solid fa-kitchen-set"></i> Kirim ke Kitchen
+                                            </button>
+                                        </form>
+                                    @elseif($order->status !== 'Sudah Diambil')
+                                        <span class="order-action-state kitchen-state is-wide">
+                                            <i class="fa-solid fa-check-double"></i> {{ $order->kitchen_confirmed_at ? 'Sudah ke Kitchen' : 'Lunas' }}
+                                        </span>
+                                    @endif
+                                @elseif($gatewayPayment && $gatewayPaymentPending)
+                                    <form class="order-action-form is-wide" method="POST" action="{{ route('kasir.orders.payment.check', $order->id) }}">
+                                        @csrf
+                                        <button type="submit" class="table-action order-action-button payment-action">
+                                            <i class="fa-solid fa-rotate"></i> Cek Status QRIS
+                                        </button>
+                                    </form>
+                                @elseif($gatewayPayment)
+                                    <span class="order-action-state payment-action is-wide">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> QRIS gagal
+                                    </span>
+                                @else
+                                    <button type="button" class="table-action order-action-button payment-action is-wide"
+                                        onclick="openConfirmPayment({{ $order->id }}, @js($order->order_number), {{ (float) $order->total }}, @js($order->payment && $order->payment->status === 'Pending' ? $order->payment->payment_method : null), @js($order->items->map(fn ($item) => ['name' => $item->product_name, 'quantity' => $item->quantity, 'subtotal' => (float) $item->subtotal])->values()), @js($order->created_at->format('d/m/Y H:i')), @js($order->customer_name), @js($order->table_number ?: 'Take Away'), @js($order->payment?->payment_method === 'Bank Transfer' && $order->payment?->transfer_proof_path ? route('kasir.orders.transfer-proof', $order->id, false) : null))">
+                                        <i class="fa-solid fa-check"></i>
+                                        {{ $order->payment?->status === 'Pending' ? 'Lihat & Konfirmasi' : 'Konfirmasi' }}
+                                    </button>
+                                @endif
+                                @endif
+                            </div>
                         </td>
 
                     </tr>
@@ -1126,7 +1253,7 @@ body.modal-open {
 {{-- MODAL KONFIRMASI PEMBAYARAN MANUAL --}}
 {{-- ========================================================= --}}
 <div class="modal" id="confirmPaymentModal">
-    <div class="modal-card" style="max-width:580px;">
+    <div class="modal-card" style="max-width:760px;max-height:calc(100dvh - 40px);padding:26px;">
         <div class="modal-head">
             <div>
                 <span class="eyebrow">KONFIRMASI PEMBAYARAN</span>
@@ -1144,6 +1271,21 @@ body.modal-open {
                 <p id="confirmPaymentMeta" style="margin:7px 0 12px;color:#806f61;font-size:13px;"></p>
                 <div id="existingPaymentItems" style="display:grid;gap:8px;"></div>
             </div>
+
+            <section id="transferProofPreview" class="transfer-proof-preview" hidden>
+                <div class="transfer-proof-heading">
+                    <span class="transfer-proof-icon"><i class="fa-regular fa-image"></i></span>
+                    <div><strong>Bukti transfer</strong><small>Periksa nominal dan tujuan pembayaran sebelum konfirmasi.</small></div>
+                </div>
+                <div class="transfer-proof-frame">
+                    <img id="transferProofImage" alt="Bukti pembayaran transfer bank">
+                    <div id="transferProofMissing" class="transfer-proof-empty" hidden>
+                        <i class="fa-regular fa-image"></i>
+                        <strong>Bukti belum diunggah</strong>
+                        <span>Minta pelanggan mengirim bukti transfer sebelum pembayaran dikonfirmasi.</span>
+                    </div>
+                </div>
+            </section>
 
             <label id="paymentMethodWrap" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;color:#6f5a49;font-size:14px;font-weight:600;">
                 Metode Pembayaran
@@ -1357,13 +1499,29 @@ body.modal-open {
      * ========================================================
      */
 
+async function refreshCashierTables() {
+    try {
+        const response = await fetch(@json(route('kasir.tables.availability', [], false)), { headers: { Accept: 'application/json' } });
+        if (!response.ok) return;
+        const data = await response.json();
+        window.cashierOccupiedTables = data.occupied || [];
+        if (document.getElementById('orderType')?.value === 'meja') generateTableOptions();
+    } catch (error) {
+        // Keep the last server-rendered availability if a refresh is temporarily unavailable.
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    refreshCashierTables();
+    window.setInterval(refreshCashierTables, 15000);
+});
     function generateTableOptions() {
         const tableSelect = document.getElementById('tableSelect');
         if (!tableSelect) return;
 
         const previousValue = tableSelect.value;
         tableSelect.innerHTML = '<option value="">-- Pilih Nomor Meja --</option>';
-        const occupiedTables = @json($occupiedTables ?? []);
+        const occupiedTables = window.cashierOccupiedTables || @json($occupiedTables ?? []);
 
         for (let number = 1; number <= 20; number++) {
             const tableNumber = 'A' + String(number).padStart(2, '0');
@@ -1438,7 +1596,7 @@ body.modal-open {
         if (!document.querySelector('.modal.show')) document.body.classList.remove('modal-open');
     }
 
-    function openConfirmPayment(orderId, orderNumber, total, existingMethod = null, items = [], orderDate = '', customerName = '', tableNumber = '') {
+    function openConfirmPayment(orderId, orderNumber, total, existingMethod = null, items = [], orderDate = '', customerName = '', tableNumber = '', transferProofUrl = '') {
         const modal = document.getElementById('confirmPaymentModal');
         const form = document.getElementById('confirmPaymentForm');
         const method = document.getElementById('paymentMethod');
@@ -1452,6 +1610,24 @@ body.modal-open {
         const detailItems = document.getElementById('existingPaymentItems');
         const hiddenMethod = document.getElementById('confirmedPaymentMethod');
         const submitButton = document.getElementById('confirmPaymentSubmit');
+        const proofPreview = document.getElementById('transferProofPreview');
+        const proofImage = document.getElementById('transferProofImage');
+        const proofMissing = document.getElementById('transferProofMissing');
+
+        const hasTransferProof = Boolean(transferProofUrl);
+        const showTransferProof = existingMethod === 'Bank Transfer' || hasTransferProof;
+        proofPreview.hidden = !showTransferProof;
+        proofImage.hidden = !hasTransferProof;
+        proofMissing.hidden = hasTransferProof;
+        proofMissing.querySelector('strong').textContent = hasTransferProof ? 'Foto bukti gagal dimuat' : 'Bukti belum diunggah';
+        proofMissing.querySelector('span').textContent = hasTransferProof
+            ? 'Coba muat ulang halaman atau periksa file bukti transfer.'
+            : 'Minta pelanggan mengirim bukti transfer sebelum pembayaran dikonfirmasi.';
+        proofImage.onerror = function () {
+            this.hidden = true;
+            proofMissing.hidden = false;
+        };        if (hasTransferProof) proofImage.src = transferProofUrl;
+        else proofImage.removeAttribute('src');
 
         confirmPaymentTotalValue = Number(total) || 0;
         form.action = `{{ url('/kasir/orders') }}/${orderId}/confirm`;
@@ -2003,12 +2179,32 @@ body.modal-open {
 
 </script>
 
+
+
 @push('styles')
 <style>
-    .cashier-order-timer{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #f0d6b8;border-radius:999px;background:#fff6e9;color:#82500f;font-size:12px;font-weight:750;white-space:nowrap}
+.cashier-order-timer{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #f0d6b8;border-radius:999px;background:#fff6e9;color:#82500f;font-size:12px;font-weight:750;white-space:nowrap}
     .cashier-order-timer.is-complete{border-color:#d9e7dc;background:#f1f7f2;color:#55725e}
-    .cashier-order-time-muted{color:#9b8a79;font-size:12px}
-</style>
+    .cashier-order-time-muted{display:inline-flex;align-items:center;min-height:26px;padding:5px 9px;border:1px solid #eee7df;border-radius:999px;background:#f8f6f2;color:#8b7a69;font-size:10px;font-weight:650;white-space:nowrap}
+.cashier-order-time-muted.is-cancelled{border-color:#f2d2cd;background:#fae8e5;color:#b84238}
+.order-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:6px;width:100%}
+.order-action-form{display:flex;min-width:0;margin:0}
+.order-actions .is-wide{grid-column:1/-1}
+.order-actions .order-action-button{width:100%!important;max-width:none;min-height:36px;margin:0;padding:7px 8px!important;font-size:10px}
+.order-action-state{box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:36px;padding:6px 8px;border-radius:9px;background:#e9f7ef;color:#237347;font-size:10px;font-weight:700;text-align:center}
+.order-action-state.is-cancelled{background:#fae8e5;color:#b84238;border:1px solid #f2d2cd}
+.finish-table-action{background:#2e8b57!important;color:#fff!important}
+.pickup-action{background:#fff2dc!important;color:#8a550a!important;border-color:#f0dcbd!important}
+.kitchen-action{background:#e9f7ef!important;color:#237347!important}
+.payment-action{background:#fff5e5!important;color:#956014!important}
+.order-items-details summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 5px;align-items:center;cursor:pointer;list-style:none}
+.order-items-details summary::-webkit-details-marker{display:none}
+.order-items-details summary strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.order-items-details summary small{grid-column:1/-1;color:#9a8068;font-size:10px}
+.order-items-details[open] summary{margin-bottom:6px}
+.order-items-expanded{display:grid;gap:5px;max-height:150px;overflow:auto;padding:8px;border:1px solid #eee2d7;border-radius:8px;background:#fffdfa}
+.order-items-expanded div{display:flex;justify-content:space-between;gap:8px;font-size:10px;white-space:nowrap}
+.order-items-expanded strong{overflow:hidden;text-overflow:ellipsis}</style>
 @endpush
 
 @push('scripts')
@@ -2035,3 +2231,16 @@ document.addEventListener('DOMContentLoaded', function () {
 @endpush
 
 @endsection
+
+
+
+
+
+
+
+
+
+
+
+
+

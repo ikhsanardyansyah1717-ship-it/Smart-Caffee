@@ -120,7 +120,18 @@ class WhatsAppLoginWebhookController extends Controller
                     );
 
                     // Cari akun berdasarkan nomor WhatsApp.
-                    $existingUser = User::where('phone', $phone)->first();
+                    $nationalPhone = '0' . substr($phone, 2);
+                    $existingUser = User::where(function ($query) use ($phone, $nationalPhone) {
+                        $query->whereIn('phone', [
+                            $phone,
+                            $nationalPhone,
+                            '+' . $phone,
+                            '+' . $nationalPhone,
+                        ])->orWhereRaw(
+                            "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '(', ''), ')', ''), '+', ''), '.', '') IN (?, ?)",
+                            [$phone, $nationalPhone]
+                        );
+                    })->first();
 
                     if ($existingUser) {
                         // Nomor yang terdaftar pada role selain customer
@@ -135,7 +146,6 @@ class WhatsAppLoginWebhookController extends Controller
                             $challenge,
                             $existingUser->id
                         );
-
                         continue;
                     }
 

@@ -21,11 +21,10 @@
 
     <link
         rel="stylesheet"
-        href="{{ asset('css/kitchen.css') }}"
+        href="{{ asset('css/kitchen.css') }}?v=20261125-nav-unified"
     >
 
     @stack('styles')
-
 </head>
 
 <body>
@@ -198,10 +197,14 @@
 
 
 <!-- KITCHEN JAVASCRIPT -->
-<script src="{{ asset('js/kitchen.js') }}"></script>
+<script src="{{ asset('js/kitchen.js') }}?v=20261125-global-motion"></script>
 
 @stack('scripts')
 
+<script src="{{ asset('js/notifications.js') }}?v=20261125-global-motion"></script>
+    @vite('resources/js/app.js')
 </body>
 
 </html>
+
+

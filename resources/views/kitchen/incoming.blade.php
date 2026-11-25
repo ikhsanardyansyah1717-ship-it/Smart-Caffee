@@ -88,7 +88,7 @@
     </div>
 
 
-    <div id="order-list" class="order-grid">
+    <div id="order-list" class="order-grid incoming-order-grid">
 
         @forelse($orders as $order)
 
@@ -197,6 +197,7 @@
             </div>
 
         @endforelse
+        
 
     </div>
 

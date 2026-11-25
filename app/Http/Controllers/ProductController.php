@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class ProductController extends Controller
 {
@@ -85,7 +88,7 @@ class ProductController extends Controller
 
             'icon' => 'nullable|string|max:255',
 
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
 
             'description' => 'nullable|string',
         ]);
@@ -94,11 +97,10 @@ class ProductController extends Controller
         $validated['is_available'] = $request->has('is_available');
 
 
-        // Upload gambar
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request
-                ->file('image')
-                ->store('products', 'public');
+        // Simpan gambar sebelum membuat produk agar kegagalan upload tidak
+        // menghasilkan produk dengan path gambar kosong.
+        if ($request->file('image') instanceof UploadedFile) {
+            $validated['image'] = $this->storeProductImage($request->file('image'));
         }
 
 
@@ -161,7 +163,7 @@ class ProductController extends Controller
 
             'icon' => 'nullable|string|max:255',
 
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
 
             'description' => 'nullable|string',
         ]);
@@ -170,25 +172,17 @@ class ProductController extends Controller
         $validated['is_available'] = $request->has('is_available');
 
 
-        // Jika upload gambar baru
-        if ($request->hasFile('image')) {
-
-            // Hapus gambar lama
-            if (
-                $product->image &&
-                Storage::disk('public')->exists($product->image)
-            ) {
-                Storage::disk('public')->delete($product->image);
-            }
-
-            // Simpan gambar baru
-            $validated['image'] = $request
-                ->file('image')
-                ->store('products', 'public');
+        $previousImage = $product->image;
+        if ($request->file('image') instanceof UploadedFile) {
+            $validated['image'] = $this->storeProductImage($request->file('image'));
         }
 
-
         $product->update($validated);
+
+        if (!empty($validated['image']) && $previousImage && $previousImage !== $validated['image']
+            && !str_starts_with($previousImage, 'http://') && !str_starts_with($previousImage, 'https://')) {
+            Storage::disk('public')->delete($previousImage);
+        }
 
 
         return redirect()
@@ -198,7 +192,7 @@ class ProductController extends Controller
 
 
     /**
-     * Menghapus produk
+     * Menghapus produk.
      */
     public function destroy(Product $product)
     {
@@ -225,6 +219,33 @@ class ProductController extends Controller
             if (is_string($value) && trim($value) !== '') {
                 $request->merge([$field => preg_replace('/\D+/', '', $value)]);
             }
+        }
+    }
+
+    private function storeProductImage(UploadedFile $image): string
+    {
+        if (!$image->isValid()) {
+            throw ValidationException::withMessages([
+                'image' => 'Upload gambar gagal. Silakan pilih file JPG, PNG, atau WEBP yang valid, lalu coba lagi.',
+            ]);
+        }
+
+        try {
+            $disk = Storage::disk('public');
+            $disk->makeDirectory('products');
+            $path = $image->storePublicly('products', 'public');
+
+            if (!$path || !$disk->exists($path)) {
+                throw new \RuntimeException('Product image was not persisted to the public disk.');
+            }
+
+            return $path;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            throw ValidationException::withMessages([
+                'image' => 'Gambar tidak berhasil disimpan. Periksa ruang penyimpanan server, lalu coba unggah kembali.',
+            ]);
         }
     }
 }

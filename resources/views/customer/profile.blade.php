@@ -27,6 +27,11 @@
         </div>
 
         <nav class="profile-menu" aria-label="Menu profil">
+            @if($user && $user->role === 'customer')
+                <a class="profile-menu-item" href="{{ route('customer.profile.edit') }}">
+                    <i class="fa-regular fa-user"></i><span>Edit profil</span><i class="fa-solid fa-chevron-right profile-chevron"></i>
+                </a>
+            @endif
             <a class="profile-menu-item" href="{{ route('customer.history') }}">
                 <i class="fa-regular fa-rectangle-list"></i><span>Order History</span>
             </a>

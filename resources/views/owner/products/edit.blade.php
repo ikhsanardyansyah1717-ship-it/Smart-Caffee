@@ -67,7 +67,7 @@
             {{-- =================================================
                  ACTION BUTTONS
             ================================================== --}}
-            <div class="pf-actions">
+            <div class="pf-actions pf-field-actions">
 
                 {{-- Simpan perubahan --}}
                 <button

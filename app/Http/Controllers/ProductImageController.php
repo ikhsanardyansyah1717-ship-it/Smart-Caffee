@@ -18,8 +18,14 @@ class ProductImageController extends Controller
         abort_if(collect(explode('/', $storedPath))->contains('..'), 404);
         abort_unless(Storage::disk('public')->exists($storedPath), 404);
 
-        return Storage::disk('public')->response($storedPath, null, [
-            'Cache-Control' => 'public, max-age=86400',
+        $disk = Storage::disk('public');
+        $absolutePath = $disk->path($storedPath);
+        $mimeType = $disk->mimeType($storedPath) ?: 'application/octet-stream';
+
+        return response()->file($absolutePath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . basename($absolutePath) . '"',
+            'Cache-Control' => 'public, max-age=300',
             'X-Content-Type-Options' => 'nosniff',
         ]);
     }

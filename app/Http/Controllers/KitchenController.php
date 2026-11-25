@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Services\FinancialReportService;
 use Illuminate\Http\Request;
@@ -51,7 +52,18 @@ class KitchenController extends Controller
                 }
             });
         $menuAverages = $menuAverages->map(fn ($row) => round($row['total'] / $row['orders'], 1))->sortKeys();
-        $activeMenuCount = Product::where('is_available', true)->count();
+        $pendingReservations = OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->join('payments', 'payments.order_id', '=', 'orders.id')
+            ->whereColumn('order_items.product_id', 'products.id')
+            ->where('payments.status', 'Pending')
+            ->where('orders.payment_status', 'Belum Dibayar')
+            ->where('orders.status', '!=', 'Dibatalkan')
+            ->selectRaw('COALESCE(SUM(order_items.quantity), 0)');
+        $activeMenuCount = Product::query()
+            ->where('products.is_available', true)
+            ->whereRaw('products.stock > (' . $pendingReservations->toSql() . ')', $pendingReservations->getBindings())
+            ->count();
 
         return view(
             'kitchen.dashboard',

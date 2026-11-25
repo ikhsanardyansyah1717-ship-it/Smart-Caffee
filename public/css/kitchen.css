@@ -1294,3 +1294,818 @@ body.pickup-modal-open {
         order: -1;
     }
 }
+
+/* RIWAYAT PESANAN — layout yang lebih teratur dan mudah dipindai */
+.kitchen-page .history-filter-bar {
+    margin-bottom: 20px;
+}
+
+.kitchen-page .history-order-grid {
+    align-items: stretch;
+    gap: 16px;
+}
+
+.kitchen-page .history-order-grid .kitchen-order-card {
+    min-height: 0;
+    height: 100%;
+    border-color: #eee2d5;
+    background: linear-gradient(180deg, #fff 0%, #fffdfa 100%);
+}
+
+.kitchen-page .history-order-grid .order-top {
+    padding-bottom: 13px;
+    border-bottom: 1px solid #f1e9e1;
+}
+
+.kitchen-page .history-order-grid .order-meta {
+    margin-top: 6px;
+}
+
+.kitchen-page .history-order-grid .items {
+    margin: 13px 0 0;
+}
+
+.kitchen-page .history-order-grid .item-line {
+    min-height: 40px;
+}
+
+.kitchen-page .history-order-grid .item-line span:first-child {
+    line-height: 1.5;
+}
+
+.kitchen-page .history-order-grid .status-history-cancelled {
+    background: #fff0ed;
+    color: #a83d30;
+}
+
+@media (max-width: 560px) {
+    .kitchen-page .history-order-grid .order-top {
+        padding-bottom: 11px;
+    }
+
+    .kitchen-page .history-order-grid .items {
+        margin-top: 11px;
+    }
+}
+
+/* SIAP DIAMBIL — hierarki informasi kartu dan ruang item */
+.kitchen-page .completed-order-grid {
+    align-items: stretch;
+    gap: 16px;
+}
+
+.kitchen-page .completed-order-grid .kitchen-order-card {
+    min-height: 0;
+    height: 100%;
+    border-color: #eee2d5;
+    background: linear-gradient(180deg, #fff 0%, #fffdfa 100%);
+}
+
+.kitchen-page .completed-order-grid .order-top {
+    padding-bottom: 13px;
+    border-bottom: 1px solid #f1e9e1;
+}
+
+.kitchen-page .completed-order-grid .order-meta {
+    margin-top: 6px;
+}
+
+.kitchen-page .completed-order-grid .items {
+    margin: 13px 0 0;
+}
+
+.kitchen-page .completed-order-grid .item-line {
+    min-height: 42px;
+    padding: 10px 12px;
+}
+
+.kitchen-page .completed-order-grid .item-line span:first-child {
+    line-height: 1.5;
+}
+
+.kitchen-page .completed-order-grid .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+}
+
+@media (max-width: 560px) {
+    .kitchen-page .completed-order-grid .order-top {
+        padding-bottom: 11px;
+    }
+
+    .kitchen-page .completed-order-grid .items {
+        margin-top: 11px;
+    }
+}
+
+/* Kartu Siap Diambil mengikuti tinggi kontennya, bukan kartu terpanjang. */
+.kitchen-page .completed-order-grid {
+    align-items: start;
+    align-content: start;
+    grid-auto-rows: max-content;
+}
+
+.kitchen-page .completed-order-grid .kitchen-order-card {
+    height: auto;
+    min-height: 0;
+    align-self: start;
+}
+
+/* Samakan kartu Siap Diambil dengan kartu pada Riwayat. */
+.kitchen-page .history-order-grid,
+.kitchen-page .completed-order-grid {
+    align-items: start;
+    align-content: start;
+    grid-auto-rows: max-content;
+}
+
+.kitchen-page .history-order-grid .kitchen-order-card,
+.kitchen-page .completed-order-grid .kitchen-order-card {
+    height: auto;
+    min-height: 0;
+    align-self: start;
+    border-color: #eee2d5;
+    background: linear-gradient(180deg, #fff 0%, #fffdfa 100%);
+}
+
+.kitchen-page .completed-order-grid .item-line {
+    min-height: 40px;
+    padding: 9px 10px;
+}
+
+/* Riwayat dan Siap Diambil: tiga kolom rapi, satu kolom di layar kecil. */
+.kitchen-page .history-order-grid,
+.kitchen-page .completed-order-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    align-content: start;
+    grid-auto-rows: auto;
+}
+
+.kitchen-page .history-order-grid .kitchen-order-card,
+.kitchen-page .completed-order-grid .kitchen-order-card {
+    height: auto;
+    align-self: stretch;
+}
+
+@media (max-width: 760px) {
+    .kitchen-page .history-order-grid,
+    .kitchen-page .completed-order-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.kitchen-page .history-order-grid,
+.kitchen-page .completed-order-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+    .kitchen-page .history-order-grid,
+    .kitchen-page .completed-order-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Dashboard Kitchen — ruang lebih seimbang dan ringkasan lebih mudah dipindai. */
+.kitchen-page .dashboard-grid {
+    align-items: start;
+}
+
+.kitchen-page .dashboard-grid > .panel:first-child {
+    align-self: start;
+}
+
+.kitchen-page .dashboard-grid .empty-state {
+    min-height: 180px;
+    border-color: #eadfd1;
+    background: linear-gradient(145deg, #fcfaf7, #fffdfb);
+}
+
+.kitchen-page .dashboard-search-bar .search {
+    max-width: 620px;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.kitchen-page .active-menu-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 14px;
+    padding: 10px 12px;
+    border: 1px solid #eee4d8;
+    border-radius: 11px;
+    background: #fcfaf7;
+    color: #786656;
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+.kitchen-page .active-menu-note i {
+    margin-top: 2px;
+    color: #9a6a35;
+}
+
+.kitchen-page .dashboard-grid .panel:last-child .mini-list > div {
+    min-height: 42px;
+    padding: 5px 8px;
+    border-radius: 10px;
+    transition: background .18s ease;
+}
+
+.kitchen-page .dashboard-grid .panel:last-child .mini-list > div:hover {
+    background: #fcf8f2;
+}
+
+.kitchen-page .dashboard-grid .panel:last-child .mini-list i {
+    flex-shrink: 0;
+}
+
+@media (max-width: 760px) {
+    .kitchen-page .dashboard-search-bar .search {
+        max-width: none;
+    }
+}
+
+/* Pesanan aktif: lebar kartu dibagi agar tidak memenuhi satu baris. */
+.kitchen-page .incoming-order-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    align-content: start;
+}
+
+.kitchen-page .incoming-order-grid .kitchen-order-card {
+    height: auto;
+    align-self: start;
+}
+
+@media (max-width: 1100px) {
+    .kitchen-page .incoming-order-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .kitchen-page .incoming-order-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Status Kitchen — KPI, progres, dan waktu menu lebih mudah dibaca. */
+.kitchen-page .kitchen-status-panel {
+    background: linear-gradient(180deg, #fff 0%, #fffdfa 100%);
+}
+
+.kitchen-page .kitchen-completion {
+    padding: 14px 15px 12px;
+    border: 1px solid #eee3d7;
+    border-radius: 14px;
+    background: #fcfaf7;
+}
+
+.kitchen-page .kitchen-completion .progress-row {
+    align-items: center;
+    margin: 0 0 9px;
+    color: #665344;
+}
+
+.kitchen-page .kitchen-completion .progress-row strong {
+    padding: 4px 9px;
+    border-radius: 20px;
+    background: #f2e8dc;
+    color: var(--primary);
+}
+
+.kitchen-page .kitchen-completion .progress {
+    height: 9px;
+    background: #ece5dc;
+}
+
+.kitchen-page .kitchen-completion .progress span {
+    border-radius: inherit;
+    background: linear-gradient(90deg, #9c5b16, #763f06);
+}
+
+.kitchen-page .kitchen-completion-caption {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.kitchen-page .kitchen-completion-caption strong {
+    color: #4b3624;
+}
+
+.kitchen-page .kitchen-status-metrics.mini-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 13px;
+}
+
+.kitchen-page .kitchen-status-metrics > div {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 9px;
+    row-gap: 3px;
+    min-width: 0;
+    padding: 11px;
+    border: 1px solid #eee5da;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.kitchen-page .kitchen-status-metrics > div > i {
+    grid-row: 1 / 3;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+}
+
+.kitchen-page .kitchen-status-metrics > div > span {
+    min-width: 0;
+    color: #806d5c;
+    font-size: 10px;
+}
+
+.kitchen-page .kitchen-status-metrics > div > strong {
+    margin: 0;
+    color: #2d2424;
+    font-size: 13px;
+}
+
+.kitchen-page .active-menu-note {
+    margin-top: 9px;
+    padding: 8px 10px;
+    font-size: 10px;
+}
+
+.kitchen-page .menu-average-list {
+    gap: 11px;
+    margin-top: 17px;
+    padding-top: 15px;
+}
+
+.kitchen-page .menu-average-list h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.kitchen-page .menu-average-list h3 i {
+    color: #9a6a35;
+}
+
+.kitchen-page .menu-average-caption {
+    margin-top: -6px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.kitchen-page .menu-average-row {
+    display: grid !important;
+    gap: 5px !important;
+}
+
+.kitchen-page .menu-average-row-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+}
+
+.kitchen-page .menu-average-row-head strong {
+    white-space: nowrap;
+}
+
+.kitchen-page .menu-average-track {
+    height: 5px;
+    overflow: hidden;
+    border-radius: 9px;
+    background: #f0ebe5;
+}
+
+.kitchen-page .menu-average-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #c79a69;
+}
+
+@media (max-width: 560px) {
+    .kitchen-page .kitchen-status-metrics.mini-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Grafik waktu per menu memakai seluruh lebar panel Status Kitchen. */
+.kitchen-page .kitchen-status-panel .menu-average-list {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.kitchen-page .kitchen-status-panel .menu-average-row,
+.kitchen-page .kitchen-status-panel .menu-average-row-head,
+.kitchen-page .kitchen-status-panel .menu-average-track {
+    width: 100%;
+    min-width: 0;
+}
+
+.kitchen-page .kitchen-status-panel .menu-average-track {
+    height: 7px;
+    background: #eee8e1;
+}
+
+/* Sorotan waktu proses mengisi ruang panel dengan data yang berguna. */
+.kitchen-page .menu-average-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(150px, .75fr);
+    align-items: stretch;
+    gap: 16px;
+    width: 100%;
+    min-width: 0;
+}
+
+.kitchen-page .menu-average-rows {
+    display: grid;
+    align-content: start;
+    gap: 11px;
+    min-width: 0;
+}
+
+.kitchen-page .menu-average-source {
+    display: block;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.kitchen-page .menu-average-empty {
+    padding: 14px;
+    border: 1px dashed #e4d7ca;
+    border-radius: 11px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.kitchen-page .menu-insights {
+    display: grid;
+    align-content: center;
+    gap: 14px;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid #eadfd1;
+    border-radius: 13px;
+    background: linear-gradient(145deg, #fbf6ef, #fffdfa);
+}
+
+.kitchen-page .menu-insight-block {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+.kitchen-page .menu-insight-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #806d5c;
+    font-size: 10px;
+    font-weight: 650;
+}
+
+.kitchen-page .menu-insight-label i {
+    color: #9a6a35;
+}
+
+.kitchen-page .menu-insight-block > strong {
+    overflow-wrap: anywhere;
+    color: #382719;
+    font-size: 14px;
+}
+
+.kitchen-page .menu-insight-time {
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.kitchen-page .menu-insight-divider {
+    height: 1px;
+    background: #e8dccf;
+}
+
+@media (max-width: 1100px) {
+    .kitchen-page .menu-average-content {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Dashboard seimbang: performa menu menjadi panel penuh di bawah. */
+.kitchen-page .dashboard-grid {
+    align-items: stretch;
+}
+
+.kitchen-page .dashboard-grid > .panel {
+    height: 100%;
+}
+
+.kitchen-page .dashboard-grid .empty-state {
+    min-height: 150px;
+}
+
+.kitchen-page .kitchen-menu-performance {
+    margin-top: 20px;
+}
+
+.kitchen-page .kitchen-menu-performance .menu-average-content {
+    grid-template-columns: minmax(0, 1fr) 250px;
+    gap: 18px;
+}
+
+.kitchen-page .kitchen-menu-performance .menu-average-rows {
+    grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+    align-content: start;
+    gap: 12px;
+}
+
+.kitchen-page .kitchen-menu-performance .menu-average-row {
+    align-content: center;
+    min-height: 78px;
+    padding: 13px;
+    border: 1px solid #eee5da;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.kitchen-page .kitchen-menu-performance .menu-average-track {
+    height: 7px;
+}
+
+.kitchen-page .kitchen-menu-performance .menu-insights {
+    grid-template-columns: 1fr 1fr;
+    align-content: center;
+    gap: 12px;
+    padding: 16px;
+}
+
+.kitchen-page .kitchen-menu-performance .menu-insight-divider {
+    display: none;
+}
+
+.kitchen-page .kitchen-menu-performance .menu-insight-block + .menu-insight-block {
+    padding-left: 12px;
+    border-left: 1px solid #e8dccf;
+}
+
+@media (max-width: 1100px) {
+    .kitchen-page .kitchen-menu-performance .menu-average-content {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 760px) {
+    .kitchen-page .dashboard-grid > .panel {
+        height: auto;
+    }
+
+    .kitchen-page .kitchen-menu-performance .menu-insights {
+        grid-template-columns: 1fr;
+    }
+
+    .kitchen-page .kitchen-menu-performance .menu-insight-block + .menu-insight-block {
+        padding: 12px 0 0;
+        border-left: 0;
+        border-top: 1px solid #e8dccf;
+    }
+}
+
+/* Pesanan aktif tampil berdampingan, bukan memanjang satu kartu per baris. */
+.kitchen-page .dashboard-grid .order-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+}
+
+.kitchen-page .dashboard-grid .order-stack .empty-state {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 760px) {
+    .kitchen-page .dashboard-grid .order-stack {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Dashboard desktop: pesanan, status, dan performa menu sejajar. */
+.kitchen-page .kitchen-dashboard-layout {
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, .82fr) minmax(350px, 1fr);
+    align-items: start;
+}
+
+.kitchen-page .kitchen-dashboard-layout > .panel {
+    height: auto;
+    min-width: 0;
+    align-self: start;
+}
+
+.kitchen-page .kitchen-dashboard-layout .order-stack {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.kitchen-page .kitchen-menu-performance {
+    margin-top: 0;
+}
+
+.kitchen-page .kitchen-menu-performance .menu-average-content {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.kitchen-page .kitchen-menu-performance .menu-average-rows {
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+}
+
+.kitchen-page .kitchen-menu-performance .menu-insights {
+    grid-template-columns: 1fr 1fr;
+}
+
+.kitchen-page .kitchen-menu-performance .menu-insight-block + .menu-insight-block {
+    padding-left: 12px;
+    border-top: 0;
+    border-left: 1px solid #e8dccf;
+}
+
+@media (max-width: 1280px) {
+    .kitchen-page .kitchen-dashboard-layout {
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, .9fr);
+    }
+
+    .kitchen-page .kitchen-dashboard-layout > .kitchen-menu-performance {
+        grid-column: 2;
+    }
+}
+
+@media (max-width: 760px) {
+    .kitchen-page .kitchen-dashboard-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .kitchen-page .kitchen-dashboard-layout > .kitchen-menu-performance {
+        grid-column: auto;
+    }
+
+    .kitchen-page .kitchen-menu-performance .menu-insights {
+        grid-template-columns: 1fr;
+    }
+
+    .kitchen-page .kitchen-menu-performance .menu-insight-block + .menu-insight-block {
+        padding: 12px 0 0;
+        border-left: 0;
+        border-top: 1px solid #e8dccf;
+    }
+}
+
+/* Susunan awal dua kolom: pesanan di kiri, status dan waktu menu di kanan. */
+.kitchen-page .dashboard-grid {
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+}
+
+.kitchen-page .dashboard-grid > .panel {
+    height: auto;
+    align-self: start;
+}
+
+.kitchen-page .dashboard-grid .order-stack {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.kitchen-page .kitchen-status-panel > .kitchen-menu-performance {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+@media (max-width: 1100px) {
+    .kitchen-page .dashboard-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Siap Diambil: tinggi setiap kartu mengikuti isi pesanannya. */
+.kitchen-page .completed-order-grid {
+    align-items: start;
+    align-content: start;
+    grid-auto-rows: max-content;
+}
+
+.kitchen-page .completed-order-grid .kitchen-order-card {
+    height: auto;
+    min-height: 0;
+    align-self: start;
+}
+
+/* Siap Diambil: kartu tetap seimbang dengan ringkasan waktu dan jumlah item. */
+.kitchen-page .completed-order-grid {
+    align-items: stretch;
+    align-content: start;
+    grid-auto-rows: auto;
+}
+
+.kitchen-page .completed-order-grid .kitchen-order-card {
+    height: 100%;
+    align-self: stretch;
+}
+
+.kitchen-page .completed-order-grid .ready-order-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 13px;
+    border-top: 1px solid #f1e9e1;
+}
+
+.kitchen-page .ready-order-summary-status {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+
+.kitchen-page .ready-order-summary-icon {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    background: #e7f5ed;
+    color: var(--green);
+    font-size: 11px;
+}
+
+.kitchen-page .ready-order-summary-status strong,
+.kitchen-page .ready-order-summary-status small {
+    display: block;
+}
+
+.kitchen-page .ready-order-summary-status strong {
+    color: #3d332a;
+    font-size: 11px;
+}
+
+.kitchen-page .ready-order-summary-status small {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.kitchen-page .ready-order-item-count {
+    flex-shrink: 0;
+    padding: 6px 9px;
+    border-radius: 20px;
+    background: #f6f0e9;
+    color: #735d4d;
+    font-size: 10px;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+    .kitchen-page .ready-order-summary {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+/* Navigasi Quattro: diselaraskan dengan Owner dan Kasir */
+.kitchen-shell>.sidebar { width:255px; padding:22px 14px 16px; background:#fff; border-right:1px solid #eadfd1; box-shadow:8px 0 28px rgba(60,39,19,.035); }
+.kitchen-shell>.sidebar .brand { min-height:66px; margin:0 4px 12px; padding:4px 8px 22px; border-bottom:1px solid #f1e8de; }
+.kitchen-shell>.sidebar .brand-icon { width:44px; height:44px; border-radius:14px; background:#763f06; box-shadow:0 4px 10px rgba(118,63,6,.1); }
+.kitchen-shell>.sidebar nav { flex:1 1 auto; align-content:start; gap:5px; min-height:0; margin:4px 0 14px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#e2d2bf transparent; }
+.kitchen-shell>.sidebar .side-link { position:relative; min-height:46px; gap:11px; padding:6px 10px; border:1px solid transparent; border-radius:13px; color:#806d5c; font-size:13px; font-weight:600; }
+.kitchen-shell>.sidebar .side-link i { display:grid; flex:0 0 34px; width:34px; height:34px; place-items:center; border-radius:10px; background:#f8f4ee; color:#927657; font-size:14px; }
+.kitchen-shell>.sidebar .side-link:hover { border-color:#f0e4d6; background:#fffdf9; color:#572e04; }
+.kitchen-shell>.sidebar .side-link.active { border-color:#f0dfca; background:linear-gradient(100deg,#f7ebdc,#fbf5ed); color:#572e04; }
+.kitchen-shell>.sidebar .side-link.active i { background:#fff; color:#763f06; box-shadow:0 2px 7px rgba(91,57,25,.08); }
+.kitchen-shell>.sidebar .side-link b { min-width:20px; height:20px; margin-left:auto; padding:0 6px; border:1px solid #ead8c2; border-radius:999px; background:#f4e8da; color:#763f06; font-size:10px; font-weight:800; line-height:18px; }
+.kitchen-user { margin:0 2px; padding:16px 6px 8px; }
+.kitchen-user .avatar { width:38px; height:38px; border-radius:12px; background:#763f06; }
+.kitchen-shell>.sidebar .logout-form { margin:4px 0 0; padding:0 4px; }
+.kitchen-shell>.sidebar .logout-btn { min-height:42px; border-radius:12px; }
+@media(max-width:680px) {
+  .kitchen-shell>.sidebar { width:72px; padding:18px 10px; }
+  .kitchen-shell>.sidebar .brand { justify-content:center; margin:0 0 12px; padding:0 0 16px; }
+  .kitchen-shell>.sidebar .brand>div:last-child,.kitchen-shell>.sidebar .side-link span,.kitchen-shell>.sidebar .kitchen-user>div:not(.avatar) { display:none; }
+  .kitchen-shell>.sidebar .side-link { min-height:46px; justify-content:center; padding:5px; }
+  .kitchen-shell>.sidebar .side-link i { flex-basis:34px; width:34px; height:34px; }
+  .kitchen-shell>.sidebar .side-link b { position:absolute; top:1px; right:0; min-width:17px; height:17px; margin:0; padding:0 4px; font-size:9px; line-height:15px; }
+  .kitchen-user { justify-content:center; margin:0; padding:12px 0 8px; }
+}

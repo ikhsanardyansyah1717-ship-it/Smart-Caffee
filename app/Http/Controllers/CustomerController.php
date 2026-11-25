@@ -15,6 +15,7 @@ use App\Services\MidtransPaymentStatusService;
 use App\Services\SiteSettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -63,7 +64,7 @@ class CustomerController extends Controller
      * is_available = true  -> Tersedia
      * is_available = false -> Habis
      */
-    public function home(): View
+    public function home(SiteSettingsService $settings): View
     {
         $categoryRank = collect(config('product_categories'))->pluck('value')->flip();
         $products = $this->customerProductsQuery()->withAvg('reviews', 'rating')
@@ -79,11 +80,50 @@ class CustomerController extends Controller
             ->values();
         $this->applyCustomerAvailableStock($products);
         $categories = config('product_categories');
+        $banners = $settings->homeBanners();
+        $productsById = $products->keyBy('id');
+        $promotionsByProduct = [];
+        foreach ($banners as $index => $banner) {
+            $productId = (int) ($banner['product_id'] ?? 0);
+            $discount = (int) ($banner['discount_percent'] ?? 0);
+            $promoProduct = $productsById->get($productId);
+            if ($promoProduct) {
+                $banners[$index]['product_name'] = $promoProduct->name;
+                $banners[$index]['title'] = $promoProduct->name;
+                $customBannerImage = ($banner['image_source'] ?? null) === 'custom'
+                    && str_starts_with((string) ($banner['image'] ?? ''), 'site-banners/');
+                if (!$customBannerImage && $promoProduct->image) {
+                    $productImage = trim((string) $promoProduct->image);
+                    $banners[$index]['image'] = \Illuminate\Support\Str::startsWith($productImage, ['http://', 'https://'])
+                        ? $productImage
+                        : route('products.image', $promoProduct, false) . '?v=' . substr(sha1($productImage), 0, 12);
+                }
+                if ($discount > 0) {
+                    $originalPrice = (float) $promoProduct->price;
+                    $promoPrice = round($originalPrice * (100 - $discount) / 100, 2);
+                    $banners[$index]['original_price'] = $originalPrice;
+                    $banners[$index]['promo_price'] = $promoPrice;
+                    $promotionsByProduct[$productId] = [
+                        'original_price' => $originalPrice,
+                        'discount_percent' => $discount,
+                        'promo_price' => $promoPrice,
+                    ];
+                }
+            }
+        }
+        foreach ($products as $product) {
+            $promotion = $promotionsByProduct[$product->id] ?? null;
+            if ($promotion) {
+                $product->original_price = $promotion['original_price'];
+                $product->discount_percent = $promotion['discount_percent'];
+                $product->price = $promotion['promo_price'];
+            }
+        }
 
         // Cabang aktif yang dipilih customer; default Bandung 1.
         $branches = Branch::where('is_active', true)->orderBy('name')->get();
-        $selectedBranch = Branch::whereKey(session('branch_id'))->where('is_active', true)->first()
-            ?? Branch::where('code', 'BDG-001')->where('is_active', true)->first()
+        $selectedBranch = $branches->firstWhere('id', (int) session('branch_id'))
+            ?? $branches->firstWhere('code', 'BDG-001')
             ?? $branches->first();
 
         if ($selectedBranch) {
@@ -96,7 +136,7 @@ class CustomerController extends Controller
 
         return view(
             'customer.home',
-            compact('products', 'favoriteIds', 'categories', 'branches', 'selectedBranch')
+            compact('products', 'favoriteIds', 'categories', 'branches', 'selectedBranch', 'banners')
         );
     }
 
@@ -160,6 +200,51 @@ class CustomerController extends Controller
     }
 
     /** Halaman ringkasan pesanan sebelum pembayaran. */
+    /** Current public catalog state for realtime customer menu updates. */
+    public function liveProducts(): \Illuminate\Http\JsonResponse
+    {
+        $products = $this->customerProductsQuery()
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->orderBy('name')
+            ->get();
+        $this->applyCustomerAvailableStock($products);
+
+        return response()->json([
+            'products' => $products->map(fn ($product) => [
+                'id' => (int) $product->id,
+                'name' => $product->name,
+                'category' => $product->category,
+                'price' => (float) $product->price,
+                'image' => $product->image,
+                'description' => $product->description,
+                'stock' => (int) $product->stock,
+                'is_available' => (bool) $product->is_available,
+                'reviews_avg_rating' => $product->reviews_avg_rating,
+                'reviews_count' => (int) $product->reviews_count,
+            ])->values(),
+        ])->header('Cache-Control', 'no-store, private');
+    }
+    public function tableAvailability(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $occupied = Order::query()
+            ->where('branch_id', session('branch_id'))
+            ->whereNotNull('table_number')
+            ->where('table_number', '!=', 'Take Away')
+            ->whereIn('status', ['Menunggu', 'Diproses', 'Selesai', 'Sudah Diambil'])
+            ->whereNull('table_finished_at')
+            ->pluck('table_number')
+            ->map(fn ($table) => strtoupper(trim($table)))
+            ->unique()
+            ->values();
+
+        $tables = collect(range(1, 20))->map(function ($number) use ($occupied) {
+            $tableNumber = 'A' . str_pad((string) $number, 2, '0', STR_PAD_LEFT);
+            return ['number' => $tableNumber, 'available' => !$occupied->contains($tableNumber)];
+        });
+
+        return response()->json(['tables' => $tables]);
+    }
     public function checkoutPage(): View
     {
         $products = $this->customerProductsQuery()->orderBy('category')->orderBy('name')->get();
@@ -175,9 +260,10 @@ class CustomerController extends Controller
         $this->applyCustomerAvailableStock($products);
 
         $bank = $settings->bankDetails();
-        $bankConfigured = $settings->hasBankAccount();
+        $bankAccounts = $settings->bankAccounts();
+        $bankConfigured = count($bankAccounts) > 0;
 
-        return view('customer.payment', compact('products', 'bank', 'bankConfigured'));
+        return view('customer.payment', compact('products', 'bank', 'bankAccounts', 'bankConfigured'));
     }
 
     public function privacyPolicy(SiteSettingsService $settings): View
@@ -564,8 +650,25 @@ class CustomerController extends Controller
      */
     public function storeOrder(Request $request)
     {
+        $customerUser = Auth::user()?->role === 'customer' ? Auth::user() : null;
+        if ($customerUser) {
+            $accountPhone = preg_replace('/\D+/', '', (string) $customerUser->phone);
+            if (str_starts_with($accountPhone, '62')) {
+                $accountPhone = '0' . substr($accountPhone, 2);
+            } elseif (str_starts_with($accountPhone, '8')) {
+                $accountPhone = '0' . $accountPhone;
+            }
+
+            // Akun login selalu memakai data profil, meskipun payload browser diubah.
+            $request->merge([
+                'customer_name' => $customerUser->name,
+                'customer_phone' => $accountPhone,
+                'customer_email' => $customerUser->email,
+            ]);
+        }
+
         $request->merge([
-            'customer_phone' => preg_replace('/[\s().-]+/', '', (string) $request->input('customer_phone', '')),
+            'customer_phone' => trim((string) $request->input('customer_phone', '')),
             'customer_email' => strtolower(trim((string) $request->input('customer_email', ''))),
         ]);
         $data = $request->validate([
@@ -576,15 +679,11 @@ class CustomerController extends Controller
                 'max:255',
             ],
 
-            'customer_phone' => ['required', 'string', 'max:30', 'regex:/^(?:0|\+?62)8[0-9]{8,11}$/'],
+            'customer_phone' => ['required', 'string', 'max:13', 'regex:/^08[0-9]{8,11}$/'],
 
             'customer_email' => ['required', 'email:rfc', 'max:255'],
 
-            'table_number' => [
-                'nullable',
-                'string',
-                'max:50'
-            ],
+            'table_number' => ['nullable', 'string', 'regex:/^(Take Away|A(?:0[1-9]|1[0-9]|20))$/'],
 
             'items' => [
                 'required',
@@ -615,10 +714,60 @@ class CustomerController extends Controller
                 'required',
                 'in:QRIS,Bank Transfer'
             ],
+
+            'bank_account_id' => [
+                $request->input('payment_method') === 'Bank Transfer' ? 'required' : 'nullable',
+                'nullable', 'string', 'max:50',
+            ],
         ]);
 
-        if ($data['payment_method'] === 'Bank Transfer' && !app(SiteSettingsService::class)->hasBankAccount()) {
+        $siteSettings = app(SiteSettingsService::class);
+        $bankAccounts = $siteSettings->bankAccounts();
+        $selectedBank = $data['payment_method'] === 'Bank Transfer'
+            ? collect($bankAccounts)->firstWhere('id', $data['bank_account_id'] ?? null)
+            : null;
+        if ($data['payment_method'] === 'Bank Transfer' && !$selectedBank) {
             return response()->json(['message' => 'Pembayaran transfer bank belum tersedia. Owner perlu mengatur rekening terlebih dahulu.'], 422);
+        }
+
+        if (Auth::check() && Auth::user()->role !== 'customer') {
+            return response()->json(['message' => 'Silakan gunakan akun pelanggan untuk membuat pesanan.'], 403);
+        }
+
+        if (!Auth::check()) {
+            $emailExists = User::where('email', $data['customer_email'])->exists();
+            $internationalPhone = '62' . substr($data['customer_phone'], 1);
+            $phoneExists = User::whereIn('phone', [
+                    $data['customer_phone'],
+                    $internationalPhone,
+                    '+' . $internationalPhone,
+                ])
+                ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '(', ''), ')', ''), '+', '') IN (?, ?)", [$data['customer_phone'], $internationalPhone])
+                ->exists();
+
+            if ($emailExists || $phoneExists) {
+                return response()->json([
+                    'message' => 'Email atau nomor ponsel ini sudah digunakan. Masuk ke akun tersebut untuk melanjutkan pesanan.',
+                    'require_login' => true,
+                    'login_url' => route('customer.login'),
+                ], 409);
+            }
+        } else {
+            $currentCustomerId = Auth::id();
+            $emailBelongsToOther = User::where('email', $data['customer_email'])
+                ->where('id', '!=', $currentCustomerId)->exists();
+            $internationalPhone = '62' . substr($data['customer_phone'], 1);
+            $phoneBelongsToOther = User::where(function ($query) use ($data, $internationalPhone) {
+                    $query->whereIn('phone', [$data['customer_phone'], $internationalPhone, '+' . $internationalPhone])
+                        ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '(', ''), ')', ''), '+', '') IN (?, ?)", [$data['customer_phone'], $internationalPhone]);
+                })
+                ->where('id', '!=', $currentCustomerId)->exists();
+
+            if ($emailBelongsToOther || $phoneBelongsToOther) {
+                return response()->json([
+                    'message' => 'Email atau nomor ponsel tersebut terhubung ke akun lain. Gunakan data kontak akun yang sedang masuk.',
+                ], 409);
+            }
         }
 
 
@@ -651,7 +800,20 @@ class CustomerController extends Controller
             }
         }
 
-        $order = DB::transaction(function () use ($data, $guestToken, $requestedQuantities, $mergedItems) {
+        $createdCustomerId = null;
+        $order = DB::transaction(function () use ($data, $guestToken, $requestedQuantities, $mergedItems, $selectedBank, &$createdCustomerId) {
+
+            $tableNumber = $data['table_number'] ?? 'Take Away';
+            if ($tableNumber !== 'Take Away') {
+                $tableTaken = Order::where('branch_id', session('branch_id'))
+                    ->where('table_number', $tableNumber)
+                    ->whereIn('status', ['Menunggu', 'Diproses', 'Selesai', 'Sudah Diambil'])
+            ->whereNull('table_finished_at')
+                    ->lockForUpdate()->exists();
+                if ($tableTaken) {
+                    abort(422, 'Meja baru saja digunakan. Silakan pilih meja lain.');
+                }
+            }
 
             $subtotal = 0;
             $products = Product::whereIn('id', array_keys($requestedQuantities))
@@ -684,31 +846,36 @@ class CustomerController extends Controller
             if (!$customerUser && !Auth::check()) {
                 $emailUser = User::where('email', $data['customer_email'])->lockForUpdate()->first();
                 $phoneUser = User::where(function ($query) use ($data) {
-                    $query->where('phone', $data['customer_phone'])
-                        ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '(', ''), ')', '') = ?", [$data['customer_phone']]);
+                    $internationalPhone = '62' . substr($data['customer_phone'], 1);
+                    $query->whereIn('phone', [$data['customer_phone'], $internationalPhone, '+' . $internationalPhone])
+                        ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '(', ''), ')', ''), '+', '') IN (?, ?)", [$data['customer_phone'], $internationalPhone]);
                 })->lockForUpdate()->first();
                 if ($emailUser && $phoneUser && $emailUser->id !== $phoneUser->id) {
-                    abort(422, 'Email dan nomor HP tercatat pada akun berbeda. Periksa kembali data pemesan.');
+                    return ['require_login' => true];
                 }
 
                 $matchedUser = $emailUser ?: $phoneUser;
-                if ($matchedUser?->role === 'customer') {
-                    $customerUser = $matchedUser;
-                } elseif (!$matchedUser) {
-                    $customerUser = User::create([
-                        'name' => trim($data['customer_name']),
-                        'email' => $data['customer_email'],
-                        'phone' => $data['customer_phone'],
-                        'password' => Str::random(48),
-                        'role' => 'customer',
-                    ]);
+                if ($matchedUser) {
+                    return ['require_login' => true];
                 }
+
+                $customerUser = User::create([
+                    'name' => trim($data['customer_name']),
+                    'email' => $data['customer_email'],
+                    'phone' => $data['customer_phone'],
+                    'password' => Hash::make(Str::random(48)),
+                    'role' => 'customer',
+                ]);
+                $createdCustomerId = $customerUser->id;
             }
 
             if ($customerUser) {
                 $customerUser->name = trim($data['customer_name'] ?? $customerUser->name);
                 $emailTaken = User::where('email', $data['customer_email'])->where('id', '!=', $customerUser->id)->exists();
                 $phoneTaken = User::where('phone', $data['customer_phone'])->where('id', '!=', $customerUser->id)->exists();
+                if ($emailTaken || $phoneTaken) {
+                    return ['contact_conflict' => true];
+                }
                 if (!$emailTaken) $customerUser->email = $data['customer_email'];
                 if (!$phoneTaken) $customerUser->phone = $data['customer_phone'];
                 $customerUser->save();
@@ -804,7 +971,7 @@ class CustomerController extends Controller
                 'guest_token' => $guestToken,
 
                 'table_number' =>
-                    $data['table_number'] ?? null,
+                    $tableNumber,
 
                 'subtotal' =>
                     $subtotal,
@@ -892,6 +1059,8 @@ class CustomerController extends Controller
                 'status' =>
                     'Pending',
 
+                'bank_account_snapshot' => $selectedBank,
+
                 'paid_at' =>
                     null,
             ]);
@@ -899,6 +1068,27 @@ class CustomerController extends Controller
 
             return $order;
         });
+
+        if (is_array($order) && ($order['require_login'] ?? false)) {
+            return response()->json([
+                'message' => 'Email atau nomor ponsel ini sudah digunakan. Masuk ke akun tersebut untuk melanjutkan pesanan.',
+                'require_login' => true,
+                'login_url' => route('customer.login'),
+            ], 409);
+        }
+        if (is_array($order) && ($order['contact_conflict'] ?? false)) {
+            return response()->json([
+                'message' => 'Email atau nomor ponsel tersebut terhubung ke akun lain. Gunakan data kontak akun yang sedang masuk.',
+            ], 409);
+        }
+
+        if ($createdCustomerId) {
+            $newCustomer = User::whereKey($createdCustomerId)->where('role', 'customer')->first();
+            if ($newCustomer) {
+                Auth::login($newCustomer);
+                $request->session()->regenerate();
+            }
+        }
 
         if (!Auth::check()) {
             $guestOrderIds = session('guest_order_ids', []);
@@ -953,16 +1143,61 @@ class CustomerController extends Controller
         return $response;
     }
 
+    public function bankTransferProofImage(Request $request, Order $order): StreamedResponse
+    {
+        abort_unless($this->customerCanAccessOrder($request, $order), 404);
+        $payment = $order->payment;
+        abort_unless($payment?->payment_method === 'Bank Transfer' && $payment->transfer_proof_path, 404);
+        abort_unless(Storage::disk('local')->exists($payment->transfer_proof_path), 404);
+
+        return Storage::disk('local')->response($payment->transfer_proof_path, basename($payment->transfer_proof_path), [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    public function uploadBankTransferProof(Request $request, Order $order): RedirectResponse
+    {
+        abort_unless($this->customerCanAccessOrder($request, $order), 404);
+        abort_unless($order->payment?->payment_method === 'Bank Transfer', 404);
+        if ($order->payment_status === 'Dibayar' || $order->status === 'Dibatalkan') {
+            return back()->with('error', 'Bukti transfer tidak dapat diubah untuk pesanan ini.');
+        }
+
+        $validated = $request->validate([
+            'transfer_proof' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ], [
+            'transfer_proof.required' => 'Pilih foto bukti transfer terlebih dahulu.',
+            'transfer_proof.image' => 'Bukti transfer harus berupa gambar.',
+            'transfer_proof.mimes' => 'Format bukti yang diterima: JPG, PNG, atau WEBP.',
+            'transfer_proof.max' => 'Ukuran bukti transfer maksimal 5 MB.',
+        ]);
+
+        $payment = $order->payment;
+        $previousProofPath = $payment->transfer_proof_path;
+        $newProofPath = $validated['transfer_proof']->store('transfer-proofs', 'local');
+        if (!$newProofPath) {
+            return back()->with('error', 'Foto bukti gagal disimpan. Silakan coba pilih foto lain.');
+        }
+
+        $payment->update(['transfer_proof_path' => $newProofPath]);
+        if ($previousProofPath && $previousProofPath !== $newProofPath) {
+            Storage::disk('local')->delete($previousProofPath);
+        }
+
+        return back()->with('success', 'Bukti transfer berhasil dikirim. Kasir akan memeriksanya.');
+    }
     public function bankTransferInstructions(Request $request, Order $order, SiteSettingsService $settings): View|RedirectResponse
     {
         abort_unless($this->customerCanAccessOrder($request, $order), 404);
         abort_unless($order->payment?->payment_method === 'Bank Transfer', 404);
 
-        if (!$settings->hasBankAccount()) {
+        $bank = $order->payment?->bank_account_snapshot ?: $settings->bankDetails();
+        if (!$bank || empty($bank['bank_name']) || empty($bank['bank_account_number']) || empty($bank['bank_account_holder'])) {
             return redirect()->route('customer.history')->with('payment_notice', 'Informasi rekening bank belum tersedia. Hubungi Quattro Coffee.');
         }
 
-        return view('customer.bank-transfer', ['order' => $order, 'bank' => $settings->bankDetails()]);
+        return view('customer.bank-transfer', ['order' => $order, 'bank' => $bank]);
     }
 
     /**
@@ -1174,14 +1409,16 @@ class CustomerController extends Controller
         }
         if ($order->status !== 'Menunggu'
             || !$payment
-            || strtoupper((string) $payment->payment_method) !== 'QRIS'
+            || !in_array(strtoupper((string) $payment->payment_method), ['QRIS', 'BANK TRANSFER'], true)
             || $order->payment_status === 'Dibayar'
             || $payment->status === 'Berhasil') {
-            return response()->json(['message' => 'Pembatalan hanya tersedia untuk pesanan QRIS yang belum dibayar dan masih menunggu.'], 422);
+            return response()->json(['message' => 'Pesanan yang sudah dibayar atau sedang diproses tidak dapat dibatalkan.'], 422);
         }
 
         $attempt = $payment->attempts->sortByDesc('id')->first();
-        if ($attempt && filled($attempt->gateway_order_id) && ($attempt->status === 'Pending' || filled($attempt->qr_code_url))) {
+        if (strtoupper((string) $payment->payment_method) === 'QRIS'
+            && $attempt && filled($attempt->gateway_order_id)
+            && ($attempt->status === 'Pending' || filled($attempt->qr_code_url))) {
             try {
                 $gatewayStatus = $midtrans->transactionStatus($attempt);
                 $gatewayState = strtolower((string) ($gatewayStatus['transaction_status'] ?? ''));
@@ -1464,6 +1701,11 @@ class CustomerController extends Controller
         }
 
         $price = (float) $product->price;
-        return $price;
+        return app(SiteSettingsService::class)->discountedPrice((int) $product->id, $price);
     }
 }
+
+
+
+
+

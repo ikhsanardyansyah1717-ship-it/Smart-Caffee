@@ -1437,7 +1437,7 @@ function openHistoryReceipt(orderId) {
 
     if (!order) {
 
-        alert('Data transaksi tidak ditemukan.');
+        window.showAppNotification('Data transaksi tidak ditemukan.', 'error');
 
         return;
     }
@@ -1634,9 +1634,7 @@ function printHistoryReceipt() {
         modal.style.display === 'none'
     ) {
 
-        alert(
-            'Silakan pilih transaksi terlebih dahulu.'
-        );
+        window.showAppNotification('Silakan pilih transaksi terlebih dahulu.', 'error');
 
         return;
     }
@@ -1765,3 +1763,5 @@ window.addEventListener(
 </script>
 
 @endsection
+
+

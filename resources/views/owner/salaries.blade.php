@@ -2,7 +2,7 @@
 @section('title', 'Daftar Gaji - Quattro Coffee')
 @push('styles')
 <style>
-.salary-page{display:grid;gap:22px;padding-bottom:28px}.salary-alert{padding:13px 16px;border-radius:12px;background:#eaf7ef;color:#267245;font-size:13px}.salary-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.salary-card{display:flex;align-items:center;gap:14px;padding:19px;background:#fff;border:1px solid #eadfd1;border-radius:18px;box-shadow:0 8px 28px rgba(91,57,25,.05)}.salary-icon{display:grid;place-items:center;width:46px;height:46px;flex:0 0 auto;border-radius:14px;background:#f4e8da;color:#763f06;font-size:18px}.salary-icon.green{background:#e7f5ed;color:#23945e}.salary-icon.gold{background:#fff1dc;color:#c27c16}.salary-label{color:#927b65;font-size:12px}.salary-value{margin-top:5px;color:#30251d;font-size:20px;font-weight:800}.salary-table-wrap{overflow-x:auto;border:1px solid #eee4d8;border-radius:15px}.salary-table{width:100%;min-width:1000px;border-collapse:collapse}.salary-table th,.salary-table td{padding:13px 12px;border-bottom:1px solid #f0e7dd;text-align:left;vertical-align:middle;font-size:12px}.salary-table th{background:#fdfaf6;color:#947b62;font-size:10px;text-transform:uppercase;letter-spacing:.06em}.salary-table tbody tr:last-child td{border-bottom:0}.salary-employee strong{display:block;color:#30251d}.salary-employee small,.salary-table td small{display:block;margin-top:4px;color:#927b65;font-size:10px}.salary-edit{display:grid;grid-template-columns:minmax(135px,.85fr) minmax(140px,1fr) minmax(150px,1.2fr) auto;gap:8px;align-items:center}.salary-edit input{width:100%;min-height:38px;padding:0 10px;border:1px solid #e7d9c9;border-radius:9px;background:#fff;color:#30251d;font-size:12px}.salary-edit button{min-height:38px;padding:0 12px;border:1px solid #763f06;border-radius:9px;background:#763f06;color:#fff;font-size:11px;font-weight:700;white-space:nowrap}.salary-edit button:hover{background:#572e04}.salary-amount{font-weight:800;color:#713f12;white-space:nowrap}.salary-note{margin:0;color:#8b7562;font-size:12px;line-height:1.6}@media(max-width:900px){.salary-summary{grid-template-columns:1fr 1fr}.salary-edit{grid-template-columns:1fr 1fr}.salary-edit button{grid-column:1/-1}}@media(max-width:560px){.salary-summary{grid-template-columns:1fr}}
+.salary-page{display:grid;gap:22px;padding-bottom:28px}.salary-alert{padding:13px 16px;border-radius:12px;background:#eaf7ef;color:#267245;font-size:13px}.salary-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.salary-card{display:flex;align-items:center;gap:14px;padding:19px;background:#fff;border:1px solid #eadfd1;border-radius:18px;box-shadow:0 8px 28px rgba(91,57,25,.05)}.salary-icon{display:grid;place-items:center;width:46px;height:46px;flex:0 0 auto;border-radius:14px;background:#f4e8da;color:#763f06;font-size:18px}.salary-icon.green{background:#e7f5ed;color:#23945e}.salary-icon.gold{background:#fff1dc;color:#c27c16}.salary-label{color:#927b65;font-size:12px}.salary-value{margin-top:5px;color:#30251d;font-size:20px;font-weight:800}.salary-table-wrap{overflow-x:auto;border:1px solid #eee4d8;border-radius:15px}.salary-table{width:100%;min-width:1000px;border-collapse:collapse}.salary-table th,.salary-table td{padding:13px 12px;border-bottom:1px solid #f0e7dd;text-align:left;vertical-align:middle;font-size:12px}.salary-table th{background:#fdfaf6;color:#947b62;font-size:10px;text-transform:uppercase;letter-spacing:.06em}.salary-table tbody tr:last-child td{border-bottom:0}.salary-employee strong{display:block;color:#30251d}.salary-employee small,.salary-table td small{display:block;margin-top:4px;color:#927b65;font-size:10px}.salary-edit{display:grid;grid-template-columns:minmax(150px,.9fr) minmax(170px,1.2fr) auto;gap:8px;align-items:center}.salary-edit input{width:100%;min-height:38px;padding:0 10px;border:1px solid #e7d9c9;border-radius:9px;background:#fff;color:#30251d;font-size:12px}.salary-edit button{min-height:38px;padding:0 12px;border:1px solid #763f06;border-radius:9px;background:#763f06;color:#fff;font-size:11px;font-weight:700;white-space:nowrap}.salary-edit button:hover{background:#572e04}.salary-amount{font-weight:800;color:#713f12;white-space:nowrap}.salary-note{margin:0;color:#8b7562;font-size:12px;line-height:1.6}@media(max-width:900px){.salary-summary{grid-template-columns:1fr 1fr}.salary-edit{grid-template-columns:1fr 1fr}.salary-edit button{grid-column:1/-1}}@media(max-width:560px){.salary-summary{grid-template-columns:1fr}}
 </style>
 @endpush
 @section('content')
@@ -22,7 +22,7 @@
     </section>
 
     <section class="panel">
-        <div class="panel-head"><div><h2>Gaji Karyawan</h2><p>Ubah nominal, tanggal berlaku, dan catatan lalu simpan per karyawan.</p></div></div>
+        <div class="panel-head"><div><h2>Gaji Karyawan</h2><p>Ubah nominal dan catatan lalu simpan per karyawan.</p></div></div>
         <p class="salary-note" style="margin:-5px 0 16px">Nominal disimpan sebagai data internal Owner. Total bulanan menjumlahkan gaji yang sudah diatur.</p>
         <div class="salary-table-wrap">
             <table class="salary-table">
@@ -36,8 +36,9 @@
                         <td>
                             <form class="salary-edit" method="POST" action="{{ route('owner.salaries.update', $employee) }}">
                                 @csrf @method('PUT')
-                                <input type="number" name="amount" min="0" max="9999999999" step="1000" required value="{{ old('amount', (float) ($employee->salary?->amount ?? 0)) }}" aria-label="Gaji bulanan {{ $employee->name }}" placeholder="Nominal Rp">
-                                <input type="date" name="effective_date" value="{{ old('effective_date', $employee->salary?->effective_date?->toDateString()) }}" aria-label="Tanggal berlaku gaji {{ $employee->name }}">
+                                @php($salaryInputAmount = old('amount', (float) ($employee->salary?->amount ?? 0)))
+                                <input type="text" inputmode="numeric" data-salary-amount-display required value="{{ number_format((float) $salaryInputAmount, 0, ',', '.') }}" aria-label="Gaji bulanan {{ $employee->name }}" placeholder="Nominal Rp">
+                                <input type="hidden" name="amount" data-salary-amount-value value="{{ $salaryInputAmount }}">
                                 <input type="text" name="notes" maxlength="2000" value="{{ old('notes', $employee->salary?->notes) }}" aria-label="Catatan gaji {{ $employee->name }}" placeholder="Catatan (opsional)">
                                 <button type="submit"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
                             </form>
@@ -104,6 +105,22 @@
         </div>
     </section>
 </div>
+<script>
+document.querySelectorAll('.salary-edit').forEach(form => {
+    const display = form.querySelector('[data-salary-amount-display]');
+    const raw = form.querySelector('[data-salary-amount-value]');
+    if (!display || !raw) return;
+
+    const syncAmount = () => {
+        const digits = display.value.replace(/\D/g, '');
+        raw.value = digits;
+        display.value = digits ? new Intl.NumberFormat('id-ID').format(Number(digits)) : '';
+    };
+
+    display.addEventListener('input', syncAmount);
+    form.addEventListener('submit', syncAmount);
+});
+</script>
 <style>
 .salary-payment-form{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;align-items:end}.salary-payment-form label{display:grid;gap:7px;color:#765f4d;font-size:12px;font-weight:700}.salary-payment-form input,.salary-payment-form select{width:100%;height:42px;padding:0 11px;border:1px solid #e7d9c9;border-radius:10px;background:#fff;color:#30251d}.salary-payment-form button{min-height:42px;grid-column:1/-1;justify-self:start}@media(max-width:800px){.salary-payment-form{grid-template-columns:1fr 1fr}}@media(max-width:540px){.salary-payment-form{grid-template-columns:1fr}.salary-payment-form button{width:100%}}
 </style>

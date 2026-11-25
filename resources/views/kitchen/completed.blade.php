@@ -94,7 +94,7 @@
     </div>
 
 
-    <div id="order-list" class="order-grid">
+    <div id="order-list" class="order-grid completed-order-grid">
 
         @forelse($orders as $order)
 
@@ -156,6 +156,13 @@
                 </div>
 
 
+                <div class="ready-order-summary">
+                    <div class="ready-order-summary-status">
+                        <span class="ready-order-summary-icon"><i class="fa-solid fa-check" aria-hidden="true"></i></span>
+                        <span><strong>Siap diserahkan</strong><small>Selesai diproses {{ $order->kitchen_completed_at?->format('d/m/Y H:i') ?? '—' }}</small></span>
+                    </div>
+                    <span class="ready-order-item-count"><i class="fa-solid fa-mug-hot" aria-hidden="true"></i> {{ $order->items->sum('quantity') }} item</span>
+                </div>
             </div>
 
         @empty

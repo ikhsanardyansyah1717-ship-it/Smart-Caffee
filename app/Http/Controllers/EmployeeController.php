@@ -30,19 +30,36 @@ class EmployeeController extends Controller
         $shiftToday = $employees->whereIn('shift', ['Pagi', 'Siang', 'Malam'])->where('status', 'Aktif')->reject(fn (Employee $employee) => $activeLeaveIds->contains($employee->id))->count();
         $onLeave = $employees->where('status', 'Cuti')->count() + $employees->where('status', 'Aktif')->filter(fn (Employee $employee) => $activeLeaveIds->contains($employee->id))->count();
 
+        $monthStart = now()->startOfMonth();
+        $monthEnd = $monthStart->copy()->endOfMonth();
         $kitchenUserIds = $employees->where('position', 'Kitchen')->pluck('user_id')->filter()->values();
         $completionAverages = Order::whereIn('kitchen_completed_by', $kitchenUserIds)
             ->whereNotNull('kitchen_started_at')->whereNotNull('kitchen_completed_at')
+            ->whereBetween('kitchen_completed_at', [$monthStart, $monthEnd])
             ->get(['kitchen_completed_by', 'kitchen_started_at', 'kitchen_completed_at'])
             ->groupBy('kitchen_completed_by')
             ->map(fn ($orders) => round($orders->avg(fn ($order) => max(0, $order->kitchen_started_at->diffInSeconds($order->kitchen_completed_at) / 60)), 1));
 
-        $employees->each(function (Employee $employee) use ($completionAverages, $activeLeaveIds) {
+        $cashierUserIds = $employees->where('position', 'Kasir')->pluck('user_id')->filter()->values();
+        $cashierProfits = DB::table('payments')
+            ->join('orders', 'orders.id', '=', 'payments.order_id')
+            ->join('order_items', 'order_items.order_id', '=', 'orders.id')
+            ->whereIn('payments.cashier_id', $cashierUserIds)
+            ->where('payments.status', 'Berhasil')
+            ->whereBetween('payments.paid_at', [$monthStart, $monthEnd])
+            ->groupBy('payments.cashier_id')
+            ->selectRaw('payments.cashier_id, SUM(order_items.subtotal - (COALESCE(order_items.cost_price, 0) * order_items.quantity)) as gross_profit')
+            ->pluck('gross_profit', 'cashier_id');
+
+        $employees->each(function (Employee $employee) use ($completionAverages, $cashierProfits, $activeLeaveIds) {
             $employee->setAttribute('average_completion_minutes', $completionAverages->get($employee->user_id));
+            $employee->setAttribute('monthly_gross_profit', $cashierProfits->get($employee->user_id));
             $employee->setAttribute('display_status', $activeLeaveIds->contains($employee->id) ? 'Cuti' : $employee->status);
         });
 
-        return view('owner.employees', compact('employees', 'totalEmployees', 'activeEmployees', 'shiftToday', 'onLeave'));
+        $performanceMonthLabel = $monthStart->translatedFormat('F Y');
+
+        return view('owner.employees', compact('employees', 'totalEmployees', 'activeEmployees', 'shiftToday', 'onLeave', 'performanceMonthLabel'));
     }
 
     public function create()
@@ -58,7 +75,7 @@ class EmployeeController extends Controller
             'position' => ['required', Rule::in(['Kasir', 'Kitchen'])],
             'shift' => ['required', Rule::in(['Pagi', 'Siang', 'Malam'])],
             'status' => ['required', Rule::in(['Aktif', 'Cuti', 'Nonaktif'])],
-            'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
+            'phone' => ['required', 'regex:/^\+62[0-9]{1,10}$/', 'unique:users,phone'],
         ]);
 
         $temporaryPassword = $this->defaultPasswordFor($validated['position']);
@@ -110,7 +127,7 @@ class EmployeeController extends Controller
             'position' => ['required', Rule::in(['Kasir', 'Kitchen'])],
             'shift' => ['required', Rule::in(['Pagi', 'Siang', 'Malam'])],
             'status' => ['required', Rule::in(['Aktif', 'Cuti', 'Nonaktif'])],
-            'phone' => ['required', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($userId)],
+            'phone' => ['required', 'regex:/^\+62[0-9]{1,10}$/', Rule::unique('users', 'phone')->ignore($userId)],
         ]);
 
         $createdCredentials = null;
@@ -186,6 +203,24 @@ class EmployeeController extends Controller
                 'email' => $employee->user->email,
                 'password' => $password,
             ]);
+    }
+
+    public function changePassword(Request $request, Employee $employee)
+    {
+        $employee->load('user');
+        abort_unless($employee->user, 404, 'Akun login karyawan belum tersedia.');
+
+        $validated = $request->validate([
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'password.min' => 'Kata sandi minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak sama.',
+        ]);
+
+        $employee->user->update(['password' => $validated['password']]);
+
+        return redirect()->route('owner.employees.index')
+            ->with('success', 'Kata sandi ' . $employee->name . ' berhasil diubah.');
     }
 
     private function roleFor(string $position, string $status): string

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 use App\Models\Product;
 use App\Models\Order;
@@ -149,6 +150,19 @@ class KasirController extends Controller
      * DAFTAR PESANAN
      * =========================================================
      */
+    public function tableAvailability(): \Illuminate\Http\JsonResponse
+    {
+        $occupied = Order::whereNotNull('table_number')
+            ->where('table_number', '!=', 'Take Away')
+            ->whereIn('status', ['Menunggu', 'Diproses', 'Selesai', 'Sudah Diambil'])
+            ->whereNull('table_finished_at')
+            ->pluck('table_number')
+            ->map(fn ($table) => strtoupper(trim($table)))
+            ->unique()
+            ->values();
+
+        return response()->json(['occupied' => $occupied]);
+    }
     public function orders()
     {
         $orders = Order::with([
@@ -169,7 +183,8 @@ class KasirController extends Controller
          */
         $occupiedTables = Order::whereNotNull('table_number')
             ->where('table_number', '!=', 'Take Away')
-            ->whereIn('status', ['Menunggu', 'Diproses', 'Selesai'])
+            ->whereIn('status', ['Menunggu', 'Diproses', 'Selesai', 'Sudah Diambil'])
+            ->whereNull('table_finished_at')
             ->pluck('table_number')
             ->map(fn ($table) => strtoupper(trim($table)))
             ->unique()
@@ -189,40 +204,85 @@ class KasirController extends Controller
      * Selesaikan penggunaan meja dan kembalikan meja menjadi tersedia.
      * Pesanan meja harus sudah dibayar sebelum bisa diselesaikan.
      */
+    public function transferProof($id)
+    {
+        $payment = Payment::where('order_id', $id)->firstOrFail();
+        abort_unless($payment->payment_method === 'Bank Transfer' && $payment->transfer_proof_path, 404);
+        abort_unless(Storage::disk('local')->exists($payment->transfer_proof_path), 404);
+
+        $disk = Storage::disk('local');
+        $filePath = $disk->path($payment->transfer_proof_path);
+        $mimeType = $disk->mimeType($payment->transfer_proof_path) ?: 'application/octet-stream';
+
+        return response()->file($filePath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . basename($filePath) . '"',
+            'Cache-Control' => 'private, max-age=300',
+        ]);
+    }
+    public function confirmPickup($id)
+    {
+        $order = Order::findOrFail($id);
+
+        if ($order->payment_status !== 'Dibayar' || !$order->kitchen_confirmed_at) {
+            return redirect()->route('kasir.orders')->with('error', 'Pesanan harus lunas dan sudah dikirim ke Kitchen.');
+        }
+
+        if ($order->status === 'Sudah Diambil') {
+            return redirect()->route('kasir.orders')->with('success', 'Pesanan ini sudah dikonfirmasi diambil.');
+        }
+
+        if ($order->status !== 'Selesai') {
+            return redirect()->route('kasir.orders')->with('error', 'Pesanan belum siap diambil dari Kitchen.');
+        }
+
+        $order->update(['status' => 'Sudah Diambil']);
+
+        return redirect()->route('kasir.orders')->with('success', 'Pesanan berhasil dikonfirmasi sudah diambil.');
+    }
+
     public function finishTable($id)
     {
         $order = Order::findOrFail($id);
 
         if (!$order->table_number || $order->table_number === 'Take Away') {
-            return redirect()->route('kasir.orders')
-                ->with('error', 'Pesanan ini tidak menggunakan meja.');
+            return redirect()->route('kasir.orders')->with('error', 'Pesanan ini tidak menggunakan meja.');
         }
 
-        if (!in_array($order->status, ['Menunggu', 'Diproses', 'Selesai'], true)) {
-            return redirect()->route('kasir.orders')
-                ->with('error', 'Meja ini sudah diselesaikan atau tidak sedang digunakan.');
+        if ($order->table_finished_at) {
+            return redirect()->route('kasir.orders')->with('success', "Meja {$order->table_number} sudah diselesaikan.");
+        }
+
+        if ($order->status !== 'Sudah Diambil') {
+            return redirect()->route('kasir.orders')->with('error', 'Konfirmasi pesanan sudah diambil sebelum menyelesaikan meja.');
         }
 
         $table = $order->table_number;
+        $activeOrders = Order::where('table_number', $table)
+            ->where('branch_id', $order->branch_id)
+            ->whereNull('table_finished_at')
+            ->whereIn('status', ['Menunggu', 'Diproses', 'Selesai', 'Sudah Diambil'])
+            ->get(['status', 'payment_status']);
 
-        $unpaidExists = Order::where('table_number', $table)
-            ->whereIn('status', ['Menunggu', 'Diproses', 'Selesai'])
-            ->where('payment_status', '!=', 'Dibayar')
-            ->exists();
+        $unpaidExists = $activeOrders->contains(fn ($activeOrder) => $activeOrder->payment_status !== 'Dibayar');
+        $notPickedUpExists = $activeOrders->contains(fn ($activeOrder) => $activeOrder->status !== 'Sudah Diambil');
 
         if ($unpaidExists) {
-            return redirect()->route('kasir.orders')
-                ->with('error', "Pembayaran meja {$table} belum lunas. Konfirmasi pembayaran sebelum menyelesaikan meja.");
+            return redirect()->route('kasir.orders')->with('error', "Pembayaran meja {$table} belum lunas.");
+        }
+
+        if ($notPickedUpExists) {
+            return redirect()->route('kasir.orders')->with('error', "Pastikan semua pesanan di meja {$table} sudah diambil terlebih dahulu.");
         }
 
         Order::where('table_number', $table)
-            ->whereIn('status', ['Menunggu', 'Diproses', 'Selesai'])
-            ->update(['status' => 'Sudah Diambil']);
+            ->where('branch_id', $order->branch_id)
+            ->whereNull('table_finished_at')
+            ->whereIn('status', ['Sudah Diambil'])
+            ->update(['table_finished_at' => now()]);
 
-        return redirect()->route('kasir.orders')
-            ->with('success', "Meja {$table} selesai digunakan dan sekarang tersedia kembali.");
+        return redirect()->route('kasir.orders')->with('success', "Meja {$table} selesai digunakan dan sekarang tersedia kembali.");
     }
-
     /**
      * =========================================================
      * KONFIRMASI PESANAN MANUAL
@@ -259,6 +319,9 @@ class KasirController extends Controller
                     throw new \RuntimeException('Pembayaran ini sudah berhasil dikonfirmasi.');
                 }
 
+                if (($paymentMethod ?? $payment?->payment_method) === 'Bank Transfer' && !$payment?->transfer_proof_path) {
+                    throw new \RuntimeException('Bukti transfer belum dikirim. Minta pelanggan mengunggah bukti sebelum konfirmasi.');
+                }
                 if ($payment && $payment->attempts()->exists()) {
                     throw new \RuntimeException('Pembayaran QRIS Midtrans harus dikonfirmasi dari status Midtrans, bukan secara manual oleh kasir.');
                 }
@@ -364,7 +427,7 @@ class KasirController extends Controller
         $order = Order::with('payment.attempts')->findOrFail($id);
 
         if ($order->payment_status !== 'Dibayar' && $order->payment?->status !== 'Berhasil') {
-            return redirect()->route('kasir.orders')->with('error', 'QRIS belum lunas. Pesanan belum bisa dikirim ke Kitchen.');
+            return redirect()->route('kasir.orders')->with('error', 'Pembayaran belum lunas. Pesanan belum bisa dikirim ke Kitchen.');
         }
 
         if ($order->status !== 'Menunggu') {
@@ -377,7 +440,7 @@ class KasirController extends Controller
 
         $order->update(['kitchen_confirmed_at' => now()]);
 
-        return redirect()->route('kasir.orders')->with('success', 'QRIS lunas dan pesanan berhasil dikirim ke Kitchen.');
+        return redirect()->route('kasir.orders')->with('success', 'Pesanan berhasil dikirim ke Kitchen.');
     }
 
 
@@ -448,7 +511,8 @@ public function history()
             DB::transaction(function () use ($request, $quantities, $table, $paymentMethod) {
                 if ($table !== 'Take Away') {
                     $tableTaken = Order::where('table_number', $table)
-                        ->whereIn('status', ['Menunggu', 'Diproses', 'Selesai'])
+                        ->whereIn('status', ['Menunggu', 'Diproses', 'Selesai', 'Sudah Diambil'])
+            ->whereNull('table_finished_at')
                         ->lockForUpdate()->exists();
                     if ($tableTaken) {
                         throw new \RuntimeException("Meja {$table} sedang digunakan. Silakan pilih meja lain.");
@@ -527,3 +591,12 @@ public function history()
         }
     }
 }
+
+
+
+
+
+
+
+
+

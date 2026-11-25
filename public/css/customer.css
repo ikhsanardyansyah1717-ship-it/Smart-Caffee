@@ -47,35 +47,57 @@
             opacity: 0.85;
         }
 
-        /* Toast Notification (Hanya untuk Login & Logout) */
+        /* Toast notifications */
         .toast {
             position: fixed;
-            top: -60px;
+            top: -72px;
             left: 50%;
-            transform: translateX(-50%);
-            background-color: var(--text-dark);
-            color: var(--white);
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-size: 13px;
-            font-weight: 500;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 2000;
-            transition: top 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            transform: translate(-50%, -8px);
+            width: max-content;
+            max-width: min(92vw, 420px);
+            padding: 8px 14px 8px 9px;
+            border: 1px solid #eadcc9;
+            border-radius: 14px;
+            background: rgba(255, 253, 249, .98);
+            color: #443322;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.4;
+            box-shadow: 0 8px 24px rgba(65, 43, 22, .12);
+            z-index: 5000;
+            opacity: 0;
+            transition: top .24s ease, opacity .2s ease, transform .24s ease;
             display: flex;
             align-items: center;
-            gap: 8px;
-            width: max-content;
-            max-width: 90%;
+            gap: 9px;
+            overflow-wrap: anywhere;
         }
 
         .toast.show {
-            top: 25px;
+            top: max(14px, env(safe-area-inset-top));
+            transform: translate(-50%, 0);
+            opacity: 1;
         }
 
-        .toast i {
-            color: #2ecc71;
-            font-size: 15px;
+        .toast .toast-icon {
+            display: grid;
+            place-items: center;
+            flex: 0 0 27px;
+            width: 27px;
+            height: 27px;
+            border-radius: 9px;
+            background: #f4eadc;
+            color: #8a5100;
+            font-size: 13px;
+        }
+
+        .toast.toast-success .toast-icon { background: #edf3e7; color: #577342; }
+        .toast.toast-warning .toast-icon { background: #f8eddc; color: #8a5100; }
+        .toast.toast-error .toast-icon { background: #f8e8e3; color: #a34b36; }
+        .toast.toast-info .toast-icon { background: #f1ebe2; color: #786451; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .toast { transition: none; }
         }
 
         /* Sistem Perpindahan Halaman */
@@ -779,7 +801,10 @@
     position: relative;
 }
 
-.stock-warning { display:inline-flex; align-items:center; color:#9b5b16; font-size:10px; font-weight:700; }
+.stock-warning { display:inline-flex; align-items:center; color:#8a5100; font-size:10px; font-weight:700; white-space:nowrap; }
+.stock-warning.low,
+.stock-warning.out,
+.stock-warning.unavailable { color:#8a5100; }
 .menu-card-qty-control button:disabled { opacity:.45; cursor:not-allowed; }
 
 .password-wrapper input {
@@ -5395,8 +5420,8 @@ body {
     width: 100%;
     height: auto;
     flex: none;
-    aspect-ratio: 1 / .88;
-    border-radius: 12px;
+    aspect-ratio: 1 / 1;
+    border-radius: 18px;
     background: #f8f4ee;
 }
 
@@ -6852,7 +6877,7 @@ body.product-detail-open {
     }
 
     #main-menu-list .menu-image-wrapper {
-        aspect-ratio: 1 / .82;
+        aspect-ratio: 1 / 1;
     }
 
     #main-menu-list .menu-info {
@@ -8184,3 +8209,40 @@ body.product-detail-open {
 .customer-wa-login__terms { margin: 0 auto; color: #7a7a7a; text-align: center; font-size: 11px; line-height: 1.5; }
 .customer-wa-login__terms a { color: #a45118; }
 @media (min-height: 800px) { .customer-wa-login__guest { padding-top: 100px; } }
+
+/* Banner product promos and sale prices. */
+.promo-price{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:8px;color:#fff}
+.promo-price>span{width:100%;font-size:9px;font-weight:700;opacity:.84}
+.promo-price del{font-size:10px;color:#efcfb2;opacity:.9}
+.promo-price strong{font-size:15px;font-weight:850;color:#fff}
+.promo-price em{padding:3px 7px;border-radius:20px;background:#e7f5ed;color:#236b3b;font-size:9px;font-style:normal;font-weight:850}
+.price-discount{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.price-discount del{color:#9d8d7e;font-size:10px;font-weight:500}
+.price-discount strong{color:#a84632;font-size:13px;font-weight:800}
+.price-discount em{padding:2px 5px;border-radius:12px;background:#fff0ed;color:#a84632;font-size:9px;font-style:normal;font-weight:800}
+.detail-price-wrap{display:grid;justify-items:end;gap:3px}
+.detail-price-wrap>del{color:#9d8d7e;font-size:12px}
+.detail-price-wrap>div{display:flex;align-items:center;gap:7px}
+.detail-price-wrap #detail-discount-badge{padding:3px 6px;border-radius:12px;background:#fff0ed;color:#a84632;font-size:9px;font-weight:800}
+
+/* Microinteraksi ringan katalog Quattro */
+.category-item { transition: transform .16s ease, background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease; }
+.category-item:active { transform:scale(.97); }
+#main-menu-list .menu-card { transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+#main-menu-list .menu-card:active { transform:scale(.99); }
+@media (hover:hover) and (pointer:fine) {
+  #main-menu-list .menu-card:hover { transform:translateY(-2px); box-shadow:0 9px 20px rgba(45,36,36,.075); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .category-item, #main-menu-list .menu-card { animation:none !important; scroll-behavior:auto !important; transition:none !important; }
+}
+.quattro-checkout-busy{overflow:hidden!important}
+.quattro-checkout-loading{position:fixed;z-index:9999;inset:0;display:grid;place-items:center;padding:20px;background:rgba(36,25,15,.28);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.quattro-checkout-loading[hidden]{display:none}
+.quattro-checkout-loading-card{display:grid;justify-items:center;gap:9px;min-width:190px;padding:22px 26px;border:1px solid #eadfd1;border-radius:18px;background:#fffdf9;color:#2c2118;box-shadow:0 14px 40px rgba(36,25,15,.16);text-align:center}
+.quattro-checkout-loading-card strong{font-size:13px;font-weight:800}
+.quattro-checkout-loading-card small{color:#897b6d;font-size:10px}
+.quattro-checkout-spinner{width:27px;height:27px;border:3px solid #eadfd1;border-top-color:#804407;border-radius:50%;animation:quattro-checkout-spin .75s linear infinite}
+@keyframes quattro-checkout-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.quattro-checkout-spinner{animation-duration:1.8s}}
+.orders-checkout-bottom button[aria-busy="true"],.payment-page-bottom button[aria-busy="true"]{display:inline-flex;align-items:center;justify-content:center;gap:8px}

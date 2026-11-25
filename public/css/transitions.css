@@ -1,0 +1,43 @@
+/* Transisi halaman dan mikrointeraksi Quattro */
+.quattro-page-loader {
+    position:fixed; inset:0; z-index:20000; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:9px; padding:24px;
+    background:rgba(250,247,241,.96); color:#572e04;
+    opacity:0; visibility:hidden; pointer-events:none;
+    transition:opacity .2s ease, visibility .2s ease;
+}
+.quattro-page-loader.is-visible { opacity:1; visibility:visible; pointer-events:auto; }
+.quattro-loader-mark {
+    width:58px; height:58px; display:grid; place-items:center; border-radius:19px;
+    background:#763f06; color:#fff; font-size:24px;
+    box-shadow:0 9px 24px rgba(91,57,25,.17);
+    animation:quattroLoaderFloat 1.25s ease-in-out infinite;
+}
+.quattro-loader-brand { margin-top:3px; font:800 12px/1.2 'Segoe UI',sans-serif; letter-spacing:.2em; }
+.quattro-loader-caption { color:#8c7a6b; font:500 11px/1.4 'Segoe UI',sans-serif; }
+.quattro-loader-dots { display:flex; gap:5px; margin-top:4px; }
+.quattro-loader-dots span { width:5px; height:5px; border-radius:50%; background:#b98a55; animation:quattroLoaderDot .8s ease-in-out infinite alternate; }
+.quattro-loader-dots span:nth-child(2) { animation-delay:.15s; }
+.quattro-loader-dots span:nth-child(3) { animation-delay:.3s; }
+@keyframes quattroLoaderFloat { 0%,100% { transform:translateY(0) rotate(0); } 50% { transform:translateY(-4px) rotate(-3deg); } }
+@keyframes quattroLoaderDot { from { opacity:.35; transform:translateY(0); } to { opacity:1; transform:translateY(-3px); } }
+@keyframes quattroPageEnter { from { opacity:.72; } to { opacity:1; } }
+body.quattro-motion-enabled button,
+body.quattro-motion-enabled a,
+body.quattro-motion-enabled [role="button"] {
+    transition-property:transform, box-shadow, background-color, border-color, color;
+    transition-duration:.16s;
+    transition-timing-function:cubic-bezier(.2,.7,.3,1);
+}
+body.quattro-motion-enabled button:active,
+body.quattro-motion-enabled a:active,
+body.quattro-motion-enabled [role="button"]:active { transform:scale(.985); }
+body.quattro-motion-enabled main.quattro-page-enter,
+body.quattro-motion-enabled .app-container.quattro-page-enter { animation:quattroPageEnter .24s ease-out both; }
+@media(prefers-reduced-motion:reduce) {
+    .quattro-page-loader, .quattro-loader-mark, .quattro-loader-dots span,
+    body.quattro-motion-enabled button, body.quattro-motion-enabled a,
+    body.quattro-motion-enabled [role="button"],
+    body.quattro-motion-enabled main.quattro-page-enter,
+    body.quattro-motion-enabled .app-container.quattro-page-enter { animation:none!important; transition:none!important; }
+}

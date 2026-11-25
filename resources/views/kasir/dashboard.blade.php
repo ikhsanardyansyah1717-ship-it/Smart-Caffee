@@ -1,6 +1,15 @@
 @extends('layouts.kasir')
 
 @section('title','Kasir Dashboard - Quattro Coffee')
+@push('styles')
+<style>
+.stock-warning-banner{display:flex;align-items:center;gap:12px;margin:16px 0 18px;padding:13px 16px;border:1px solid #f0b4b1;border-radius:13px;background:#fff0ef;color:#a52822;box-shadow:0 5px 14px rgba(176,45,38,.07)}
+.stock-warning-banner>i{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:10px;background:#fce0de;color:#c43d35;font-size:16px}
+.stock-warning-banner span{font-size:13px;line-height:1.5}
+.stock-warning-banner strong{color:#a3201b;font-weight:800}
+@media(max-width:600px){.stock-warning-banner{align-items:flex-start;padding:12px}.stock-warning-banner>i{margin-top:1px}}
+</style>
+@endpush
 
 @section('content')
 
@@ -157,7 +166,7 @@
             </div>
         </div>
 
-        <a href="{{ route('kasir.payment') }}" class="primary-btn full">
+        <a href="{{ route('kasir.payment') }}" class="primary-btn full sales-payment-action">
             <i class="fa-solid fa-cash-register"></i>
             Proses Pembayaran
         </a>

@@ -16,11 +16,14 @@ class Payment extends Model
         'amount',
         'status',
         'paid_at',
+        'transfer_proof_path',
+        'bank_account_snapshot',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'paid_at' => 'datetime',
+        'bank_account_snapshot' => 'array',
     ];
 
     /**
@@ -41,3 +44,5 @@ class Payment extends Model
         return $this->hasMany(PaymentAttempt::class);
     }
 }
+
+

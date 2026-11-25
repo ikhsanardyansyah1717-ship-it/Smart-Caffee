@@ -39,7 +39,10 @@ class MidtransPaymentStatusService
                         $product->save();
                     }
                     $payment->update(['status' => 'Berhasil', 'paid_at' => now()]);
-                    $order->update(['payment_status' => 'Dibayar']);
+                    $order->update([
+                        'payment_status' => 'Dibayar',
+                        'kitchen_confirmed_at' => $order->kitchen_confirmed_at ?: now(),
+                    ]);
                 }
                 $lockedAttempt->update([
                     'status' => 'Berhasil',
@@ -80,3 +83,6 @@ class MidtransPaymentStatusService
         return $result['status'];
     }
 }
+
+
+

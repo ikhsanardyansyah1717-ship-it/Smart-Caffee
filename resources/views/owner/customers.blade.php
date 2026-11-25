@@ -173,6 +173,9 @@
                     type="text"
                     name="q"
                     value="{{ request('q') }}"
+                    data-search="#customerRows tr.customer-row"
+                    data-empty="#customerSearchEmpty"
+                    data-no-data="#customerNoData"
                     placeholder="Cari nama, email, atau nomor HP..."
                     autocomplete="off"
                 >
@@ -233,11 +236,11 @@
                 </thead>
 
 
-                <tbody>
+                <tbody id="customerRows">
 
                     @forelse($customers as $customer)
 
-                        <tr>
+                        <tr class="customer-row">
 
                             {{-- =================================
                                  NAMA PELANGGAN
@@ -327,7 +330,7 @@
                         {{-- =====================================
                              DATA KOSONG
                         ====================================== --}}
-                        <tr>
+                        <tr id="customerNoData">
 
                             <td
                                 colspan="5"
@@ -354,6 +357,13 @@
                         </tr>
 
                     @endforelse
+
+                    <tr id="customerSearchEmpty" hidden>
+                        <td colspan="5" class="table-empty">
+                            <strong>Tidak ada pelanggan yang cocok</strong>
+                            <span>Coba kata kunci nama, email, atau nomor HP lainnya.</span>
+                        </td>
+                    </tr>
 
                 </tbody>
 

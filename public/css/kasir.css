@@ -1215,3 +1215,114 @@ body.modal-open {
 .dashboard-search-bar { max-width: 560px; margin: 0 0 16px; }
 .stock-warning-banner { display:flex; align-items:center; gap:10px; margin:0 0 18px; padding:13px 16px; border:1px solid #f0d9a9; border-radius:12px; background:#fff7e8; color:#80520b; font-size:13px; }
 .stock-warning-banner i { font-size:17px; }
+
+/* Jarak tombol aksi pembayaran dari statistik ringkasan. */
+.sales-payment-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    margin-top: 22px;
+}
+
+/* Editor banner untuk Home Customer. */
+.banner-notice{display:flex;align-items:center;gap:9px;margin:0 0 16px;padding:12px 15px;border-radius:11px;font-size:12px}
+.banner-notice-success{background:#eaf7ee;color:#256b3b;border:1px solid #d3ead9}
+.banner-notice-error{background:#fff3e5;color:#8a5100;border:1px solid #f1dfc7}
+.banner-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.banner-editor-card{min-width:0;padding:18px}
+.banner-editor-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.banner-editor-card-head>div{display:flex;align-items:center;gap:9px}
+.banner-editor-card-head h2{font-size:15px;color:#30251c}
+.banner-editor-index{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#f4e8da;color:#763f06;font-size:11px;font-weight:800}
+.banner-editor-live{display:inline-flex;align-items:center;gap:5px;color:#2f8f5b;font-size:9px;font-weight:700;white-space:nowrap}
+.banner-editor-live i{font-size:7px}
+.banner-preview{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:132px;margin-bottom:16px;padding:16px 18px;overflow:hidden;border-radius:14px;background:linear-gradient(115deg,#804709,#512d08);color:#fff}
+.banner-preview:after{content:"";position:absolute;width:130px;height:130px;right:-35px;top:-75px;border-radius:50%;background:#ffffff12}
+.banner-preview-copy{position:relative;z-index:1;display:grid;gap:6px;min-width:0}
+.banner-preview-copy>span{width:max-content;max-width:100%;padding:4px 8px;border-radius:20px;background:#bd5745;color:#fff;font-size:9px;font-weight:800;text-transform:uppercase}
+.banner-preview-copy strong{font-size:20px;line-height:1.2;overflow-wrap:anywhere}
+.banner-preview-copy small{max-width:290px;color:#f4e9dc;font-size:10px;line-height:1.45}
+.banner-preview img{position:relative;z-index:1;width:78px;height:78px;flex:0 0 78px;border:2px solid #fff;border-radius:50%;object-fit:cover;background:#eee}
+.banner-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.banner-field{display:grid;gap:6px;min-width:0}
+.banner-field-wide{grid-column:1/-1}
+.banner-field label{color:#46382d;font-size:11px;font-weight:700}
+.banner-field input,.banner-field textarea{width:100%;min-width:0;padding:10px 11px;border:1px solid #e5dbd1;border-radius:9px;background:#fff;color:#30251c;font:inherit;font-size:12px;outline:none}
+.banner-field input:focus,.banner-field textarea:focus{border-color:#b88959;box-shadow:0 0 0 3px #763f0612}
+.banner-field input[type=file]{padding:8px;background:#fcfaf7}
+.banner-field textarea{resize:vertical;line-height:1.45}
+.banner-field>small{color:#8c7a6b;font-size:10px;line-height:1.4}
+.banner-editor-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;padding:14px 0 24px}
+.banner-editor-actions .primary-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:auto;min-height:42px;margin:0;padding:0 18px}
+@media(max-width:1000px){.banner-editor-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.banner-editor-card{padding:14px}.banner-editor-card-head{align-items:flex-start;flex-direction:column}.banner-fields{grid-template-columns:1fr}.banner-field-wide{grid-column:auto}.banner-preview{min-height:120px;padding:14px}.banner-preview-copy strong{font-size:17px}.banner-preview img{width:64px;height:64px;flex-basis:64px}}
+
+/* Promo & custom upload controls on Banner Customer. */
+.banner-preview{min-height:158px}
+.banner-preview-copy{max-width:calc(100% - 94px)}
+.banner-promo-preview{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:4px}
+.banner-promo-preview del{color:#f0d8c2;font-size:10px}
+.banner-promo-preview strong{color:#fff;font-size:14px;font-weight:800}
+.banner-promo-preview>span{padding:3px 7px;border-radius:20px;background:#e7f5ed;color:#236b3b;font-size:9px;font-weight:800}
+.banner-promo-preview>small{color:#f4e9dc;font-size:9px}
+.banner-field select{width:100%;min-width:0;padding:10px 34px 10px 11px;border:1px solid #e5dbd1;border-radius:9px;background:#fff;color:#30251c;font:inherit;font-size:12px;outline:none}
+.banner-field select:focus{border-color:#b88959;box-shadow:0 0 0 3px #763f0612}
+.discount-input-wrap{position:relative}
+.discount-input-wrap input{padding-right:38px}
+.discount-input-wrap>span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#806d5c;font-size:12px;font-weight:700}
+.banner-upload-control{display:flex;align-items:center;gap:12px;min-height:48px;padding:7px 10px;border:1px dashed #d7c7b6;border-radius:10px;background:#fcfaf7}
+.banner-file-input{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;clip-path:inset(50%)}
+.banner-file-input:focus-visible+.banner-upload-button{outline:3px solid #b8895966;outline-offset:2px}
+.banner-upload-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:32px;padding:0 12px;border:1px solid #e5d5c3;border-radius:8px;background:#fff;color:#763f06;font-size:10px;font-weight:750;cursor:pointer;white-space:nowrap;transition:background .18s ease,border-color .18s ease}
+.banner-upload-button:hover{border-color:#c6a27d;background:#fbf4ec}
+.banner-upload-control>[data-upload-name]{overflow:hidden;color:#806d5c;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.banner-editor-card{box-shadow:0 8px 22px rgba(74,46,27,.045)}
+.banner-editor-card-head{margin-bottom:16px}
+.banner-fields{row-gap:14px}
+@media(max-width:560px){.banner-upload-control{align-items:flex-start;flex-direction:column}.banner-upload-control>[data-upload-name]{max-width:100%}}
+
+/* Navigasi Quattro: diselaraskan dengan Owner dan Kitchen */
+.sidebar { width:255px; padding:22px 14px 16px; background:#fff; border-right:1px solid #eadfd1; box-shadow:8px 0 28px rgba(60,39,19,.035); }
+.sidebar .brand { min-height:66px; margin:0 4px 12px; padding:4px 8px 22px; border-bottom:1px solid #f1e8de; }
+.sidebar .brand-icon { width:44px; height:44px; border-radius:14px; background:#763f06; box-shadow:0 4px 10px rgba(118,63,6,.1); }
+.sidebar nav { flex:1 1 auto; align-content:start; gap:5px; min-height:0; margin:4px 0 14px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#e2d2bf transparent; }
+.side-link { position:relative; min-height:46px; gap:11px; padding:6px 10px; border:1px solid transparent; border-radius:13px; color:#806d5c; font-size:13px; font-weight:600; }
+.side-link i { display:grid; flex:0 0 34px; width:34px; height:34px; place-items:center; border-radius:10px; background:#f8f4ee; color:#927657; font-size:14px; }
+.side-link:hover { border-color:#f0e4d6; background:#fffdf9; color:#572e04; }
+.side-link.active { border-color:#f0dfca; background:linear-gradient(100deg,#f7ebdc,#fbf5ed); color:#572e04; box-shadow:none; }
+.side-link.active i { background:#fff; color:#763f06; box-shadow:0 2px 7px rgba(91,57,25,.08); }
+.menu-label { margin:0 4px 3px; padding:0 10px 8px; color:#a1846c; font-weight:700; }
+.sidebar-bottom { margin-top:auto; padding:16px 6px 8px; }
+.cashier-user { gap:10px; }
+.cashier-user .avatar { width:38px; height:38px; border-radius:12px; background:#763f06; color:#fff; }
+.sidebar .logout-form { margin:4px 0 0; padding:0 4px; }
+.sidebar .logout-btn { min-height:42px; border-radius:12px; }
+@media(max-width:720px) {
+  .sidebar { width:72px; padding:18px 10px; }
+  .sidebar .brand { justify-content:center; margin:0 0 12px; padding:0 0 16px; }
+  .sidebar .brand>div:last-child,.sidebar .menu-label,.side-link span,.cashier-user>div:last-child { display:none; }
+  .side-link { min-height:46px; justify-content:center; padding:5px; }
+  .side-link i { flex-basis:34px; width:34px; height:34px; }
+  .sidebar-bottom { margin-top:auto; padding:12px 0 8px; }
+  .cashier-user { justify-content:center; }
+}
+/* Sidebar sejajar dengan lebar konten */
+@media(min-width:721px){.kasir-shell .main-content,.app-shell .main-content{margin-left:255px;width:calc(100% - 255px)}}
+@media(max-width:720px){.app-shell .main-content{margin-left:72px;width:calc(100% - 72px)}}
+
+
+/* Dashboard status badge: canceled orders */
+.badge.dibatalkan{display:inline-flex;align-items:center;justify-content:center;min-height:25px;padding:5px 10px;border:1px solid #f2d2cd;border-radius:999px;background:#fae8e5;color:#b84238;font-size:10px;font-weight:700;line-height:1.1;white-space:nowrap}
+
+/* Dashboard search: fill the field so the hint is not clipped. */
+.dashboard-search-bar{width:min(100%,560px);min-height:40px;margin:0 0 16px}
+.dashboard-search-bar input{flex:1;width:auto;min-width:0}
+
+/* Samakan ukuran dan perataan semua status pada tabel dashboard. */
+#cashierDashboardOrders .badge{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:76px;height:25px;padding:0 9px;border:1px solid transparent;border-radius:999px;font-size:10px;font-weight:700;line-height:1;white-space:nowrap}
+#cashierDashboardOrders .badge.dibatalkan{background:#fae8e5;color:#b84238;border-color:#f2d2cd}
+#cashierDashboardOrders .badge.menunggu{background:#f5e8da;color:#8B4F08;border-color:#efddc8}
+#cashierDashboardOrders .badge.diproses{background:#fff1df;color:#9a5b0b;border-color:#f3dfc4}
+#cashierDashboardOrders .badge.selesai,#cashierDashboardOrders .badge.sudah-diambil{background:#eaf4ec;color:#35734b;border-color:#d9e9dc}

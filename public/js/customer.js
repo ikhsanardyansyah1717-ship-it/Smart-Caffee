@@ -139,6 +139,103 @@ const databaseProducts =
 
         : [];
 
+const savedProductImageRequests = new Map();
+let savedProductImageObserver = null;
+
+function productImageAttributes(item) {
+    const loadingAttributes = 'loading="lazy" decoding="async"';
+    if (String(item.img || '').startsWith('/product-images/')) {
+        const fallback = productImages[item.name] || '';
+        return `data-product-src="${item.img}" data-fallback-src="${fallback}" ${loadingAttributes}`;
+    }
+    return `src="${item.img}" ${loadingAttributes}`;
+}
+
+function loadSavedProductImage(img) {
+    if (!img || img.dataset.imageLoading === 'true') return;
+    img.dataset.imageLoading = 'true';
+
+    const url = img.dataset.productSrc;
+    let request = savedProductImageRequests.get(url);
+    if (!request) {
+        request = fetch(url, { headers: { 'ngrok-skip-browser-warning': 'true' } })
+            .then(response => {
+                if (!response.ok || !response.headers.get('content-type')?.startsWith('image/')) {
+                    throw new Error('Foto produk tidak dapat dimuat.');
+                }
+                return response.blob();
+            })
+            .then(blob => URL.createObjectURL(blob))
+            .catch(error => {
+                savedProductImageRequests.delete(url);
+                throw error;
+            });
+        savedProductImageRequests.set(url, request);
+    }
+
+    request.then(objectUrl => {
+        if (img.isConnected) img.src = objectUrl;
+    }).catch(() => {
+        if (!img.isConnected) return;
+        img.onerror = function () {
+            const fallback = img.dataset.fallbackSrc;
+            if (fallback && !img.dataset.fallbackAttempted) {
+                img.dataset.fallbackAttempted = 'true';
+                img.src = fallback;
+                return;
+            }
+            img.hidden = true;
+        };
+        img.src = url;
+    });
+}
+
+function loadSavedProductImages(root) {
+    const images = root?.matches?.('img[data-product-src]')
+        ? [root]
+        : root?.querySelectorAll?.('img[data-product-src]');
+    if (!images) return;
+
+    if (!savedProductImageObserver && 'IntersectionObserver' in window) {
+        savedProductImageObserver = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                savedProductImageObserver.unobserve(entry.target);
+                loadSavedProductImage(entry.target);
+            });
+        }, { rootMargin: '180px 0px' });
+    }
+
+    images.forEach(img => {
+        if (img.dataset.imageLoading === 'true' || img.dataset.imageObserved === 'true') return;
+        if (savedProductImageObserver) {
+            img.dataset.imageObserved = 'true';
+            savedProductImageObserver.observe(img);
+        } else {
+            loadSavedProductImage(img);
+        }
+    });
+}
+function loadProductImage(img, url, fallback = '') {
+    if (!img) return;
+    if (String(url || '').startsWith('/product-images/')) {
+        img.dataset.productSrc = url;
+        img.dataset.fallbackSrc = fallback;
+        loadSavedProductImages(img.parentElement || img);
+        return;
+    }
+    img.src = url || fallback;
+}
+
+function getSavedProductImage(product) {
+    const image = String(product?.image || '').trim();
+    if (!image) return '';
+    if (/^https?:\/\//i.test(image)) return image;
+    // The same product image route is used by the Owner catalog. Including
+    // the stored path as a version avoids showing an older cached photo.
+    return `/product-images/${encodeURIComponent(product.id)}?v=${encodeURIComponent(image)}`;
+}
+
 
 /* =========================================================
    CONVERT DATABASE PRODUCT
@@ -159,9 +256,10 @@ const menuFromDatabase =
                 normalizeCategory(
                     product.category
                 ),
-
             price:
                 Number(product.price),
+            originalPrice: Number(product.original_price ?? product.price),
+            discountPercent: Number(product.discount_percent ?? 0),
 
             // STATUS KETERSEDIAAN DARI DATABASE
             stock: Number(product.stock ?? 0),
@@ -184,8 +282,8 @@ const menuFromDatabase =
                 'Menu pilihan Quattro Coffee',
 
             img:
-                productImages[name] ??
-                'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&auto=format&fit=crop'
+                getSavedProductImage(product) || (productImages[name] ??
+                'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&auto=format&fit=crop')
 
         };
 
@@ -373,16 +471,33 @@ function showToast(message) {
         return;
     }
 
-    toastMsg.innerText =
-        message;
+    const icon = toast.querySelector('i') || document.createElement('i');
+    const normalizedMessage = String(message || 'Pemberitahuan');
+    const lowerMessage = normalizedMessage.toLocaleLowerCase('id-ID');
+    const type = /gagal|error|tidak dapat|belum dapat|tidak berhasil|tidak tersedia/.test(lowerMessage)
+        ? 'error'
+        : (/habis|tersisa|yang tersedia hanya|mencapai batas|kurangi jumlah/.test(lowerMessage)
+            ? 'warning'
+            : (/berhasil|ditambahkan|disimpan|dibuat|diperbarui|dibatalkan/.test(lowerMessage) ? 'success' : 'info'));
+    const icons = {
+        success: 'fa-circle-check',
+        warning: 'fa-triangle-exclamation',
+        error: 'fa-circle-exclamation',
+        info: 'fa-circle-info',
+    };
+
+    if (!icon.isConnected) toast.prepend(icon);
+    icon.className = `fa-solid ${icons[type]} toast-icon`;
+    toast.classList.remove('toast-success', 'toast-warning', 'toast-error', 'toast-info');
+    toast.classList.add(`toast-${type}`);
+    toastMsg.textContent = normalizedMessage;
 
     toast.classList.add('show');
 
-    setTimeout(() => {
-
+    clearTimeout(window.__customerToastTimer);
+    window.__customerToastTimer = setTimeout(() => {
         toast.classList.remove('show');
-
-    }, 2300);
+    }, 3000);
 
 }
 
@@ -455,6 +570,13 @@ function renderMenu(items) {
                 0
             );
             const stock = Math.max(0, Number(item.stock || 0));
+            const availabilityText = stock <= 0
+                ? 'Tersisa 0'
+                : (!isAvailable ? 'Tidak tersedia' : `Tersisa ${stock}`);
+            const availabilityClass = stock <= 0 ? 'out' : (!isAvailable ? 'unavailable' : (stock <= 5 ? 'low' : 'available'));
+            const priceMarkup = Number(item.discountPercent) > 0
+                ? `<span class="price price-discount"><del>${rupiah(item.originalPrice)}</del><strong>${rupiah(item.price)}</strong><em>-${item.discountPercent}%</em></span>`
+                : `<span class="price">${rupiah(item.price)}</span>`;
 
             return `
 
@@ -462,17 +584,14 @@ function renderMenu(items) {
 
                     <div class="menu-image-wrapper">
 
-                        <img
-                            src="${item.img}"
-                            alt="${item.name}"
-                        >
+                        <img ${productImageAttributes(item)} alt="${item.name}">
 
                         ${
                             !isAvailable
                                 ? `
                                     <span class="availability-badge unavailable">
                                         <i class="fa-solid fa-circle-xmark"></i>
-                                        Habis
+                                        ${stock <= 0 ? 'Habis' : 'Tidak tersedia'}
                                     </span>
                                 `
                                 : ''
@@ -492,10 +611,9 @@ function renderMenu(items) {
 
                         <div class="menu-footer">
 
-                            <span class="price">
-                                ${rupiah(item.price)}
-                            </span>
-                            ${isAvailable && stock <= 5 ? `<small class="stock-warning">Tersisa ${stock}</small>` : ''}
+                            ${priceMarkup}
+
+                            <small class="stock-warning ${availabilityClass}">${availabilityText}</small>
 
                             ${productCartQty > 0
                                 ? `
@@ -566,6 +684,8 @@ function renderMenu(items) {
             `;
 
         }).join('');
+
+    loadSavedProductImages(container);
 
 }
 
@@ -698,7 +818,7 @@ function addProductVariant(menuId, customization = {}, quantity = 1) {
         .filter(cartItem => Number(cartItem.id) === Number(item.id))
         .reduce((sum, cartItem) => sum + Number(cartItem.qty || 0), 0);
     if (alreadyInCart + Number(quantity) > Number(item.stock || 0)) {
-        showToast(`Stok ${item.name} tersisa ${Number(item.stock || 0)}. Jumlah di keranjang sudah mencapai batas stok.`);
+        showToast(`Jumlah ${item.name} yang tersedia hanya ${Number(item.stock || 0)}. Pesanan di keranjang sudah mencapai batas.`);
         return;
     }
 
@@ -776,8 +896,9 @@ function openProductDetail(menuId) {
         activeProductOptions[type] = optionGroups[type].choices[0][0];
     });
 
-    document.getElementById('detail-product-image').src = product.img;
-    document.getElementById('detail-product-image').alt = product.name;
+    const detailImage = document.getElementById('detail-product-image');
+    detailImage.alt = product.name;
+    loadProductImage(detailImage, product.img, productImages[product.name] || '');
     document.getElementById('detail-product-name').textContent = product.name;
     document.getElementById('detail-product-description').textContent = product.desc;
     renderProductOptions();
@@ -877,7 +998,7 @@ function changeDetailQty(delta) {
         .reduce((sum, cartItem) => sum + Number(cartItem.qty || 0), 0);
     const nextQuantity = Math.max(1, activeDetailQuantity + delta);
     if (delta > 0 && alreadyInCart + nextQuantity > Number(activeDetailProduct?.stock || 0)) {
-        showToast(`Stok ${activeDetailProduct?.name} tersisa ${Number(activeDetailProduct?.stock || 0)}.`);
+        showToast(`Jumlah ${activeDetailProduct?.name} yang tersedia hanya ${Number(activeDetailProduct?.stock || 0)}.`);
         return;
     }
     activeDetailQuantity = nextQuantity;
@@ -888,6 +1009,17 @@ function updateProductDetailPrice() {
     if (!activeDetailProduct) return;
     const price = getConfiguredPrice(activeDetailProduct, activeProductOptions);
     document.getElementById('detail-product-price').textContent = rupiah(price);
+    const originalPriceElement = document.getElementById('detail-original-price');
+    const discountBadgeElement = document.getElementById('detail-discount-badge');
+    const discountPercent = Number(activeDetailProduct.discountPercent || 0);
+    if (originalPriceElement) {
+        originalPriceElement.textContent = rupiah(activeDetailProduct.originalPrice ?? activeDetailProduct.price);
+        originalPriceElement.hidden = discountPercent <= 0;
+    }
+    if (discountBadgeElement) {
+        discountBadgeElement.textContent = '-' + discountPercent + '%';
+        discountBadgeElement.hidden = discountPercent <= 0;
+    }
     document.getElementById('detail-quantity').textContent = activeDetailQuantity;
     document.getElementById('detail-line-total').textContent = rupiah(price * activeDetailQuantity);
 }
@@ -930,7 +1062,7 @@ function changeQty(
             .filter(cartItem => Number(cartItem.id) === Number(menuId))
             .reduce((sum, cartItem) => sum + Number(cartItem.qty || 0), 0);
         if (!product || currentQuantity + delta > Number(product.stock || 0)) {
-            showToast(`Stok ${product?.name || item.name} tersisa ${Number(product?.stock || 0)}.`);
+            showToast(`Jumlah ${product?.name || item.name} yang tersedia hanya ${Number(product?.stock || 0)}.`);
             return;
         }
     }
@@ -1057,10 +1189,7 @@ function updateCartUI() {
 
             <div class="cart-item">
 
-                <img
-                    src="${item.img}"
-                    alt="${item.name}"
-                >
+                <img ${productImageAttributes(item)} alt="${item.name}">
 
                 <div class="cart-details">
 
@@ -1112,6 +1241,8 @@ function updateCartUI() {
             </div>
 
         `).join('');
+
+    loadSavedProductImages(container);
 
 
     const subtotal =
@@ -1831,9 +1962,51 @@ function resetPaymentUI() {
    CHECKOUT
    ========================================================= */
 
+let checkoutInProgress = false;
+
+function setCheckoutButtonLoading(button, label) {
+    if (!button) return;
+    if (!button.dataset.originalHtml) button.dataset.originalHtml = button.innerHTML;
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.innerHTML = `<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i><span>${escapeHtml(label)}</span>`;
+}
+
+function restoreCheckoutButton(button) {
+    if (!button) return;
+    if (button.dataset.originalHtml) button.innerHTML = button.dataset.originalHtml;
+    delete button.dataset.originalHtml;
+    button.disabled = false;
+    button.removeAttribute('aria-busy');
+}
+
+function showCheckoutLoading(message = 'Menyiapkan pesanan') {
+    let overlay = document.getElementById('quattro-checkout-loading');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'quattro-checkout-loading';
+        overlay.className = 'quattro-checkout-loading';
+        overlay.setAttribute('role', 'status');
+        overlay.setAttribute('aria-live', 'polite');
+        overlay.innerHTML = '<div class="quattro-checkout-loading-card"><span class="quattro-checkout-spinner" aria-hidden="true"></span><strong></strong><small>Mohon tunggu sebentar</small></div>';
+        document.body.appendChild(overlay);
+    }
+    overlay.querySelector('strong').textContent = message;
+    overlay.hidden = false;
+    document.body.classList.add('quattro-checkout-busy');
+}
+
+function hideCheckoutLoading() {
+    const overlay = document.getElementById('quattro-checkout-loading');
+    if (overlay) overlay.hidden = true;
+    document.body.classList.remove('quattro-checkout-busy');
+}
+
 async function checkout(
     paymentData = {}
 ) {
+
+    if (checkoutInProgress) return;
 
     if (!appState.cart.length) {
 
@@ -1878,7 +2051,7 @@ if (unavailableItems.length) {
 
     if (changedQuantity) {
         const currentProduct = appState.menu.find(product => Number(product.id) === Number(changedQuantity.id));
-        showToast(`Stok ${currentProduct.name} tersisa ${currentProduct.stock}. Kurangi jumlah di keranjang.`);
+        showToast(`Jumlah ${currentProduct.name} yang tersedia hanya ${currentProduct.stock}. Kurangi jumlah di keranjang.`);
         return;
     }
 
@@ -1986,6 +2159,8 @@ if (unavailableItems.length) {
 
         customer_email: paymentData.customer_email || null,
 
+        bank_account_id: paymentData.bank_account_id || null,
+
         table_number:
 
             paymentData.table_number ??
@@ -2029,13 +2204,12 @@ if (unavailableItems.length) {
     };
 
 
-    console.log(
-        'CHECKOUT PAYLOAD:',
-        payload
-    );
-
-
     try {
+
+        checkoutInProgress = true;
+        const checkoutStartedAt = Date.now();
+        setCheckoutButtonLoading(document.getElementById('pay-payment-button'), 'Memproses pesanan…');
+        showCheckoutLoading('Mengirim pesanan');
 
         showToast(
             'Menyimpan transaksi...'
@@ -2072,6 +2246,9 @@ if (unavailableItems.length) {
             );
 
 
+        // Keep the feedback visible long enough to notice even on a very fast response.
+        await new Promise(resolve => window.setTimeout(resolve, Math.max(0, 500 - (Date.now() - checkoutStartedAt))));
+
         let data = {};
 
 
@@ -2094,6 +2271,12 @@ if (unavailableItems.length) {
            ================================================= */
 
         if (!response.ok) {
+
+            if (data.require_login && data.login_url) {
+                showToast(`${data.message} Mengalihkan ke halaman masuk…`);
+                setTimeout(() => { window.showQuattroPageTransition?.(data.login_url); window.location.assign(data.login_url); }, 1400);
+                return;
+            }
 
             let message =
 
@@ -2164,19 +2347,24 @@ if (unavailableItems.length) {
 
         if (data.bank_transfer_url) {
             showToast('Pesanan dibuat. Menampilkan rekening transfer...');
-            setTimeout(() => { window.location.href = data.bank_transfer_url; }, 400);
+            setTimeout(() => { window.showQuattroPageTransition?.(data.bank_transfer_url); window.location.href = data.bank_transfer_url; }, 400);
         } else if (data.payment_url) {
             showToast('Pesanan dibuat. Membuka pembayaran QRIS...');
-            setTimeout(() => { window.location.href = data.payment_url; }, 500);
+            setTimeout(() => { window.showQuattroPageTransition?.(data.payment_url);
+        window.location.href = data.payment_url; }, 500);
         } else {
             showToast(data.message || `Pesanan ${data.order_number ?? ''} dibuat. QRIS belum tersedia; silakan bayar dari Riwayat Pesanan.`);
-            setTimeout(() => { window.location.href = '/customer/history'; }, 1200);
+            setTimeout(() => { window.showQuattroPageTransition?.('/customer/history'); window.location.href = '/customer/history'; }, 1200);
         }
 
     }
 
 
     catch (error) {
+
+        checkoutInProgress = false;
+        hideCheckoutLoading();
+        restoreCheckoutButton(document.getElementById('pay-payment-button'));
 
         console.error(
             'Checkout Error:',
@@ -2606,6 +2794,7 @@ function formatPaymentDeadline(value) {
 window.resumeQrisPayment = async function (orderId, retry) {
     try {
         if (!retry) {
+            window.showQuattroPageTransition?.(`/customer/orders/${orderId}/payment`);
             window.location.href = `/customer/orders/${orderId}/payment`;
             return;
         }
@@ -2613,6 +2802,7 @@ window.resumeQrisPayment = async function (orderId, retry) {
         const response = await fetch(`/customer/orders/${orderId}/payment/retry`, { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf, 'X-Guest-Token': getGuestToken() }, credentials: 'same-origin' });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.payment_url) throw new Error(data.message || 'QRIS belum dapat dibuka.');
+        window.showQuattroPageTransition?.(data.payment_url);
         window.location.href = data.payment_url;
     } catch (error) {
         showToast(error.message || 'Pembayaran belum dapat dibuka.');
@@ -2716,7 +2906,7 @@ async function toggleFavorite(id) {
     } catch (error) {
         console.error('Favorite error:', error);
 
-        alert(
+        showToast(
             error.message ||
             'Terjadi kesalahan saat mengubah favorit.'
         );
@@ -2792,10 +2982,7 @@ function renderFavorites() {
                 </button>
 
 
-                <img
-                    src="${item.img}"
-                    alt="${item.name}"
-                >
+                <img ${productImageAttributes(item)} alt="${item.name}">
 
 
                 <h5>
@@ -2835,6 +3022,8 @@ function renderFavorites() {
             </div>
 
         `).join('');
+
+    loadSavedProductImages(container);
 
 }
 
@@ -2909,6 +3098,24 @@ document.addEventListener(
 
         loadCustomerState();
 
+        const quickCartBar = document.getElementById('quick-cart-bar');
+        quickCartBar?.addEventListener('click', event => {
+            if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            if (quickCartBar.dataset.busy === 'true') {
+                event.preventDefault();
+                return;
+            }
+            event.preventDefault();
+            quickCartBar.dataset.busy = 'true';
+            const checkoutLabel = quickCartBar.querySelector('.quick-cart-checkout');
+            if (checkoutLabel) {
+                checkoutLabel.setAttribute('aria-busy', 'true');
+                checkoutLabel.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i><span>Menyiapkan…</span>';
+            }
+            showCheckoutLoading('Membuka keranjang');
+            window.setTimeout(() => { window.location.href = quickCartBar.href; }, 550);
+        });
+
         const detailModal = document.getElementById('product-detail-modal');
         detailModal?.addEventListener('click', event => {
             if (event.target === detailModal) closeProductDetail();
@@ -2931,3 +3138,61 @@ document.addEventListener(
 
     }
 );
+
+
+
+
+let customerLiveProductSyncTimer = null;
+let customerLiveProductSyncInFlight = false;
+
+window.addEventListener('quattro:data-changed', event => {
+    if (event.detail?.type !== 'products' || !document.getElementById('main-menu-list')) return;
+    window.clearTimeout(customerLiveProductSyncTimer);
+    customerLiveProductSyncTimer = window.setTimeout(syncCustomerProductsLive, 220);
+});
+
+async function syncCustomerProductsLive() {
+    if (customerLiveProductSyncInFlight || document.visibilityState !== 'visible') return;
+    customerLiveProductSyncInFlight = true;
+    try {
+        const response = await fetch('/customer/live/products', {
+            headers: { 'Accept': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+            credentials: 'same-origin',
+            cache: 'no-store'
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        const previousMenu = new Map(appState.menu.map(item => [Number(item.id), item]));
+        appState.menu = (data.products || []).map(product => {
+            const previous = previousMenu.get(Number(product.id)) || {};
+            return {
+                ...previous,
+                id: Number(product.id),
+                name: product.name,
+                category: normalizeCategory(product.category),
+                price: Number(product.price || 0),
+                originalPrice: Number(previous.originalPrice ?? product.price ?? 0),
+                discountPercent: Number(previous.discountPercent || 0),
+                stock: Math.max(0, Number(product.stock || 0)),
+                is_available: Boolean(product.is_available) && Number(product.stock || 0) > 0,
+                rating: product.reviews_avg_rating == null ? null : Number(product.reviews_avg_rating),
+                reviewCount: Number(product.reviews_count || 0),
+                desc: productDescriptions[product.name] || product.description || previous.desc || 'Menu pilihan Quattro Coffee',
+                img: getSavedProductImage(product) || productImages[product.name] || previous.img || ''
+            };
+        });
+        if (activeDetailProduct) {
+            activeDetailProduct = appState.menu.find(item => Number(item.id) === Number(activeDetailProduct.id)) || activeDetailProduct;
+        }
+        filterMenu();
+        updateCartUI();
+    } catch (error) {
+        console.warn('Pembaruan menu realtime gagal.', error);
+    } finally {
+        customerLiveProductSyncInFlight = false;
+    }
+}
+window.addEventListener('quattro:data-changed', event => {
+    if (!['orders', 'payments'].includes(event.detail?.type)) return;
+    if (document.getElementById('history-container')) renderHistory();
+});

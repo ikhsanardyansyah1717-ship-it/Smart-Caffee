@@ -27,6 +27,8 @@ class FinancialReportService
         $paidItems = OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->leftJoin('products', 'products.id', '=', 'order_items.product_id')
+            ->where('orders.payment_status', 'Dibayar')
+            ->where('orders.status', '!=', 'Dibatalkan')
             ->whereExists(function ($query) use ($start, $end) {
                 $query->selectRaw('1')
                     ->from('payments')
@@ -68,13 +70,15 @@ class FinancialReportService
         ];
     }
 
-    public function topProducts(Carbon $start, Carbon $end, int $limit = 20): Collection
+    public function topProducts(Carbon $start, Carbon $end, int $limit = 1000): Collection
     {
         $costExpr = 'COALESCE(NULLIF(order_items.cost_price, 0), products.cost_price, 0)';
 
         return OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->leftJoin('products', 'products.id', '=', 'order_items.product_id')
+            ->where('orders.payment_status', 'Dibayar')
+            ->where('orders.status', '!=', 'Dibatalkan')
             ->whereExists(function ($query) use ($start, $end) {
                 $query->selectRaw('1')
                     ->from('payments')

@@ -27,7 +27,7 @@
     {{-- Kasir CSS --}}
     <link
         rel="stylesheet"
-        href="{{ asset('css/kasir.css') }}"
+        href="{{ asset('css/kasir.css') }}?v=20261125-dashboard-badges"
     >
 
     @stack('styles')
@@ -52,16 +52,11 @@
 
             <div>
                 <strong>QUATTRO</strong>
-                <span>COFFEE</span>
+                <span>KASIR</span>
             </div>
 
         </div>
 
-
-        {{-- MENU LABEL --}}
-        <div class="menu-label">
-            KASIR
-        </div>
 
 
         {{-- =================================================
@@ -97,6 +92,12 @@
                 <span>Pantau Stok</span>
             </a>
 
+
+            {{-- BANNER CUSTOMER --}}
+            <a href="{{ route('kasir.banners.edit') }}" class="side-link {{ request()->routeIs('kasir.banners.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-images"></i>
+                <span>Banner Customer</span>
+            </a>
 
             {{-- RIWAYAT --}}
             <a
@@ -195,10 +196,14 @@
      JAVASCRIPT
      ========================================================= --}}
 
-<script src="{{ asset('js/kasir.js') }}"></script>
+<script src="{{ asset('js/kasir.js') }}?v=20261124-notifications"></script>
 
 @stack('scripts')
 
+<script src="{{ asset('js/notifications.js') }}?v=20261124-notifications"></script>
+    @vite('resources/js/app.js')
 </body>
 
 </html>
+
+

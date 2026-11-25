@@ -27,10 +27,11 @@ class EmployeeSalaryController extends Controller
     {
         $validated = $request->validate([
             'amount' => ['required', 'numeric', 'min:0', 'max:9999999999'],
-            'effective_date' => ['nullable', 'date'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
+        $salary = $employee->salary()->first();
+        $validated['effective_date'] = $salary?->effective_date?->toDateString() ?? today()->toDateString();
         $employee->salary()->updateOrCreate([], $validated);
 
         return redirect()->route('owner.salaries.index')->with('success', 'Data gaji ' . $employee->name . ' berhasil diperbarui.');

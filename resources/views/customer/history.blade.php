@@ -345,5 +345,6 @@
     window.quattroFavoriteIds = @json($favoriteIds);
     window.quattroProducts = @json($products);
 </script>
-<script src="{{ asset('js/customer.js') }}?v=23"></script>
+<script src="{{ asset('js/customer.js') }}?v=20261125-global-motion"></script>
 @endpush
+

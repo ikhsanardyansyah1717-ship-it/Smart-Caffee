@@ -114,7 +114,7 @@ window.quattroFavoriteIds = [];
 window.quattroProducts = @json($products);
 </script>
 
-<script src="{{ asset('js/customer.js') }}?v=12"></script>
+<script src="{{ asset('js/customer.js') }}?v=20261125-checkout-loading-3"></script>
 
 <script>
 
@@ -286,10 +286,19 @@ window.continueToPayment = function () {
         document.getElementById('order-note')?.value.trim() || ''
     );
 
-    window.location.href = @json(route('customer.payment'));
+    const button = document.getElementById('continue-payment-button');
+    if (button?.disabled) return;
+    if (button) {
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+        button.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i><span>Menyiapkan pembayaran…</span>';
+    }
+    showCheckoutLoading('Menyiapkan pembayaran');
+    window.setTimeout(() => { window.location.href = @json(route('customer.payment')); }, 550);
 
 };
 
 </script>
 
 @endpush
+

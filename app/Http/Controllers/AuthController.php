@@ -9,7 +9,6 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\URL;
 
 class AuthController extends Controller
 {
@@ -34,12 +33,7 @@ class AuthController extends Controller
             'user_id' => null,
         ], now()->addMinutes(5));
 
-        $returnUrl = URL::temporarySignedRoute(
-            'customer.login.whatsapp.return',
-            now()->addMinutes(5),
-            ['code' => $code]
-        );
-        $message = "Hi! Saya ingin login ke Quattro Coffee.\n\nKode verifikasi: {$code}\n\nSetelah mengirim pesan, kembali ke browser untuk melanjutkan: {$returnUrl}";
+        $message = "LOGIN QUATTRO COFFEE\n\nKode verifikasi: {$code}\n\nKirim pesan ini dari nomor WhatsApp yang terdaftar di akun Quattro Coffee. Setelah terkirim, kembali ke halaman login dan tunggu konfirmasi.\n\nJika Anda tidak meminta kode ini, abaikan pesan ini.";
         $whatsAppUrl = 'https://api.whatsapp.com/send?phone='
             . urlencode(config('services.whatsapp.login_number'))
             . '&text=' . urlencode($message);

@@ -18,6 +18,7 @@ class Order extends Model
         'customer_email',
         'guest_token',
         'table_number',
+        'table_finished_at',
         'subtotal',
         'tax',
         'total',
@@ -39,6 +40,7 @@ class Order extends Model
         'total' => 'decimal:2',
         'kitchen_started_at' => 'datetime',
         'kitchen_completed_at' => 'datetime',
+        'table_finished_at' => 'datetime',
         'kitchen_confirmed_at' => 'datetime',
         'cancelled_at' => 'datetime',
     ];
@@ -82,3 +84,4 @@ class Order extends Model
         return $this->belongsTo(User::class, 'kitchen_completed_by');
     }
 }
+

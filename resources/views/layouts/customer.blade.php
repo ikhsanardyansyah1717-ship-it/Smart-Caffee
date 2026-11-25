@@ -25,12 +25,11 @@
     {{-- CSS Customer --}}
     <link
         rel="stylesheet"
-       href="{{ asset('css/customer.css') }}?v=20261102-wa-login"
+       href="{{ asset('css/customer.css') }}?v=20261125-checkout-loading-3"
     >
 
     {{-- CSS tambahan --}}
     @stack('styles')
-
 </head>
 
 <body>
@@ -43,6 +42,10 @@
 
     <script src="{{ asset('js/customer-language.js') }}?v=6"></script>
 
+<script src="{{ asset('js/notifications.js') }}?v=20261124-notifications"></script>
+    @vite('resources/js/app.js')
 </body>
 
 </html>
+
+
