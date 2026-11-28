@@ -91,7 +91,7 @@
                 </a>
 
 
-                <!-- SIAP DIAMBIL -->
+                <!-- SELESAI -->
                 <a
                     href="{{ route('kitchen.completed') }}"
                     class="side-link {{ request()->routeIs('kitchen.completed') ? 'active' : '' }}"
@@ -100,7 +100,7 @@
                     <i class="fa-solid fa-circle-check"></i>
 
                     <span>
-                        Siap Diambil
+                        Selesai
                     </span>
 
                     <b id="ready-count">
@@ -206,5 +206,6 @@
 </body>
 
 </html>
+
 
 

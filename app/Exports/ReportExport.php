@@ -29,7 +29,7 @@ class ReportExport implements FromCollection, WithHeadings, WithMapping, WithCus
 
     public function collection(): Enumerable
     {
-        $costExpr = 'COALESCE(NULLIF(order_items.cost_price, 0), products.cost_price, 0)';
+        $costExpr = 'COALESCE(NULLIF(products.cost_price, 0), NULLIF(order_items.cost_price, 0), 0)';
 
         return OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
@@ -37,7 +37,7 @@ class ReportExport implements FromCollection, WithHeadings, WithMapping, WithCus
             ->leftJoin('products', 'products.id', '=', 'order_items.product_id')
             ->where('payments.status', 'Berhasil')
             ->whereBetween('payments.paid_at', [$this->start, $this->end])
-            ->selectRaw("order_items.product_name, SUM(order_items.quantity) as total_qty, SUM(order_items.quantity * order_items.price) as total_pendapatan, SUM(order_items.quantity * {$costExpr}) as hpp")
+            ->selectRaw("order_items.product_name, SUM(order_items.quantity) as total_qty, SUM(order_items.quantity * order_items.price) as total_pendapatan, SUM(order_items.quantity * {$costExpr}) as hpp, SUM(CASE WHEN COALESCE(NULLIF(products.cost_price,0),NULLIF(order_items.cost_price,0)) IS NULL THEN order_items.quantity ELSE 0 END) as missing_cost_qty")
             ->groupBy('order_items.product_name')
             ->orderByDesc('total_qty')
             ->get();
@@ -50,7 +50,8 @@ class ReportExport implements FromCollection, WithHeadings, WithMapping, WithCus
             'Jumlah Terjual',
             'Total Pendapatan (Rp)',
             'Harga Pokok Penjualan (Rp)',
-            'Laba Kotor (Rp)',
+            'Laba Kotor (HPP kosong dihitung Rp0)',
+            'Unit belum memiliki HPP',
         ];
     }
 
@@ -79,11 +80,11 @@ class ReportExport implements FromCollection, WithHeadings, WithMapping, WithCus
         return [
             AfterSheet::class => function (AfterSheet $event): void {
                 $sheet = $event->sheet->getDelegate();
-                $sheet->mergeCells('A1:E1');
+                $sheet->mergeCells('A1:F1');
                 $sheet->setCellValue('A1', 'LAPORAN PENJUALAN · QUATTRO COFFEE');
-                $sheet->mergeCells('A2:E2');
+                $sheet->mergeCells('A2:F2');
                 $sheet->setCellValue('A2', 'Performa penjualan per produk');
-                $sheet->mergeCells('A3:E3');
+                $sheet->mergeCells('A3:F3');
                 $sheet->setCellValue('A3', 'Periode: ' . $this->start->format('d M Y') . ' – ' . $this->end->format('d M Y') . '   |   Dibuat: ' . now()->format('d M Y H:i'));
                 $summary = app(\App\Services\FinancialReportService::class)->summary($this->start, $this->end);
                 $sheet->mergeCells('G1:J1');
@@ -99,6 +100,7 @@ class ReportExport implements FromCollection, WithHeadings, WithMapping, WithCus
                     ['Pemasukan lain', $summary['pemasukan_lain']],
                     ['Laba bersih', $summary['laba_bersih']],
                     ['Margin laba bersih', $summary['margin'] / 100],
+                    ['Unit terjual tanpa HPP', $summary['items_without_cost']],
                 ];
                 foreach ($summaryRows as $index => [$label, $value]) {
                     $row = $index + 4;
@@ -112,7 +114,7 @@ class ReportExport implements FromCollection, WithHeadings, WithMapping, WithCus
                     'alignment' => ['vertical' => 'center'],
                 ]);
                 $sheet->getStyle('G2:J2')->getFont()->getColor()->setRGB('7C6A58');
-                $sheet->getStyle('G4:J11')->getBorders()->getBottom()->setBorderStyle('thin')->getColor()->setRGB('EADCCB');
+                $sheet->getStyle('G4:J12')->getBorders()->getBottom()->setBorderStyle('thin')->getColor()->setRGB('EADCCB');
                 $sheet->getStyle('H4:H10')->getNumberFormat()->setFormatCode('"Rp" #,##0;[Red]("Rp" #,##0)');
                 $sheet->getStyle('H11')->getNumberFormat()->setFormatCode('0.0%');
                 $sheet->getStyle('G10:J10')->getFont()->applyFromArray(['bold' => true, 'color' => ['rgb' => '713F12']]);
@@ -121,15 +123,15 @@ class ReportExport implements FromCollection, WithHeadings, WithMapping, WithCus
                 $sheet->getRowDimension(5)->setRowHeight(30);
                 $lastRow = max(5, $sheet->getHighestRow());
                 $sheet->freezePane('A6');
-                $sheet->setAutoFilter("A5:E{$lastRow}");
+                $sheet->setAutoFilter("A5:F{$lastRow}");
                 if ($lastRow > 5) {
-                    $sheet->getStyle("A6:E{$lastRow}")->getBorders()->getBottom()->setBorderStyle('thin')->getColor()->setRGB('EADCCB');
-                    $sheet->getStyle("C6:E{$lastRow}")->getNumberFormat()->setFormatCode('#,##0;[Red](#,##0)');
+                    $sheet->getStyle("A6:F{$lastRow}")->getBorders()->getBottom()->setBorderStyle('thin')->getColor()->setRGB('EADCCB');
+                    $sheet->getStyle("C6:F{$lastRow}")->getNumberFormat()->setFormatCode('#,##0;[Red](#,##0)');
                     for ($row = 6; $row <= $lastRow; $row += 2) {
-                        $sheet->getStyle("A{$row}:E{$row}")->getFill()->setFillType('solid')->getStartColor()->setRGB('FBF7F1');
+                        $sheet->getStyle("A{$row}:F{$row}")->getFill()->setFillType('solid')->getStartColor()->setRGB('FBF7F1');
                     }
                 }
-                $sheet->getStyle("A1:E{$lastRow}")->getAlignment()->setVertical('center');
+                $sheet->getStyle("A1:F{$lastRow}")->getAlignment()->setVertical('center');
             },
         ];
     }
@@ -142,6 +144,7 @@ class ReportExport implements FromCollection, WithHeadings, WithMapping, WithCus
             (float) $row->total_pendapatan,
             (float) $row->hpp,
             (float) ($row->total_pendapatan - $row->hpp),
+            (int) $row->missing_cost_qty,
         ];
     }
 }

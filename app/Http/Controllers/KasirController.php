@@ -13,6 +13,7 @@ use App\Models\Payment;
 use App\Services\MidtransSnapService;
 use App\Services\MidtransPaymentStatusService;
 use App\Services\FinancialReportService;
+use Illuminate\Support\Facades\URL;
 
 class KasirController extends Controller
 {
@@ -330,6 +331,9 @@ class KasirController extends Controller
                 if (!$confirmedMethod) {
                     throw new \RuntimeException('Pilih metode pembayaran sebelum mengonfirmasi transaksi kasir.');
                 }
+                if ($confirmedMethod === 'QRIS') {
+                    throw new \RuntimeException('Pembayaran QRIS harus dibuat dan diverifikasi melalui kode QR Midtrans.');
+                }
                 if ($payment && abs((float) $payment->amount - (float) $order->total) >= 0.01) {
                     throw new \RuntimeException('Nominal pembayaran tidak sesuai dengan total pesanan. Periksa detail pembayaran.');
                 }
@@ -395,21 +399,86 @@ class KasirController extends Controller
         }
     }
 
-    public function checkGatewayPayment($id, MidtransSnapService $midtrans, MidtransPaymentStatusService $statusService)
+    public function createCashierQris(Request $request, $id, MidtransSnapService $midtrans)
+    {
+        $order = Order::with('payment.attempts')->findOrFail($id);
+        $payment = $order->payment;
+
+        if (!$payment || $payment->payment_method !== 'QRIS') {
+            return response()->json(['message' => 'Pesanan ini tidak menggunakan QRIS.'], 422);
+        }
+        if ($order->payment_status === 'Dibayar' || $payment->status === 'Berhasil') {
+            return response()->json(['status' => 'Dibayar', 'message' => 'Pembayaran sudah lunas.']);
+        }
+        if ($order->status === 'Dibatalkan') {
+            return response()->json(['message' => 'Pesanan yang dibatalkan tidak dapat dibayar.'], 422);
+        }
+        if (!$midtrans->isConfigured()) {
+            return response()->json(['message' => 'QRIS Midtrans belum dikonfigurasi. Periksa Server Key Midtrans.'], 503);
+        }
+
+        try {
+            $attempt = $payment->attempts()->latest('id')->first();
+            if ($attempt && $attempt->status === 'Pending' && $attempt->expires_at?->isFuture() && filled($attempt->qr_code_url)) {
+                // Reuse an active attempt so reopening the cashier dialog does not charge twice.
+            } else {
+                if ($attempt && $attempt->status === 'Pending') {
+                    $attempt->update(['status' => 'Gagal']);
+                }
+                $payment->update(['status' => 'Pending']);
+                $attempt = $midtrans->createSession($payment->refresh());
+            }
+
+            $qrUrl = URL::temporarySignedRoute(
+                'customer.orders.payment.qr',
+                $attempt->expires_at,
+                ['order' => $order, 'attempt' => $attempt->id],
+                false,
+            );
+
+            return response()->json([
+                'status' => 'Menunggu',
+                'qr_url' => $qrUrl,
+                'expires_at' => $attempt->expires_at->toIso8601String(),
+                'message' => 'Pindai QRIS dengan aplikasi pembayaran pelanggan.',
+            ])->header('Cache-Control', 'no-store, private');
+        } catch (\Throwable $exception) {
+            report($exception);
+            return response()->json([
+                'message' => $exception->getMessage() ?: 'QRIS belum dapat dibuat. Coba kembali.',
+            ], 503);
+        }
+    }
+
+    public function checkGatewayPayment(Request $request, $id, MidtransSnapService $midtrans, MidtransPaymentStatusService $statusService)
     {
         $order = Order::with('payment.attempts')->findOrFail($id);
         if ($order->payment_status === 'Dibayar' || $order->payment?->status === 'Berhasil') {
+            if ($request->expectsJson()) {
+                return response()->json(['status' => 'Dibayar', 'message' => 'Pembayaran sudah lunas.']);
+            }
             return redirect()->route('kasir.orders')->with('success', 'Pembayaran pesanan ini sudah lunas.');
         }
 
         $attempt = $order->payment?->attempts()->latest('id')->first();
         if (!$attempt || $attempt->status !== 'Pending') {
+            if ($request->expectsJson()) {
+                return response()->json(['status' => $attempt?->status === 'Gagal' ? 'Kedaluwarsa' : 'TidakAda', 'message' => 'Tidak ada pembayaran QRIS yang masih menunggu.']);
+            }
             return redirect()->route('kasir.orders')->with('error', 'Tidak ada pembayaran QRIS Midtrans yang masih menunggu.');
         }
 
         try {
             $status = $midtrans->transactionStatus($attempt);
             $result = $statusService->apply($attempt, $status);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => $result,
+                    'message' => $result === 'Dibayar'
+                        ? 'Pembayaran QRIS berhasil diverifikasi.'
+                        : ($result === 'Menunggu' ? 'Menunggu pembayaran pelanggan.' : 'QRIS kedaluwarsa atau gagal.'),
+                ]);
+            }
             return redirect()->route('kasir.orders')->with(
                 $result === 'Dibayar' ? 'success' : 'error',
                 $result === 'Dibayar'
@@ -418,6 +487,9 @@ class KasirController extends Controller
             );
         } catch (\Throwable $exception) {
             report($exception);
+            if ($request->expectsJson()) {
+                return response()->json(['status' => 'Menunggu', 'message' => 'Status belum dapat diperiksa. Mencoba kembali otomatis.'], 503);
+            }
             return redirect()->route('kasir.orders')->with('error', 'Status pembayaran belum dapat diperiksa. Coba kembali sebentar lagi.');
         }
     }
@@ -451,6 +523,18 @@ class KasirController extends Controller
  */
 public function history()
 {
+    $request = request();
+    $validated = $request->validate([
+        'from_date' => ['nullable', 'date_format:Y-m-d'],
+        'to_date' => ['nullable', 'date_format:Y-m-d'],
+    ]);
+
+    $fromDate = $validated['from_date'] ?? now()->startOfMonth()->toDateString();
+    $toDate = $validated['to_date'] ?? now()->toDateString();
+    [$periodStart, $periodEnd] = FinancialReportService::resolvePeriod(null, $fromDate, $toDate);
+    $fromDate = $periodStart->toDateString();
+    $toDate = $periodEnd->toDateString();
+
     $orders = Order::with([
         'items',
         'payment'
@@ -459,10 +543,11 @@ public function history()
         $query->where('status', 'Sudah Diambil')
               ->orWhere('status', 'Dibatalkan');
     })
+    ->whereBetween('created_at', [$periodStart, $periodEnd])
     ->latest()
     ->get();
 
-    return view('kasir.history', compact('orders'));
+    return view('kasir.history', compact('orders', 'fromDate', 'toDate'));
 }
 
     /**

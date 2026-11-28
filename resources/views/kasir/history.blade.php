@@ -324,6 +324,10 @@
         background: #fff !important;
     }
 
+    body > *:not(#historyReceiptModal) {
+        display: none !important;
+    }
+
     body {
         overflow: visible !important;
     }
@@ -660,6 +664,158 @@
     }
 }
 
+/* Tata letak cetak untuk printer/PDF kertas biasa: proporsional dan satu halaman. */
+@media print {
+    @page {
+        size: A5 portrait;
+        margin: 8mm;
+    }
+
+    html,
+    body {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+    }
+
+    #historyReceiptModal {
+        position: static !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        min-height: 194mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .history-receipt-overlay,
+    .history-receipt-container {
+        position: static !important;
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        background: #fff !important;
+        animation: none !important;
+        box-shadow: none !important;
+        break-inside: auto !important;
+        page-break-inside: auto !important;
+    }
+
+    .history-receipt-overlay {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 194mm !important;
+    }
+
+    #historyReceiptPrintArea {
+        width: 108mm !important;
+        min-width: 0 !important;
+        max-width: 108mm !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    .history-receipt-paper {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin: 0 auto !important;
+        padding: 8mm !important;
+        overflow: visible !important;
+        border: 1px solid #e6d7c5 !important;
+        border-radius: 4mm !important;
+        background: #fffdf9 !important;
+        color: #2f2115 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 11pt !important;
+        line-height: 1.45 !important;
+        box-shadow: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    .history-receipt-brand {
+        margin: -8mm -8mm 6mm !important;
+        padding: 6mm 5mm 5mm !important;
+        border-radius: 3mm 3mm 0 0 !important;
+        background: #633707 !important;
+        color: #fffaf2 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .history-receipt-brand h2 {
+        color: #fffaf2 !important;
+        font-size: 17pt !important;
+        letter-spacing: 2pt !important;
+    }
+
+    .history-receipt-brand p {
+        color: #ead8c0 !important;
+        font-size: 8pt !important;
+        letter-spacing: 3pt !important;
+    }
+
+    .receipt-line {
+        margin: 4mm 0 !important;
+        border-color: #b99772 !important;
+    }
+
+    .history-receipt-meta {
+        gap: 2mm !important;
+    }
+
+    .history-receipt-meta span,
+    .receipt-product-detail span:first-child {
+        color: #705a43 !important;
+    }
+
+    .history-receipt-meta strong,
+    .receipt-product-detail span:last-child,
+    .history-receipt-payment strong {
+        color: #2f2115 !important;
+    }
+
+    .history-receipt-items {
+        gap: 3mm !important;
+    }
+
+    .history-receipt-total .grand {
+        margin: 2mm -2mm 0 !important;
+        padding: 3mm 2mm !important;
+        border-radius: 2mm !important;
+        background: #f4eadc !important;
+        color: #633707 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .history-receipt-total .grand strong {
+        color: #633707 !important;
+        font-size: 14pt !important;
+    }
+
+    .history-receipt-thanks {
+        color: #705a43 !important;
+        font-size: 9pt !important;
+    }
+}
+
 
 /* =========================================================
    FILTER PERIODE TANGGAL RIWAYAT
@@ -792,35 +948,15 @@
             </p>
         </div>
 
-        <!-- FILTER PERIODE TANGGAL, DITAMPILKAN DI POJOK KANAN -->
-        <form class="history-date-filter" method="GET" action="{{ route('kasir.history') }}">
-            <div class="history-date-field">
-                <label for="from_date">Dari tanggal</label>
-                <input
-                    type="date"
-                    id="from_date"
-                    name="from_date"
-                    value="{{ $fromDate ?? request('from_date', now()->startOfMonth()->toDateString()) }}"
-                    required
-                >
-            </div>
-
-            <div class="history-date-field">
-                <label for="to_date">Sampai tanggal</label>
-                <input
-                    type="date"
-                    id="to_date"
-                    name="to_date"
-                    value="{{ $toDate ?? request('to_date', now()->toDateString()) }}"
-                    required
-                >
-            </div>
-
-            <button class="history-date-submit" type="submit">
-                <i class="fa-solid fa-filter"></i>
-                <span>Terapkan</span>
-            </button>
-        </form>
+        <div class="top-actions">
+            @include('owner.partials.period-picker', [
+                'periodStartParam' => 'from_date',
+                'periodEndParam' => 'to_date',
+                'periodMonthParam' => null,
+                'periodStartValue' => $fromDate,
+                'periodEndValue' => $toDate,
+            ])
+        </div>
 
     </header>
 
@@ -1608,7 +1744,6 @@ function closeHistoryReceipt(event) {
             'historyReceiptModal'
         );
 
-
     modal.style.display = 'none';
 
 
@@ -1639,6 +1774,11 @@ function printHistoryReceipt() {
         return;
     }
 
+    // Keep the receipt outside the long history page while printing so the
+    // browser paginates only the receipt, not the hidden table behind it.
+    if (modal.parentElement !== document.body) {
+        document.body.appendChild(modal);
+    }
 
     window.print();
 

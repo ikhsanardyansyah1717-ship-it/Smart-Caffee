@@ -3,9 +3,37 @@
 ===================================================== --}}
 @push('styles')
 <style>
-.product-form-panel{width:100%;max-width:none}.product-form-panel form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:28px;align-items:start}.product-form-panel .pf-field-name,.product-form-panel .pf-field-category,.product-form-panel .pf-field-pricing{grid-column:1/-1}.product-form-panel .pf-field-icon{grid-column:1;grid-row:4}.product-form-panel .pf-field-description{grid-column:1;grid-row:5}.product-form-panel .pf-field-image{grid-column:2;grid-row:4/span 2}.product-form-panel .pf-field-status{grid-column:1/-1;grid-row:6}.product-form-panel .pf-field-actions{grid-column:1/-1;grid-row:7}@media(max-width:850px){.product-form-panel form{grid-template-columns:minmax(0,1fr);column-gap:0}.product-form-panel .pf-field-name,.product-form-panel .pf-field-category,.product-form-panel .pf-field-pricing,.product-form-panel .pf-field-icon,.product-form-panel .pf-field-description,.product-form-panel .pf-field-image,.product-form-panel .pf-field-status,.product-form-panel .pf-field-actions{grid-column:1;grid-row:auto}}
-.product-form-panel .pf-image-preview{position:relative;display:grid;place-items:center;width:min(100%,520px);aspect-ratio:1/1;height:auto;overflow:hidden;margin:2px 0 8px;border:1px dashed #dfcfbb;border-radius:18px;background:linear-gradient(145deg,#fbf7f1,#f2e7d8);color:#96734b}.product-form-panel .pf-image-preview img{width:100%;height:100%;object-fit:cover}.product-form-panel .pf-image-preview span{display:grid;justify-items:center;gap:8px;color:#9b7a52}.product-form-panel .pf-image-preview span[hidden],.product-form-panel .pf-image-preview img[hidden]{display:none}.product-form-panel .pf-image-preview i{font-size:27px}.product-form-panel .pf-image-preview small{font-size:11px}
-.product-form-panel .pf-image-picker{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.product-form-panel .pf-image-picker input[type=file]{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;clip-path:inset(50%)}.product-form-panel .pf-file-picker{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 15px;border:1px solid #e8d8c6;border-radius:11px;background:#fff;color:#75440b;font-size:12px;font-weight:750;cursor:pointer}.product-form-panel .pf-file-picker:hover{background:#fbf5ee;border-color:#c99a64}.product-form-panel .pf-image-file-name{color:#8b7a6b;font-size:11px}.product-form-panel .pf-image-picker input:focus-visible+.pf-file-picker{outline:3px solid #c8904d;outline-offset:2px}
+.product-form-panel{width:100%;max-width:1380px;margin:0 auto;padding:26px 30px}
+.product-form-panel form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px;align-items:start}
+.product-form-panel .pf-group{min-width:0;margin:0}
+.product-form-panel .pf-group>label{display:block;margin:0 0 6px;color:#554537;font-size:13px;font-weight:700}
+.product-form-panel .pf-group input[type=text],.product-form-panel .pf-group select,.product-form-panel .pf-group textarea{width:100%;min-height:44px;padding:10px 12px;border:1px solid #e9dfd4;border-radius:10px;background:#fcfbf9;font-size:14px}
+.product-form-panel .pf-group textarea{min-height:180px;resize:vertical}
+.product-form-panel .pf-field-name{grid-column:1;grid-row:1}
+.product-form-panel .pf-field-category{grid-column:1;grid-row:4}
+.product-form-panel .pf-field-pricing{grid-column:1/-1;grid-row:2}
+.product-form-panel .pf-field-icon{grid-column:1;grid-row:3}
+.product-form-panel .pf-field-description{grid-column:1;grid-row:5;align-self:start;margin:0}
+.product-form-panel .pf-field-image{grid-column:2;grid-row:3/span 3;align-self:start}
+.product-form-panel .pf-field-status{grid-column:1/-1;grid-row:6}
+.product-form-panel .pf-field-actions{grid-column:1/-1;grid-row:7}
+.product-form-panel .pf-icon-preview{width:42px;height:42px;margin-top:7px;border-radius:10px;font-size:17px}
+.product-form-panel .pf-image-preview{position:relative;display:grid;place-items:center;width:min(100%,380px);aspect-ratio:1/1;height:auto;overflow:hidden;margin:3px 0 9px;border:1px dashed #dfcfbb;border-radius:16px;background:linear-gradient(145deg,#fbf7f1,#f2e7d8);color:#96734b}
+.product-form-panel .pf-image-preview img{width:100%;height:100%;object-fit:cover}
+.product-form-panel .pf-image-preview span{display:grid;justify-items:center;gap:8px;color:#9b7a52}
+.product-form-panel .pf-image-preview span[hidden],.product-form-panel .pf-image-preview img[hidden]{display:none}
+.product-form-panel .pf-image-preview i{font-size:25px}
+.product-form-panel .pf-image-preview small,.product-form-panel .pf-group>small{font-size:11px;line-height:1.55;color:#8b7a6b}
+.product-form-panel .pf-image-picker{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:7px 0}
+.product-form-panel .pf-image-picker input[type=file]{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;clip-path:inset(50%)}
+.product-form-panel .pf-file-picker{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;border:1px solid #e8d8c6;border-radius:10px;background:#fff;color:#75440b;font-size:12px;font-weight:750;cursor:pointer}
+.product-form-panel .pf-file-picker:hover{background:#fbf5ee;border-color:#c99a64}
+.product-form-panel .pf-image-file-name{color:#8b7a6b;font-size:11px}
+.product-form-panel .pf-image-picker input:focus-visible+.pf-file-picker{outline:3px solid #c8904d;outline-offset:2px}
+.product-form-panel .pf-field-status{padding-top:2px}
+.product-form-panel .pf-field-actions{display:flex;gap:9px;padding-top:13px;border-top:1px solid #f0e7dd}
+.product-form-panel .product-form-btn{min-height:42px;padding:0 16px;font-size:13px}
+@media(max-width:850px){.product-form-panel{max-width:640px;padding:18px}.product-form-panel form{grid-template-columns:minmax(0,1fr);gap:12px}.product-form-panel .pf-field-name,.product-form-panel .pf-field-category,.product-form-panel .pf-field-pricing,.product-form-panel .pf-field-icon,.product-form-panel .pf-field-description,.product-form-panel .pf-field-image,.product-form-panel .pf-field-status,.product-form-panel .pf-field-actions{grid-column:1;grid-row:auto}.product-form-panel .pf-field-image{grid-row:auto}.product-form-panel .pf-field-name{order:1}.product-form-panel .pf-field-category{order:4}.product-form-panel .pf-field-pricing{order:3}.product-form-panel .pf-field-description{order:5;align-self:stretch;margin:0}.product-form-panel .pf-field-image{order:6}.product-form-panel .pf-field-icon{order:3}.product-form-panel .pf-field-status{order:7}.product-form-panel .pf-field-actions{order:8}.product-form-panel .pf-image-preview{width:min(100%,280px)}}
 </style>
 @endpush
 
@@ -228,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function () {
     <textarea
         id="description"
         name="description"
-        rows="4"
+        rows="6"
         placeholder="Deskripsi produk..."
     >{{ old('description', $product->description ?? '') }}</textarea>
 
@@ -263,3 +291,7 @@ document.addEventListener('DOMContentLoaded', function () {
     </label>
 
 </div>
+
+
+
+

@@ -25,7 +25,14 @@ use App\Http\Controllers\MidtransWebhookController;
 use App\Http\Controllers\WhatsAppLoginWebhookController;
 
 /* WELCOME */
-Route::view('/', 'welcome')->name('welcome');
+Route::get('/', function (\App\Http\Controllers\CustomerController $customerController, \App\Services\SiteSettingsService $settings) {
+    $user = auth()->user();
+    if ($user && $user->role !== 'customer') {
+        return view('welcome');
+    }
+
+    return $customerController->home($settings);
+})->name('welcome');
 Route::get('/product-images/{product}', [ProductImageController::class, 'show'])->name('products.image');
 Route::get('/site-banners/{filename}', SiteBannerImageController::class)->where('filename', '[^/]+')->name('site-banners.image');
 Route::get('/live/revisions', function () {
@@ -62,6 +69,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
     Route::get('/orders/{order}/payment', [CustomerController::class, 'openPayment'])->name('orders.payment.open');
     Route::get('/orders/{order}/payment/qr', [CustomerController::class, 'paymentQr'])->name('orders.payment.qr');
     Route::post('/orders/{order}/payment/check', [CustomerController::class, 'checkPaymentStatus'])->name('orders.payment.check');
+    Route::post('/orders/{order}/payment/expire', [CustomerController::class, 'expireUnpaidOrder'])->name('orders.payment.expire');
     Route::get('/payment/finish/{order}', [CustomerController::class, 'paymentFinish'])->name('payment.finish');
     Route::get('/favorites', [CustomerController::class, 'favorites'])->name('favorites');
     Route::post('/favorites/toggle', [CustomerController::class, 'toggleFavorite'])->name('favorites.toggle');
@@ -72,12 +80,20 @@ Route::prefix('customer')->name('customer.')->group(function () {
 Route::get('/customer/login', [AuthController::class, 'showLogin'])
     ->name('customer.login');
 
+Route::get('/customer/login/google', [AuthController::class, 'redirectToGoogle'])
+    ->middleware(['guest', 'throttle:20,1'])
+    ->name('customer.login.google');
+
+Route::get('/customer/login/google/callback', [AuthController::class, 'handleGoogleCallback'])
+    ->middleware(['guest', 'throttle:20,1'])
+    ->name('customer.login.google.callback');
+
 Route::post('/customer/login/whatsapp/start', [AuthController::class, 'startWhatsAppLogin'])
-    ->middleware(['guest', 'throttle:5,1'])
+    ->middleware(['guest', 'throttle:20,1'])
     ->name('customer.login.whatsapp.start');
 
 Route::post('/customer/login/whatsapp/poll', [AuthController::class, 'pollWhatsAppLogin'])
-    ->middleware(['guest', 'throttle:120,1'])
+    ->middleware(['guest', 'throttle:300,1'])
     ->name('customer.login.whatsapp.poll');
 
 Route::get('/customer/login/whatsapp/return/{code}', [AuthController::class, 'returnFromWhatsApp'])
@@ -262,6 +278,9 @@ Route::middleware(['auth', 'role:kasir'])
         Route::post('/orders/{id}/confirm', [KasirController::class, 'confirmManualPayment'])
             ->name('orders.confirm');
 
+        Route::post('/orders/{id}/qris/create', [KasirController::class, 'createCashierQris'])
+            ->name('orders.qris.create');
+
         Route::post('/orders/{id}/payment/check', [KasirController::class, 'checkGatewayPayment'])
             ->name('orders.payment.check');
 
@@ -292,6 +311,7 @@ Route::middleware(['auth', 'role:kasir'])
             ->name('products.stock.update');
 
     });
+
 
 
 

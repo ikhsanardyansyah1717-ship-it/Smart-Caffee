@@ -650,6 +650,7 @@ class CustomerController extends Controller
      */
     public function storeOrder(Request $request)
     {
+
         $customerUser = Auth::user()?->role === 'customer' ? Auth::user() : null;
         if ($customerUser) {
             $accountPhone = preg_replace('/\D+/', '', (string) $customerUser->phone);
@@ -660,10 +661,14 @@ class CustomerController extends Controller
             }
 
             // Akun login selalu memakai data profil, meskipun payload browser diubah.
+            $accountEmail = strtolower(trim((string) $customerUser->email));
+            $needsReceiptEmail = str_ends_with($accountEmail, '@whatsapp.quattro.local');
             $request->merge([
                 'customer_name' => $customerUser->name,
-                'customer_phone' => $accountPhone,
-                'customer_email' => $customerUser->email,
+                'customer_phone' => $accountPhone !== '' ? $accountPhone : $request->input('customer_phone', ''),
+                'customer_email' => $needsReceiptEmail
+                    ? $request->input('customer_email', '')
+                    : $customerUser->email,
             ]);
         }
 
@@ -746,6 +751,7 @@ class CustomerController extends Controller
                 ->exists();
 
             if ($emailExists || $phoneExists) {
+                $request->session()->put('url.intended', route('customer.payment'));
                 return response()->json([
                     'message' => 'Email atau nomor ponsel ini sudah digunakan. Masuk ke akun tersebut untuk melanjutkan pesanan.',
                     'require_login' => true,
@@ -1070,6 +1076,7 @@ class CustomerController extends Controller
         });
 
         if (is_array($order) && ($order['require_login'] ?? false)) {
+            $request->session()->put('url.intended', route('customer.payment'));
             return response()->json([
                 'message' => 'Email atau nomor ponsel ini sudah digunakan. Masuk ke akun tersebut untuk melanjutkan pesanan.',
                 'require_login' => true,
@@ -1156,10 +1163,13 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function uploadBankTransferProof(Request $request, Order $order): RedirectResponse
+    public function uploadBankTransferProof(Request $request, Order $order, \App\Services\UnpaidPaymentExpiryService $expiry, MidtransSnapService $midtrans, MidtransPaymentStatusService $statusService): RedirectResponse
     {
         abort_unless($this->customerCanAccessOrder($request, $order), 404);
         abort_unless($order->payment?->payment_method === 'Bank Transfer', 404);
+        $expiry->expire($order, $midtrans, $statusService);
+        $order->refresh();
+        if ($order->status === 'Dibatalkan') return back()->with('error', 'Waktu pembayaran habis. Pesanan dibatalkan.');
         if ($order->payment_status === 'Dibayar' || $order->status === 'Dibatalkan') {
             return back()->with('error', 'Bukti transfer tidak dapat diubah untuk pesanan ini.');
         }
@@ -1192,6 +1202,8 @@ class CustomerController extends Controller
         abort_unless($this->customerCanAccessOrder($request, $order), 404);
         abort_unless($order->payment?->payment_method === 'Bank Transfer', 404);
 
+        app(\App\Services\UnpaidPaymentExpiryService::class)->expire($order, app(MidtransSnapService::class), app(MidtransPaymentStatusService::class));
+        $order->refresh();
         $bank = $order->payment?->bank_account_snapshot ?: $settings->bankDetails();
         if (!$bank || empty($bank['bank_name']) || empty($bank['bank_account_number']) || empty($bank['bank_account_holder'])) {
             return redirect()->route('customer.history')->with('payment_notice', 'Informasi rekening bank belum tersedia. Hubungi Quattro Coffee.');
@@ -1371,10 +1383,12 @@ class CustomerController extends Controller
             : null;
     }
 
-    public function retryPayment(Request $request, Order $order, MidtransSnapService $midtrans)
+    public function retryPayment(Request $request, Order $order, MidtransSnapService $midtrans, \App\Services\UnpaidPaymentExpiryService $expiry, MidtransPaymentStatusService $statusService)
     {
         abort_unless($this->customerCanAccessOrder($request, $order), 404);
-        if ($order->status === 'Dibatalkan' || $order->payment_status === 'Dibayar') {
+                $expiry->expire($order, $midtrans, $statusService);
+        $order->refresh();
+if ($order->status === 'Dibatalkan' || $order->payment_status === 'Dibayar') {
             return response()->json(['message' => 'Pesanan ini tidak dapat dibayar lagi.'], 422);
         }
         $payment = $order->payment;
@@ -1382,6 +1396,9 @@ class CustomerController extends Controller
             return response()->json(['message' => 'Pembayaran ulang hanya tersedia untuk QRIS.'], 422);
         }
         $latest = $payment->attempts()->latest('id')->first();
+        if ($latest?->created_at?->copy()->addMinutes(15)->isPast()) {
+            return response()->json(['message' => 'Waktu pembayaran habis. Pesanan sedang dibatalkan; QR baru tidak dapat dibuat.'], 422);
+        }
         if ($latest && $latest->status === 'Pending' && $latest->expires_at?->isFuture() && $latest->payment_url && $latest->qr_code_url) {
             return response()->json(['payment_url' => route('customer.orders.payment.open', $order), 'payment_deadline' => $latest->expires_at->toIso8601String()]);
         }
@@ -1496,7 +1513,7 @@ class CustomerController extends Controller
         return response()->json(['message' => 'Pesanan berhasil dibatalkan. Stok reservasi sudah dilepas.']);
     }
 
-    public function openPayment(Request $request, Order $order, MidtransSnapService $midtrans)
+    public function openPayment(Request $request, Order $order, MidtransSnapService $midtrans, \App\Services\UnpaidPaymentExpiryService $expiry, MidtransPaymentStatusService $statusService)
     {
         abort_unless($this->customerCanAccessOrder($request, $order), 404);
         if ($order->payment_status === 'Dibayar' || $order->payment?->status === 'Berhasil') {
@@ -1518,7 +1535,12 @@ class CustomerController extends Controller
                 $attempt->refresh();
             }
             if ($correctDeadline->isPast()) {
-                $attempt->update(['status' => 'Gagal']);
+                $expiry->expire($order, $midtrans, $statusService);
+                $order->refresh();
+                if ($order->status === 'Dibatalkan' || $order->payment_status === 'Dibayar') {
+                    return redirect()->route('customer.history');
+                }
+                return redirect()->route('customer.history')->with('payment_notice', 'Batas waktu QRIS telah habis. Status pembayaran sedang diperiksa; pesanan tidak dibuatkan QR baru.');
             }
         }
 
@@ -1533,6 +1555,13 @@ class CustomerController extends Controller
                 $attempt->refresh();
             }
         }
+        if ($attempt && $attempt->created_at?->copy()->addMinutes(15)->isPast()) {
+            $expiry->expire($order, $midtrans, $statusService);
+            $order->refresh();
+            if ($order->status === 'Dibatalkan' || $order->payment_status === 'Dibayar') return redirect()->route('customer.history');
+            return redirect()->route('customer.history')->with('payment_notice', 'Batas waktu QRIS telah habis. Status pembayaran sedang diperiksa; pesanan tidak dibuatkan QR baru.');
+        }
+
         if (!$attempt || $attempt->status !== 'Pending' || !$attempt->expires_at?->isFuture() || !$attempt->qr_code_url) {
             try {
                 if ($attempt && $attempt->status === 'Pending') {
@@ -1671,6 +1700,18 @@ class CustomerController extends Controller
         }
     }
 
+    public function expireUnpaidOrder(Request $request, Order $order, \App\Services\UnpaidPaymentExpiryService $expiry, MidtransSnapService $midtrans, MidtransPaymentStatusService $statusService)
+    {
+        abort_unless($this->customerCanAccessOrder($request, $order), 404);
+        $result = $expiry->expire($order, $midtrans, $statusService);
+        $order->refresh();
+        return response()->json([
+            'status' => $result,
+            'cancelled' => $order->status === 'Dibatalkan',
+            'reason' => $order->cancellation_reason,
+            'message' => $order->status === 'Dibatalkan' ? 'Waktu pembayaran habis. Pesanan dibatalkan.' : ($result === 'Dibayar' ? 'Pembayaran berhasil.' : 'Pembayaran masih menunggu.'),
+        ]);
+    }
     public function paymentFinish(Order $order)
     {
         return redirect()->route('customer.history')->with('payment_notice', 'Terima kasih. Status pembayaran sedang diverifikasi otomatis.');
@@ -1704,6 +1745,11 @@ class CustomerController extends Controller
         return app(SiteSettingsService::class)->discountedPrice((int) $product->id, $price);
     }
 }
+
+
+
+
+
 
 
 

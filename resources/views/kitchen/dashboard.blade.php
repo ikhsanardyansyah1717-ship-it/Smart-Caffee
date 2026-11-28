@@ -157,7 +157,7 @@
                             <div class="order-timer" data-started-at="{{ $startedAt?->toIso8601String() }}"><i class="fa-regular fa-clock"></i> <span class="timer-label">Waktu proses 00:00</span></div>
                             <form action="{{ route('kitchen.orders.complete', $order->id) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="action-btn btn-success"><i class="fa-solid fa-circle-check"></i> Siap Diambil</button>
+                                <button type="submit" class="action-btn btn-success"><i class="fa-solid fa-circle-check"></i> Selesai</button>
                             </form>
                         @else
 

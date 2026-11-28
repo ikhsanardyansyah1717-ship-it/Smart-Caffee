@@ -22,7 +22,7 @@ class FinancialReportService
             ->whereBetween('paid_at', [$start, $end])
             ->sum('amount');
 
-        $costExpr = 'COALESCE(NULLIF(order_items.cost_price, 0), products.cost_price, 0)';
+        $costExpr = 'COALESCE(NULLIF(products.cost_price, 0), NULLIF(order_items.cost_price, 0), 0)';
 
         $paidItems = OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
@@ -40,8 +40,8 @@ class FinancialReportService
         $hpp = (float) (clone $paidItems)->sum(DB::raw("order_items.quantity * {$costExpr}"));
 
         $itemsWithoutCost = (int) (clone $paidItems)
-            ->whereRaw("{$costExpr} <= 0")
-            ->count();
+            ->whereRaw("COALESCE(NULLIF(products.cost_price, 0), NULLIF(order_items.cost_price, 0)) IS NULL")
+            ->sum('order_items.quantity');
 
         $range = [$start->toDateString(), $end->toDateString()];
 
@@ -72,7 +72,7 @@ class FinancialReportService
 
     public function topProducts(Carbon $start, Carbon $end, int $limit = 1000): Collection
     {
-        $costExpr = 'COALESCE(NULLIF(order_items.cost_price, 0), products.cost_price, 0)';
+        $costExpr = 'COALESCE(NULLIF(products.cost_price, 0), NULLIF(order_items.cost_price, 0), 0)';
 
         return OrderItem::query()
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
@@ -86,7 +86,7 @@ class FinancialReportService
                     ->where('payments.status', 'Berhasil')
                     ->whereBetween('payments.paid_at', [$start, $end]);
             })
-            ->selectRaw("order_items.product_name, SUM(order_items.quantity) as total_qty, SUM(order_items.quantity * order_items.price) as total_sales, SUM(order_items.quantity * {$costExpr}) as total_cost, SUM(order_items.quantity * (order_items.price - {$costExpr})) as total_profit")
+            ->selectRaw("order_items.product_name, SUM(order_items.quantity) as total_qty, SUM(order_items.quantity * order_items.price) as total_sales, SUM(order_items.quantity * {$costExpr}) as total_cost, SUM(order_items.quantity * (order_items.price - {$costExpr})) as total_profit, SUM(CASE WHEN COALESCE(NULLIF(products.cost_price, 0), NULLIF(order_items.cost_price, 0)) IS NULL THEN order_items.quantity ELSE 0 END) as missing_cost_qty")
             ->groupBy('order_items.product_name')
             ->orderByDesc('total_qty')
             ->limit($limit)

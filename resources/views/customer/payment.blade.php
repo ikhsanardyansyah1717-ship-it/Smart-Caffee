@@ -25,15 +25,27 @@
                 if (str_starts_with($accountPhone, '62')) $accountPhone = '0' . substr($accountPhone, 2);
                 elseif (str_starts_with($accountPhone, '8')) $accountPhone = '0' . $accountPhone;
             @endphp
-            <div class="payment-account-note"><i class="fa-solid fa-circle-check"></i><span>Data dari profil akunmu akan digunakan untuk pesanan ini.</span><a href="{{ route('customer.profile.edit') }}">Edit profil</a></div>
+            @php $needsReceiptEmail = str_ends_with(strtolower((string) auth()->user()->email), '@whatsapp.quattro.local'); @endphp
+            <div class="payment-account-note"><i class="fa-solid fa-circle-check"></i><span>{{ $needsReceiptEmail ? 'Akun WhatsApp siap digunakan. Isi email aktif untuk menerima struk.' : 'Data dari profil akunmu akan digunakan untuk pesanan ini.' }}</span>@unless($needsReceiptEmail)<a href="{{ route('customer.profile.edit') }}">Edit profil</a>@endunless</div>
             <label for="customer-name">Nama lengkap</label>
             <div class="payment-page-input payment-readonly-field"><i class="fa-regular fa-user"></i><input id="customer-name" type="text" value="{{ auth()->user()->name }}" readonly aria-readonly="true"></div>
-            <label for="customer-phone">Nomor ponsel</label>
-            <div class="payment-page-input payment-readonly-field"><i class="fa-solid fa-phone"></i><input id="customer-phone" type="tel" inputmode="numeric" value="{{ $accountPhone }}" readonly aria-readonly="true"></div>
+            <label for="customer-phone">Nomor ponsel @if(!$accountPhone)<span>*</span>@endif</label>
+            @if($accountPhone)
+                <div class="payment-page-input payment-readonly-field"><i class="fa-solid fa-phone"></i><input id="customer-phone" type="tel" inputmode="numeric" value="{{ $accountPhone }}" readonly aria-readonly="true"></div>
+            @else
+                <div class="payment-page-input"><i class="fa-solid fa-phone"></i><input id="customer-phone" type="tel" inputmode="numeric" pattern="[0-9]*" autocomplete="tel-national" maxlength="13" placeholder="08xxxxxxxxxx" required aria-describedby="customer-phone-help"></div>
+                <small id="customer-phone-help" class="payment-field-help">Nomor ini dipakai outlet untuk menghubungi Anda soal pesanan.</small>
+            @endif
+            @if($needsReceiptEmail)
+                <label for="customer-email">Email untuk struk digital<span>*</span></label>
+                <div class="payment-page-input"><i class="fa-regular fa-envelope"></i><input id="customer-email" type="email" inputmode="email" autocomplete="email" maxlength="255" placeholder="nama@email.com" required aria-describedby="customer-email-help"></div>
+                <small id="customer-email-help" class="payment-field-help">Email ini disimpan ke profil akunmu untuk struk berikutnya.</small>
+            @else
             <label for="customer-email">Email struk digital</label>
             <div class="payment-page-input payment-readonly-field"><i class="fa-regular fa-envelope"></i><input id="customer-email" type="email" value="{{ auth()->user()->email }}" readonly aria-readonly="true"></div>
-            @if(!$accountPhone || !auth()->user()->email)
-                <small class="payment-field-help payment-profile-incomplete">Nomor HP atau email belum lengkap. Lengkapi profil sebelum membuat pesanan.</small>
+            @endif
+            @if(!$accountPhone || (!$needsReceiptEmail && !auth()->user()->email))
+                <small class="payment-field-help payment-profile-incomplete">Masukkan nomor HP aktif untuk melanjutkan pesanan.</small>
             @endif
         @else
             <label for="customer-name">Nama Lengkap<span>*</span></label>
@@ -135,7 +147,7 @@ window.quattroUser = @json(['id' => auth()->id(), 'name' => auth()->user()?->nam
 window.quattroFavoriteIds = [];
 window.quattroProducts = @json($products);
 </script>
-<script src="{{ asset('js/customer.js') }}?v=20261125-checkout-loading-3"></script>
+<script src="{{ asset('js/customer.js') }}?v=20261128-session-cart-reset"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const contactStorageKey = 'quattro_checkout_contact_v1';

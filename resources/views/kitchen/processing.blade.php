@@ -169,7 +169,7 @@
 
                             <i class="fa-solid fa-circle-check"></i>
 
-                            Siap Diambil
+                            Selesai
 
                         </button>
 
@@ -200,3 +200,4 @@
 </div>
 
 @endsection
+

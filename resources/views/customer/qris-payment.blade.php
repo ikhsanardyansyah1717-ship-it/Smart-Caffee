@@ -124,11 +124,23 @@
         if (!seconds) {
             timer.classList.add('is-expired');
             checkButton.disabled = true;
-            feedback.textContent = 'Waktu QR berakhir. Buat QR baru untuk melanjutkan pembayaran.';
-            newQr.hidden = false;
+            feedback.textContent = 'Waktu pembayaran habis. Pesanan sedang diperbarui ke riwayat.';
+            newQr.hidden = true;
         }
     };
+    const checkExpiry = async () => {
+        try {
+            const response = await fetch(@json(route('customer.orders.payment.expire', $order, false)), {method:'POST',headers:{'Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]')?.content || '', 'X-Guest-Token':localStorage.getItem('quattro_guest_token') || ''},credentials:'same-origin'});
+            const data = await response.json();
+            if (data.cancelled) {
+                feedback.textContent = data.message;
+                checkButton.disabled = true;
+                setTimeout(() => window.location.href = @json(route('customer.history')), 1200);
+            } else if (data.status === 'Dibayar') window.location.href = @json(route('customer.history'));
+        } catch (error) {}
+    };
     tick();
+    setInterval(() => { if (Date.now() >= deadline) checkExpiry(); }, 5000);
     const ticker = setInterval(tick, 1000);
     checkButton.addEventListener('click', async () => {
         if (checking) return;
@@ -149,7 +161,7 @@
                 setTimeout(() => window.location.href = @json(route('customer.history')), 1100);
             } else if (data.status === 'Kedaluwarsa') {
                 timer.classList.add('is-expired');
-                newQr.hidden = false;
+                newQr.hidden = true;
             }
         } catch (error) {
             feedback.textContent = 'Status belum dapat diperiksa. Coba kembali sebentar lagi.';
@@ -161,3 +173,4 @@
 })();
 </script>
 @endsection
+

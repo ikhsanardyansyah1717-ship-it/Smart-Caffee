@@ -4,7 +4,7 @@
 
 @section('content')
 
-<div class="app-container">
+<div class="app-container quattro-home-entry-pending">
 
     {{-- =====================================================
         TOAST
@@ -317,6 +317,23 @@
         </span>
     </a>
 
+    <div id="checkout-navigation-loading" class="checkout-navigation-loading" hidden role="status" aria-live="polite">
+        <div class="checkout-navigation-card">
+            <div class="checkout-loader-brand">
+                <span class="checkout-loader-logo"><i class="fa-solid fa-mug-hot" aria-hidden="true"></i></span>
+                <span><strong>QUATTRO</strong><small>COFFEE</small></span>
+            </div>
+            <div class="checkout-loader-cup" aria-hidden="true">
+                <span class="checkout-loader-orbit"></span>
+                <i class="fa-solid fa-mug-hot"></i>
+            </div>
+            <strong class="checkout-loader-title">Menyiapkan keranjang</strong>
+            <small class="checkout-loader-caption">Sebentar ya, pesananmu sedang disiapkan.</small>
+            <div class="checkout-loader-progress" aria-hidden="true"><span></span></div>
+            <span class="checkout-loader-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        </div>
+    </div>
+
     <div id="product-detail-modal" class="product-detail-modal" aria-hidden="true">
         <div class="product-detail-panel" role="dialog" aria-modal="true" aria-labelledby="detail-product-name">
             <button type="button" class="detail-close" onclick="closeProductDetail()" aria-label="Tutup detail menu">
@@ -353,6 +370,106 @@
 
 @endsection
 
+@push('styles')
+<style>
+    .quattro-home-entry-pending .quattro-header,
+    .quattro-home-entry-pending .quattro-greeting,
+    .quattro-home-entry-pending .quattro-promo-slider,
+    .quattro-home-entry-pending .quattro-promo-dots,
+    .quattro-home-entry-pending .search-box,
+    .quattro-home-entry-pending .category-section-heading,
+    .quattro-home-entry-pending .categories-grid,
+    .quattro-home-entry-pending .menu-section-heading,
+    .quattro-home-entry-pending #main-menu-list {
+        opacity: 0;
+        animation: quattroCustomerHomeEnter .42s ease-out forwards;
+    }
+    .quattro-home-entry-pending .quattro-greeting { animation-delay: .04s; }
+    .quattro-home-entry-pending .quattro-promo-slider { animation-delay: .08s; }
+    .quattro-home-entry-pending .quattro-promo-dots { animation-delay: .1s; }
+    .quattro-home-entry-pending .search-box { animation-delay: .12s; }
+    .quattro-home-entry-pending .category-section-heading,
+    .quattro-home-entry-pending .categories-grid { animation-delay: .16s; }
+    .quattro-home-entry-pending .menu-section-heading,
+    .quattro-home-entry-pending #main-menu-list { animation-delay: .2s; }
+    .quattro-home-entry-pending #quick-cart-bar:not([hidden]) {
+        animation: quattroCartBarReveal .3s ease-out .56s both;
+    }
+    @keyframes quattroCustomerHomeEnter {
+        from { opacity: 0; transform: translateY(9px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes quattroCartBarReveal {
+        from { opacity: 0; visibility: hidden; transform: translateY(18px); }
+        to { opacity: 1; visibility: visible; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .quattro-home-entry-pending .quattro-header,
+        .quattro-home-entry-pending .quattro-greeting,
+        .quattro-home-entry-pending .quattro-promo-slider,
+        .quattro-home-entry-pending .quattro-promo-dots,
+        .quattro-home-entry-pending .search-box,
+        .quattro-home-entry-pending .category-section-heading,
+        .quattro-home-entry-pending .categories-grid,
+        .quattro-home-entry-pending .menu-section-heading,
+        .quattro-home-entry-pending #main-menu-list,
+        .quattro-home-entry-pending .quick-cart-bar:not([hidden]) { animation: none; opacity: 1; visibility: visible; transform: none; }
+    }
+    .checkout-navigation-loading[hidden] { display: none !important; }
+    .checkout-navigation-loading {
+        position: fixed;
+        inset: 0;
+        z-index: 10050;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        background: radial-gradient(circle at 50% 44%, rgba(252, 244, 233, .68), rgba(39, 25, 14, .42));
+        backdrop-filter: blur(7px);
+        -webkit-backdrop-filter: blur(7px);
+        animation: checkoutNavFadeIn .22s ease-out both;
+    }
+    .checkout-navigation-card {
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        width: min(290px, calc(100vw - 48px));
+        padding: 20px 22px 17px;
+        border: 1px solid rgba(255,255,255,.85);
+        border-radius: 22px;
+        background: linear-gradient(155deg, #fffefa, #f8efe4);
+        color: #352417;
+        box-shadow: 0 22px 60px rgba(37, 25, 15, .25), 0 4px 14px rgba(100, 61, 24, .08);
+        animation: checkoutNavCardIn .32s cubic-bezier(.2,.8,.2,1) both;
+    }
+    .checkout-loader-brand { display:flex; align-items:center; gap:8px; justify-self:start; width:100%; padding-bottom:12px; border-bottom:1px solid #eee2d4; }
+    .checkout-loader-logo { display:grid; place-items:center; width:30px; height:30px; border-radius:10px; background:#75400d; color:#fff9ef; font-size:13px; box-shadow:0 4px 9px rgba(89,49,12,.18); }
+    .checkout-loader-brand>span:last-child { display:grid; gap:2px; }
+    .checkout-loader-brand strong { color:#392719; font-size:10px; letter-spacing:1.3px; }
+    .checkout-loader-brand small { color:#a17d5b; font-size:7px; letter-spacing:2px; }
+    .checkout-loader-cup { position:relative; display:grid; place-items:center; width:66px; height:66px; margin:5px 0 2px; border-radius:50%; background:radial-gradient(circle, #fff 0 47%, #f3e5d4 48% 100%); color:#874b13; font-size:24px; box-shadow:inset 0 0 0 1px rgba(136,84,33,.08), 0 7px 18px rgba(89,49,12,.1); }
+    .checkout-loader-orbit { position:absolute; inset:-5px; border:2px solid transparent; border-top-color:#a55b1e; border-right-color:#dfbd91; border-radius:50%; animation:checkoutNavSpin 1.05s cubic-bezier(.55,.1,.45,.9) infinite; }
+    .checkout-loader-cup>i { animation:checkoutCupBob 1.2s ease-in-out infinite; }
+    .checkout-loader-title { margin-top:3px; color:#392719; font-size:14px; letter-spacing:.1px; }
+    .checkout-loader-caption { color:#88735f; font-size:10px; text-align:center; }
+    .checkout-loader-progress { position:relative; width:100%; height:3px; margin-top:8px; overflow:hidden; border-radius:99px; background:#ecdfd0; }
+    .checkout-loader-progress>span { position:absolute; inset:0 auto 0 -42%; width:42%; border-radius:inherit; background:linear-gradient(90deg,#a45a1c,#d5a368); animation:checkoutProgressSweep 1.15s ease-in-out infinite; }
+    .checkout-loader-dots { display:flex; gap:4px; height:5px; margin-top:1px; }
+    .checkout-loader-dots i { width:4px; height:4px; border-radius:50%; background:#98602f; opacity:.35; animation:checkoutDotPulse .9s ease-in-out infinite; }
+    .checkout-loader-dots i:nth-child(2) { animation-delay:.12s; }
+    .checkout-loader-dots i:nth-child(3) { animation-delay:.24s; }
+    @keyframes checkoutNavSpin { to { transform: rotate(360deg); } }
+    @keyframes checkoutCupBob { 0%,100% { transform:translateY(1px) rotate(-3deg); } 50% { transform:translateY(-2px) rotate(3deg); } }
+    @keyframes checkoutProgressSweep { 0% { transform:translateX(0); } 100% { transform:translateX(340%); } }
+    @keyframes checkoutDotPulse { 0%,80%,100% { opacity:.28; transform:scale(.8); } 40% { opacity:1; transform:scale(1); } }
+    @keyframes checkoutNavFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes checkoutNavCardIn { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @media (prefers-reduced-motion: reduce) {
+        .checkout-navigation-loading, .checkout-navigation-card { animation: none; }
+        .checkout-loader-orbit, .checkout-loader-cup>i, .checkout-loader-progress>span, .checkout-loader-dots i { animation: none; }
+    }
+</style>
+@endpush
+
 
 {{-- =========================================================
     JAVASCRIPT
@@ -382,7 +499,7 @@
 </script>
 
 
-<script src="{{ asset('js/customer.js') }}?v=20261125-checkout-loading-3"></script>
+<script src="{{ asset('js/customer.js') }}?v=20261128-session-cart-reset"></script>
 {{-- =====================================================
     PROMO AUTO SLIDER
 ===================================================== --}}

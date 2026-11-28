@@ -42,6 +42,12 @@ return [
         'expiry_minutes' => env('MIDTRANS_EXPIRY_MINUTES', 15),
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', rtrim(env('APP_URL', 'http://localhost'), '/') . '/customer/login/google/callback'),
+    ],
+
     'whatsapp' => [
     'login_number' => env('WHATSAPP_LOGIN_NUMBER'),
 

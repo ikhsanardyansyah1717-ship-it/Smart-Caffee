@@ -335,6 +335,8 @@ const storageKey =
         window.quattroUser?.id ?? 'guest'
     }`;
 
+const cartSessionStorageKey = `${storageKey}_cart_session`;
+
 const guestTokenStorageKey = 'quattro_guest_token_v1';
 
 function getGuestToken() {
@@ -362,20 +364,10 @@ function loadCustomerState() {
 
     try {
 
-        const saved =
+        const saved = JSON.parse(localStorage.getItem(storageKey) || 'null') || {};
+        const sessionCart = JSON.parse(sessionStorage.getItem(cartSessionStorageKey) || '[]');
 
-            JSON.parse(
-                localStorage.getItem(
-                    storageKey
-                )
-            );
-
-        if (!saved) {
-            return;
-        }
-
-
-        appState.cart = (Array.isArray(saved.cart) ? saved.cart : []).map(cartItem => {
+        appState.cart = (Array.isArray(sessionCart) ? sessionCart : []).map(cartItem => {
             const customization = {
                 temperature: cartItem.customization?.temperature || '',
                 note: String(cartItem.customization?.note || '').trim().slice(0, 300)
@@ -419,22 +411,8 @@ function loadCustomerState() {
 
 function saveCustomerState() {
 
-    localStorage.setItem(
-
-        storageKey,
-
-        JSON.stringify({
-
-            cart:
-                appState.cart,
-
-
-            history:
-                appState.history
-
-        })
-
-    );
+    sessionStorage.setItem(cartSessionStorageKey, JSON.stringify(appState.cart));
+    localStorage.setItem(storageKey, JSON.stringify({ history: appState.history }));
 
 }
 
@@ -1964,44 +1942,6 @@ function resetPaymentUI() {
 
 let checkoutInProgress = false;
 
-function setCheckoutButtonLoading(button, label) {
-    if (!button) return;
-    if (!button.dataset.originalHtml) button.dataset.originalHtml = button.innerHTML;
-    button.disabled = true;
-    button.setAttribute('aria-busy', 'true');
-    button.innerHTML = `<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i><span>${escapeHtml(label)}</span>`;
-}
-
-function restoreCheckoutButton(button) {
-    if (!button) return;
-    if (button.dataset.originalHtml) button.innerHTML = button.dataset.originalHtml;
-    delete button.dataset.originalHtml;
-    button.disabled = false;
-    button.removeAttribute('aria-busy');
-}
-
-function showCheckoutLoading(message = 'Menyiapkan pesanan') {
-    let overlay = document.getElementById('quattro-checkout-loading');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'quattro-checkout-loading';
-        overlay.className = 'quattro-checkout-loading';
-        overlay.setAttribute('role', 'status');
-        overlay.setAttribute('aria-live', 'polite');
-        overlay.innerHTML = '<div class="quattro-checkout-loading-card"><span class="quattro-checkout-spinner" aria-hidden="true"></span><strong></strong><small>Mohon tunggu sebentar</small></div>';
-        document.body.appendChild(overlay);
-    }
-    overlay.querySelector('strong').textContent = message;
-    overlay.hidden = false;
-    document.body.classList.add('quattro-checkout-busy');
-}
-
-function hideCheckoutLoading() {
-    const overlay = document.getElementById('quattro-checkout-loading');
-    if (overlay) overlay.hidden = true;
-    document.body.classList.remove('quattro-checkout-busy');
-}
-
 async function checkout(
     paymentData = {}
 ) {
@@ -2207,10 +2147,6 @@ if (unavailableItems.length) {
     try {
 
         checkoutInProgress = true;
-        const checkoutStartedAt = Date.now();
-        setCheckoutButtonLoading(document.getElementById('pay-payment-button'), 'Memproses pesanan…');
-        showCheckoutLoading('Mengirim pesanan');
-
         showToast(
             'Menyimpan transaksi...'
         );
@@ -2246,9 +2182,6 @@ if (unavailableItems.length) {
             );
 
 
-        // Keep the feedback visible long enough to notice even on a very fast response.
-        await new Promise(resolve => window.setTimeout(resolve, Math.max(0, 500 - (Date.now() - checkoutStartedAt))));
-
         let data = {};
 
 
@@ -2274,7 +2207,7 @@ if (unavailableItems.length) {
 
             if (data.require_login && data.login_url) {
                 showToast(`${data.message} Mengalihkan ke halaman masuk…`);
-                setTimeout(() => { window.showQuattroPageTransition?.(data.login_url); window.location.assign(data.login_url); }, 1400);
+                setTimeout(() => { window.location.assign(data.login_url); }, 1400);
                 return;
             }
 
@@ -2347,14 +2280,13 @@ if (unavailableItems.length) {
 
         if (data.bank_transfer_url) {
             showToast('Pesanan dibuat. Menampilkan rekening transfer...');
-            setTimeout(() => { window.showQuattroPageTransition?.(data.bank_transfer_url); window.location.href = data.bank_transfer_url; }, 400);
+            setTimeout(() => { window.location.href = data.bank_transfer_url; }, 400);
         } else if (data.payment_url) {
             showToast('Pesanan dibuat. Membuka pembayaran QRIS...');
-            setTimeout(() => { window.showQuattroPageTransition?.(data.payment_url);
-        window.location.href = data.payment_url; }, 500);
+            setTimeout(() => { window.location.href = data.payment_url; }, 500);
         } else {
             showToast(data.message || `Pesanan ${data.order_number ?? ''} dibuat. QRIS belum tersedia; silakan bayar dari Riwayat Pesanan.`);
-            setTimeout(() => { window.showQuattroPageTransition?.('/customer/history'); window.location.href = '/customer/history'; }, 1200);
+            setTimeout(() => { window.location.href = '/customer/history'; }, 500);
         }
 
     }
@@ -2363,8 +2295,6 @@ if (unavailableItems.length) {
     catch (error) {
 
         checkoutInProgress = false;
-        hideCheckoutLoading();
-        restoreCheckoutButton(document.getElementById('pay-payment-button'));
 
         console.error(
             'Checkout Error:',
@@ -2420,12 +2350,78 @@ function closePaymentModalIfExists() {
    HISTORY
    ========================================================= */
 
+async function reorderCancelledOrder(orderId, button) {
+    const order = window.quattroHistoryOrders?.get(Number(orderId));
+    if (!order || order.status !== 'Dibatalkan' || !Array.isArray(order.items) || !order.items.length) {
+        showToast('Detail pesanan tidak tersedia untuk dipesan ulang.');
+        return;
+    }
+    if (button?.dataset.busy === 'true') return;
+    if (button) {
+        button.dataset.busy = 'true';
+        button.disabled = true;
+    }
+
+    try {
+        const refreshed = await syncCustomerProductsLive(true);
+        if (!refreshed) {
+            showToast('Stok belum dapat diperbarui. Coba tekan Pesan lagi sebentar.');
+            return;
+        }
+        const items = order.items.map(item => {
+            let customization = item.customization || {};
+            if (typeof customization === 'string') {
+                try { customization = JSON.parse(customization); } catch (error) { customization = {}; }
+            }
+            return {
+                productId: Number(item.product_id),
+                quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
+                customization: customization && typeof customization === 'object' ? customization : {}
+            };
+        });
+        const totals = new Map();
+        items.forEach(item => totals.set(item.productId, (totals.get(item.productId) || 0) + item.quantity));
+        for (const [productId, quantity] of totals) {
+            const product = appState.menu.find(item => Number(item.id) === productId);
+            if (!product || !product.is_available) {
+                showToast((product?.name || 'Salah satu menu') + ' sedang tidak tersedia. Pesanan belum dimasukkan ke keranjang.');
+                return;
+            }
+            const inCart = appState.cart
+                .filter(item => Number(item.id) === productId)
+                .reduce((sum, item) => sum + Number(item.qty || 0), 0);
+            if (inCart + quantity > Number(product.stock || 0)) {
+                showToast('Stok ' + product.name + ' tersisa ' + Number(product.stock || 0) + '. Kurangi jumlah di keranjang sebelum memesan ulang.');
+                return;
+            }
+        }
+        for (const item of items) addProductVariant(item.productId, item.customization, item.quantity);
+        showToast('Pesanan dimasukkan ke keranjang. Silakan periksa kembali sebelum checkout.');
+        window.setTimeout(() => { window.location.href = '/customer/orders'; }, 650);
+    } catch (error) {
+        console.error('Gagal menambahkan pesanan ulang ke keranjang.', error);
+        showToast('Pesanan belum bisa dimasukkan ke keranjang. Silakan coba lagi.');
+    } finally {
+        if (button?.isConnected) {
+            button.dataset.busy = 'false';
+            button.disabled = false;
+        }
+    }
+}
 async function renderHistory() {
 
     const container = document.getElementById('history-container');
 
     if (!container) {
         return;
+    }
+    if (!container.dataset.reorderBound) {
+        container.addEventListener('click', event => {
+            const button = event.target.closest('[data-reorder-order]');
+            if (!button || !container.contains(button)) return;
+            reorderCancelledOrder(Number(button.dataset.reorderOrder), button);
+        });
+        container.dataset.reorderBound = 'true';
     }
 
     try {
@@ -2460,6 +2456,7 @@ async function renderHistory() {
         const orders = Array.isArray(data.orders)
             ? data.orders
             : [];
+        window.quattroHistoryOrders = new Map(orders.map(order => [Number(order.id), order]));
 
         if (!orders.length) {
 
@@ -2632,6 +2629,7 @@ async function renderHistory() {
                         <div class="history-cancellation-note" style="padding:12px 16px 16px;background:#fff8f5;border-top:1px solid #f0e5dc;color:#765b49;font-size:13px">
                             <strong style="color:#754000">Pesanan dibatalkan${order.cancelled_at ? ` · ${escapeHtml(order.cancelled_at)}` : ''}</strong>
                             <div style="margin-top:4px">Alasan: ${escapeHtml(order.cancellation_reason || 'Dibatalkan oleh pelanggan.')}</div>
+                            ${items.length ? '<button type="button" class="history-qris-pay history-reorder-button" style="margin-top:10px" data-reorder-order="' + Number(order.id) + '"><i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i> Pesan lagi</button>' : ''}
                         </div>
                     ` : ''}
 
@@ -2931,6 +2929,7 @@ function renderFavorites() {
     }
 
 
+
     const items =
 
         appState.menu.filter(
@@ -3092,6 +3091,34 @@ function togglePassword(
    DOM READY
    ========================================================= */
 
+let customerHomeEntryTimer = null;
+
+function replayCustomerHomeEntry() {
+    const page = document.getElementById('quick-cart-bar')?.closest('.app-container');
+    if (!page) return;
+    page.classList.add('quattro-home-entry-pending');
+    window.clearTimeout(customerHomeEntryTimer);
+    customerHomeEntryTimer = window.setTimeout(() => {
+        page.classList.remove('quattro-home-entry-pending');
+    }, 900);
+}
+
+window.addEventListener('pageshow', event => {
+    if (!event.persisted) return;
+    const navigationLoader = document.getElementById('checkout-navigation-loading');
+    if (navigationLoader) navigationLoader.hidden = true;
+    const quickCartBar = document.getElementById('quick-cart-bar');
+    if (quickCartBar) {
+        quickCartBar.dataset.busy = 'false';
+        const checkoutLabel = quickCartBar.querySelector('.quick-cart-checkout');
+        if (checkoutLabel) {
+            checkoutLabel.removeAttribute('aria-busy');
+            checkoutLabel.innerHTML = checkoutLabel.dataset.originalHtml || 'Checkout <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>';
+        }
+    }
+    replayCustomerHomeEntry();
+});
+
 document.addEventListener(
     'DOMContentLoaded',
     function () {
@@ -3101,19 +3128,16 @@ document.addEventListener(
         const quickCartBar = document.getElementById('quick-cart-bar');
         quickCartBar?.addEventListener('click', event => {
             if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-            if (quickCartBar.dataset.busy === 'true') {
-                event.preventDefault();
-                return;
-            }
-            event.preventDefault();
+            if (quickCartBar.dataset.busy === 'true') return;
             quickCartBar.dataset.busy = 'true';
             const checkoutLabel = quickCartBar.querySelector('.quick-cart-checkout');
             if (checkoutLabel) {
+                if (!checkoutLabel.dataset.originalHtml) checkoutLabel.dataset.originalHtml = checkoutLabel.innerHTML;
                 checkoutLabel.setAttribute('aria-busy', 'true');
-                checkoutLabel.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i><span>Menyiapkan…</span>';
+                checkoutLabel.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i><span>MEMBUKA…</span>';
             }
-            showCheckoutLoading('Membuka keranjang');
-            window.setTimeout(() => { window.location.href = quickCartBar.href; }, 550);
+            const navigationLoader = document.getElementById('checkout-navigation-loading');
+            if (navigationLoader) navigationLoader.hidden = false;
         });
 
         const detailModal = document.getElementById('product-detail-modal');
@@ -3136,6 +3160,8 @@ document.addEventListener(
 
         initPaymentUI();
 
+        replayCustomerHomeEntry();
+
     }
 );
 
@@ -3151,8 +3177,8 @@ window.addEventListener('quattro:data-changed', event => {
     customerLiveProductSyncTimer = window.setTimeout(syncCustomerProductsLive, 220);
 });
 
-async function syncCustomerProductsLive() {
-    if (customerLiveProductSyncInFlight || document.visibilityState !== 'visible') return;
+async function syncCustomerProductsLive(force = false) {
+    if (customerLiveProductSyncInFlight || (!force && document.visibilityState !== 'visible')) return false;
     customerLiveProductSyncInFlight = true;
     try {
         const response = await fetch('/customer/live/products', {
@@ -3160,7 +3186,7 @@ async function syncCustomerProductsLive() {
             credentials: 'same-origin',
             cache: 'no-store'
         });
-        if (!response.ok) return;
+        if (!response.ok) return false;
         const data = await response.json();
         const previousMenu = new Map(appState.menu.map(item => [Number(item.id), item]));
         appState.menu = (data.products || []).map(product => {
@@ -3186,8 +3212,10 @@ async function syncCustomerProductsLive() {
         }
         filterMenu();
         updateCartUI();
+        return true;
     } catch (error) {
         console.warn('Pembaruan menu realtime gagal.', error);
+        return false;
     } finally {
         customerLiveProductSyncInFlight = false;
     }
@@ -3196,3 +3224,7 @@ window.addEventListener('quattro:data-changed', event => {
     if (!['orders', 'payments'].includes(event.detail?.type)) return;
     if (document.getElementById('history-container')) renderHistory();
 });
+
+
+
+

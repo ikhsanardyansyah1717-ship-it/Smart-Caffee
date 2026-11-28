@@ -1,6 +1,12 @@
 @php
     $ppService = \App\Services\FinancialReportService::class;
-    [$ppStart, $ppEnd] = $ppService::resolvePeriod(request('month'), request('start'), request('end'));
+    $ppStartParam = $periodStartParam ?? 'start';
+    $ppEndParam = $periodEndParam ?? 'end';
+    $ppMonthParam = $periodMonthParam ?? 'month';
+    $ppStartValue = $periodStartValue ?? request($ppStartParam);
+    $ppEndValue = $periodEndValue ?? request($ppEndParam);
+    $ppMonthValue = $ppMonthParam ? request($ppMonthParam) : null;
+    [$ppStart, $ppEnd] = $ppService::resolvePeriod($ppMonthValue, $ppStartValue, $ppEndValue);
     $ppLabel = $ppService::periodLabel($ppStart, $ppEnd);
 @endphp
 
@@ -43,8 +49,8 @@
     </div>
 
     <form method="GET" action="{{ url()->current() }}" id="ppForm" style="display:none;">
-        <input type="hidden" name="start" id="ppStartInput">
-        <input type="hidden" name="end" id="ppEndInput">
+        <input type="hidden" name="{{ $ppStartParam }}" id="ppStartInput">
+        <input type="hidden" name="{{ $ppEndParam }}" id="ppEndInput">
     </form>
 </div>
 

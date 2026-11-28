@@ -150,11 +150,13 @@ class WhatsAppLoginWebhookController extends Controller
                     }
 
                     // Nomor belum terdaftar: buat akun pelanggan baru.
+                    $accountCreated = false;
                     try {
                         $newUser = $this->createWhatsAppCustomer(
                             $phone,
                             $profileName
                         );
+                        $accountCreated = $newUser !== null;
                     } catch (QueryException $exception) {
                         // Jika webhook Meta terkirim berulang hampir bersamaan,
                         // periksa kembali apakah nomor sudah berhasil dibuat.
@@ -171,7 +173,8 @@ class WhatsAppLoginWebhookController extends Controller
                     $this->updateChallenge(
                         $key,
                         $challenge,
-                        $newUser->id
+                        $newUser->id,
+                        $accountCreated
                     );
                 }
             }
@@ -252,10 +255,12 @@ class WhatsAppLoginWebhookController extends Controller
     private function updateChallenge(
         string $key,
         array $challenge,
-        ?int $userId
+        ?int $userId,
+        bool $accountCreated = false
     ): void {
         $challenge['status'] = $userId ? 'verified' : 'unlinked';
         $challenge['user_id'] = $userId;
+        $challenge['account_created'] = $userId ? $accountCreated : false;
 
         Cache::put($key, $challenge, now()->addMinutes(5));
     }

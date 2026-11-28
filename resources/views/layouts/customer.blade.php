@@ -16,6 +16,8 @@
         @yield('title', 'Quattro Coffee')
     </title>
 
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
     {{-- Font Awesome --}}
     <link
         rel="stylesheet"

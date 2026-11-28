@@ -56,10 +56,11 @@
         <tr><td>Laba Bersih</td><td>Rp {{ number_format($financialSummary['laba_bersih'], 0, ',', '.') }}</td></tr>
     </table>
     <p class="formula">Laba bersih = pendapatan − HPP − biaya operasional + pemasukan lain. Margin = laba bersih ÷ total pendapatan × 100.</p>
+    @if($financialSummary['items_without_cost'] > 0)<p class="formula">{{ $financialSummary['items_without_cost'] }} unit terjual belum memiliki HPP; HPP produk tersebut dihitung Rp0 sampai nilainya diisi.</p>@endif
 
     <h2 class="section-title">Penjualan dan Laba per Produk</h2>
     <table class="products">
-        <thead><tr><th>Produk</th><th class="number">Terjual</th><th class="number">Harga Jual / Unit</th><th class="number">Laba per Produk</th><th class="number">Laba Kotor</th><th class="number">Laba Bersih</th></tr></thead>
+        <thead><tr><th>Produk</th><th class="number">Terjual</th><th class="number">Harga Jual / Unit</th><th class="number">Laba Kotor Produk</th><th class="number">Laba Kotor / Unit</th><th class="number">Laba Bersih Produk</th></tr></thead>
         <tbody>
             @php
                 $productRevenueTotal = max(1, (float) $topProducts->sum('total_sales'));
@@ -67,7 +68,10 @@
             @forelse($topProducts as $product)
                 @php
                     $productQuantity = max(1, (int) $product->total_qty);
-                    $productNetProfit = round((float) $financialSummary['laba_bersih'] * ((float) $product->total_sales / $productRevenueTotal));
+                    $productRevenueShare = (float) $product->total_sales / $productRevenueTotal;
+                    $productAllocatedExpense = round((float) $financialSummary['biaya_operasional'] * $productRevenueShare);
+                    $productNetProfit = (float) $product->total_profit - $productAllocatedExpense;
+                    $productHasMissingCost = (int) $product->missing_cost_qty > 0;
                 @endphp
                 <tr>
                     <td>{{ $product->product_name }}</td>
@@ -82,7 +86,7 @@
             @endforelse
         </tbody>
     </table>
-    <p class="formula">Laba per produk = (harga jual rata-rata − harga modal rata-rata) × jumlah terjual. Laba kotor = laba per produk ÷ jumlah terjual. Laba bersih produk = laba bersih periode × porsi omzet produk.</p>
+    <p class="formula">Laba kotor produk = omzet produk − HPP produk. Laba kotor per unit = laba kotor produk ÷ unit terjual. Laba bersih produk = laba kotor produk − alokasi biaya operasional berdasarkan porsi omzet; pemasukan lain dicatat terpisah.</p>
     <div class="footer"><span>Quattro Coffee · Laporan internal</span><span class="right">Dicetak {{ now()->format('d/m/Y H:i') }}</span></div>
 </body>
 </html>

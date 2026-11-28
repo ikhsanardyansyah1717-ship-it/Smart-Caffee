@@ -24,13 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Redirect user yang belum login
         $middleware->redirectGuestsTo(function ($request) {
-
-            if (
-                $request->is('owner/*') ||
-                $request->is('kitchen/*') ||
-                $request->is('kasir/*')
-            ) {
-                return route('admin.login');
+            if ($request->is('customer/*')) {
+                return route('customer.login');
             }
 
             return route('admin.login');

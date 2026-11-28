@@ -1143,7 +1143,7 @@ body.modal-open {
                                     <form class="order-action-form" method="POST" action="{{ route('kasir.orders.pickup', $order->id) }}">
                                         @csrf
                                         <button type="submit" class="table-action order-action-button pickup-action">
-                                            <i class="fa-solid fa-bell-concierge"></i> Siap Diambil
+                                            <i class="fa-solid fa-bell-concierge"></i> Sudah Diambil
                                         </button>
                                     </form>
                                 @elseif($order->table_finished_at)
@@ -1172,7 +1172,7 @@ body.modal-open {
                                                 <i class="fa-solid fa-kitchen-set"></i> Kirim ke Kitchen
                                             </button>
                                         </form>
-                                    @elseif($order->status !== 'Sudah Diambil')
+                                    @elseif(!in_array($order->status, ['Selesai', 'Sudah Diambil']))
                                         <span class="order-action-state kitchen-state is-wide">
                                             <i class="fa-solid fa-check-double"></i> {{ $order->kitchen_confirmed_at ? 'Sudah ke Kitchen' : 'Lunas' }}
                                         </span>
@@ -1303,6 +1303,20 @@ body.modal-open {
                 <small style="display:block;margin-top:4px;color:#52745a;">Pastikan pembayaran sudah diterima sebelum menekan konfirmasi.</small>
             </div>
             <small id="paymentInstruction" style="display:block;margin:-7px 0 16px;color:#806f61;">Periksa metode dan jumlah pembayaran sebelum konfirmasi.</small>
+
+            <section id="cashierQrisPanel" hidden aria-live="polite" style="margin:0 0 16px;padding:18px;border:1px solid #eadfd3;border-radius:16px;background:#fffaf5;text-align:center;">
+                <strong style="display:block;color:#493524;font-size:15px;">Pembayaran QRIS</strong>
+                <p id="cashierQrisStatus" style="margin:6px 0 14px;color:#806f61;font-size:13px;">Menyiapkan QRIS Midtrans…</p>
+                <div id="cashierQrisImageWrap" hidden style="display:inline-flex;padding:10px;border:1px solid #eadfd3;border-radius:14px;background:#fff;">
+                    <img id="cashierQrisImage" alt="Kode QRIS Midtrans untuk dipindai pelanggan" width="220" height="220" style="display:block;width:min(220px,60vw);height:auto;image-rendering:auto;">
+                </div>
+                <p id="cashierQrisHint" hidden style="margin:12px 0 0;color:#806f61;font-size:12px;">Pelanggan dapat memindai QR ini melalui aplikasi pembayaran. Status akan diperiksa otomatis.</p>
+                <div id="cashierQrisUrlActions" hidden style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:12px;">
+                    <a id="cashierQrisOpenUrl" href="#" target="_blank" rel="noopener" style="padding:9px 13px;border:1px solid #d7bda3;border-radius:10px;background:#fff;color:#75420f;font-size:12px;font-weight:700;text-decoration:none;">Buka QRIS</a>
+                    <button type="button" onclick="copyCashierQrisUrl()" style="padding:9px 13px;border:1px solid #d7bda3;border-radius:10px;background:#fff;color:#75420f;font-size:12px;font-weight:700;cursor:pointer;">Salin URL QRIS</button>
+                </div>
+                <button id="cashierQrisRetry" type="button" hidden onclick="beginCashierQris(true)" style="margin-top:12px;padding:9px 15px;border:1px solid #d7bda3;border-radius:10px;background:#fff;color:#75420f;font-weight:700;cursor:pointer;">Buat QR baru</button>
+            </section>
 
             <div id="cashInputWrap" style="display:none;margin-bottom:16px;">
                 <label style="display:flex;flex-direction:column;gap:8px;color:#6f5a49;font-size:14px;font-weight:600;">
@@ -1578,6 +1592,10 @@ document.addEventListener('DOMContentLoaded', function () {
      */
 
     let confirmPaymentTotalValue = 0;
+    let cashierQrisOrderId = null;
+    let cashierQrisPollTimer = null;
+    let cashierQrisBusy = false;
+    let cashierQrisChecking = false;
 
     function openFinishTableModal(orderId, tableNumber, actionUrl) {
         const modal = document.getElementById('finishTableModal');
@@ -1597,6 +1615,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function openConfirmPayment(orderId, orderNumber, total, existingMethod = null, items = [], orderDate = '', customerName = '', tableNumber = '', transferProofUrl = '') {
+        stopCashierQrisPolling();
+        cashierQrisOrderId = orderId;
+        resetCashierQrisPanel();
         const modal = document.getElementById('confirmPaymentModal');
         const form = document.getElementById('confirmPaymentForm');
         const method = document.getElementById('paymentMethod');
@@ -1643,6 +1664,7 @@ document.addEventListener('DOMContentLoaded', function () {
         cash.value = '';
         cash.max = '';
         submitButton.disabled = false;
+        submitButton.hidden = false;
         submitButton.querySelector('span').textContent = existingMethod ? 'Konfirmasi Pembayaran' : 'Konfirmasi & Bayar';
         document.getElementById('changePreview').textContent = '';
         document.getElementById('changePreview').style.color = '#806f61';
@@ -1661,6 +1683,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function closeConfirmPayment() {
+        stopCashierQrisPolling();
         document.getElementById('confirmPaymentModal').classList.remove('show');
         if (!document.getElementById('orderModal').classList.contains('show')) {
             document.body.classList.remove('modal-open');
@@ -1673,8 +1696,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const cash = document.getElementById('cashReceived');
         const preview = document.getElementById('changePreview');
         const instruction = document.getElementById('paymentInstruction');
+        const submitButton = document.getElementById('confirmPaymentSubmit');
+        const qrisPanel = document.getElementById('cashierQrisPanel');
 
         if (method === 'Cash') {
+            stopCashierQrisPolling();
+            qrisPanel.hidden = true;
+            submitButton.hidden = false;
             wrap.style.display = 'block';
             cash.required = true;
             instruction.textContent = 'Hitung uang yang diterima. Pastikan jumlahnya sama dengan atau lebih besar dari total.';
@@ -1685,8 +1713,168 @@ document.addEventListener('DOMContentLoaded', function () {
             cash.removeAttribute('max');
             preview.textContent = '';
             instruction.textContent = method === 'QRIS'
-                ? 'Pastikan pembayaran QRIS berhasil diterima sebelum mengonfirmasi.'
+                ? 'Pelanggan memindai QR Midtrans. Pembayaran akan diverifikasi otomatis.'
                 : 'Pilih metode dan periksa total pembayaran sebelum konfirmasi.';
+            if (method === 'QRIS') {
+                submitButton.hidden = true;
+                qrisPanel.hidden = false;
+                if (!document.getElementById('cashierQrisImage').src || qrisPanel.dataset.orderId !== String(cashierQrisOrderId)) {
+                    beginCashierQris();
+                } else if (!cashierQrisPollTimer) {
+                    startCashierQrisPolling();
+                }
+            } else {
+                stopCashierQrisPolling();
+                qrisPanel.hidden = true;
+                submitButton.hidden = false;
+            }
+        }
+    }
+
+    function resetCashierQrisPanel() {
+        const panel = document.getElementById('cashierQrisPanel');
+        const image = document.getElementById('cashierQrisImage');
+        stopCashierQrisPolling();
+        panel.dataset.orderId = '';
+        image.removeAttribute('src');
+        document.getElementById('cashierQrisImageWrap').hidden = true;
+        document.getElementById('cashierQrisHint').hidden = true;
+        document.getElementById('cashierQrisUrlActions').hidden = true;
+        document.getElementById('cashierQrisRetry').hidden = true;
+        document.getElementById('cashierQrisStatus').textContent = 'Menyiapkan QRIS Midtrans…';
+        document.getElementById('cashierQrisStatus').style.color = '#806f61';
+    }
+
+    function stopCashierQrisPolling() {
+        if (cashierQrisPollTimer) window.clearInterval(cashierQrisPollTimer);
+        cashierQrisPollTimer = null;
+        cashierQrisChecking = false;
+    }
+
+    function cashierQrisHeaders() {
+        return {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('#confirmPaymentForm input[name="_token"]')?.value || ''
+        };
+    }
+
+    async function beginCashierQris(forceNew = false) {
+        const panel = document.getElementById('cashierQrisPanel');
+        const imageWrap = document.getElementById('cashierQrisImageWrap');
+        const retry = document.getElementById('cashierQrisRetry');
+        const status = document.getElementById('cashierQrisStatus');
+        const orderId = cashierQrisOrderId;
+        if (!orderId || cashierQrisBusy) return;
+        cashierQrisBusy = true;
+        stopCashierQrisPolling();
+        panel.hidden = false;
+        panel.dataset.orderId = String(orderId);
+        imageWrap.hidden = true;
+        retry.hidden = true;
+        status.textContent = forceNew ? 'Memuat ulang QRIS…' : 'Menyiapkan QRIS Midtrans…';
+        try {
+            const response = await fetch(`{{ url('/kasir/orders') }}/${orderId}/qris/create`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: cashierQrisHeaders(),
+                body: '{}'
+            });
+            const data = await response.json();
+            if (cashierQrisOrderId !== orderId
+                || !document.getElementById('confirmPaymentModal').classList.contains('show')
+                || document.getElementById('paymentMethod').value !== 'QRIS') return;
+            if (!response.ok) throw new Error(data.message || 'QRIS belum dapat dibuat.');
+            if (data.status === 'Dibayar') {
+                handleCashierQrisPaid(data.message);
+                return;
+            }
+            if (!data.qr_url) throw new Error(data.message || 'Kode QR belum tersedia.');
+            const qrLink = document.getElementById('cashierQrisOpenUrl');
+            qrLink.href = data.qr_url;
+            document.getElementById('cashierQrisUrlActions').hidden = false;
+            const image = document.getElementById('cashierQrisImage');
+            image.onload = () => {
+                if (cashierQrisOrderId !== orderId || document.getElementById('paymentMethod').value !== 'QRIS') return;
+                imageWrap.hidden = false;
+                document.getElementById('cashierQrisHint').hidden = false;
+                status.textContent = 'Menunggu pelanggan memindai dan membayar';
+                startCashierQrisPolling();
+            };
+            image.onerror = () => {
+                if (cashierQrisOrderId !== orderId || document.getElementById('paymentMethod').value !== 'QRIS') return;
+                status.textContent = 'QRIS gagal dimuat. Silakan coba buat QR baru.';
+                retry.hidden = false;
+            };
+            image.src = data.qr_url;
+        } catch (error) {
+            if (cashierQrisOrderId === orderId) {
+                status.textContent = error.message || 'QRIS belum dapat dibuat. Periksa koneksi dan konfigurasi Midtrans.';
+                retry.textContent = 'Muat ulang QR';
+                retry.hidden = false;
+            }
+        } finally {
+            cashierQrisBusy = false;
+        }
+    }
+
+    function startCashierQrisPolling() {
+        if (cashierQrisPollTimer) return;
+        checkCashierQrisStatus();
+        cashierQrisPollTimer = window.setInterval(checkCashierQrisStatus, 5000);
+    }
+
+    async function checkCashierQrisStatus() {
+        const orderId = cashierQrisOrderId;
+        if (!orderId || cashierQrisChecking
+            || !document.getElementById('confirmPaymentModal').classList.contains('show')
+            || document.getElementById('paymentMethod').value !== 'QRIS') return;
+        cashierQrisChecking = true;
+        try {
+            const response = await fetch(`{{ url('/kasir/orders') }}/${orderId}/payment/check`, {
+                method: 'POST', credentials: 'same-origin', headers: cashierQrisHeaders(), body: '{}'
+            });
+            const data = await response.json();
+            if (cashierQrisOrderId !== orderId) return;
+            if (data.status === 'Dibayar') {
+                stopCashierQrisPolling();
+                handleCashierQrisPaid(data.message);
+            } else if (data.status === 'Kedaluwarsa' || data.status === 'TidakAda') {
+                stopCashierQrisPolling();
+                document.getElementById('cashierQrisStatus').textContent = 'QRIS kedaluwarsa atau pembayaran gagal. Buat QR baru untuk mencoba kembali.';
+                document.getElementById('cashierQrisImageWrap').hidden = true;
+                document.getElementById('cashierQrisHint').hidden = true;
+                document.getElementById('cashierQrisUrlActions').hidden = true;
+                document.getElementById('cashierQrisRetry').textContent = 'Buat QR baru';
+                document.getElementById('cashierQrisRetry').hidden = false;
+            }
+        } catch (error) {
+            // Network hiccups are retried on the next interval without interrupting the cashier.
+        } finally {
+            cashierQrisChecking = false;
+        }
+    }
+
+    function handleCashierQrisPaid(message) {
+        stopCashierQrisPolling();
+        document.getElementById('cashierQrisImageWrap').hidden = true;
+        document.getElementById('cashierQrisHint').hidden = true;
+        document.getElementById('cashierQrisUrlActions').hidden = true;
+        document.getElementById('cashierQrisRetry').hidden = true;
+        document.getElementById('cashierQrisStatus').textContent = message || 'Pembayaran terverifikasi. Pesanan akan diperbarui.';
+        document.getElementById('cashierQrisStatus').style.color = '#28643d';
+        window.setTimeout(() => window.location.reload(), 1200);
+    }
+
+    async function copyCashierQrisUrl() {
+        const url = document.getElementById('cashierQrisOpenUrl')?.href;
+        if (!url || url.endsWith('#')) return;
+        try {
+            await navigator.clipboard.writeText(url);
+            showMessage('URL QRIS berhasil disalin.');
+        } catch (error) {
+            window.prompt('Salin URL QRIS ini:', url);
         }
     }
 

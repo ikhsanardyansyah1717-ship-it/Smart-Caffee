@@ -9,7 +9,7 @@
         <span aria-hidden="true"></span>
     </header>
 
-    <section class="customer-wa-login__hero" aria-label="Masuk dengan WhatsApp">
+    <section class="customer-wa-login__hero" aria-label="Masuk dengan Google">
         <div class="customer-wa-login__brand"><span><i class="fa-solid fa-mug-hot"></i></span><strong>QUATTRO <small>COFFEE</small></strong></div>
         <div class="customer-wa-login__art" aria-hidden="true">
             <div class="customer-wa-login__spark customer-wa-login__spark--one">✦</div>
@@ -19,46 +19,34 @@
             <div class="customer-wa-login__badge"><i class="fa-solid fa-check"></i></div>
         </div>
         <h1>Kopi favoritmu, selalu dekat.</h1>
-        <p>Masuk ke akun Quattro untuk pesan lebih cepat dan cek pesananmu.</p>
+        <p>Masuk dengan akun Google untuk pesan lebih cepat dan cek pesananmu.</p>
     </section>
 
-    <button class="customer-wa-login__button" id="customer-wa-login-start" type="button">
-        <i class="fa-brands fa-whatsapp"></i> Log In via WhatsApp
-    </button>
-    <p class="customer-wa-login__hint">Gunakan nomor yang terdaftar di akun, kirim pesan verifikasi, lalu tunggu di halaman ini. Login otomatis memerlukan WhatsApp Business dan webhook yang aktif.</p>
-    <div
-    class="customer-wa-login__state"
-    id="customer-wa-login-state"
-    role="status"
-    aria-live="polite"
-    aria-atomic="true"
-    hidden
->
-    <span class="customer-wa-login__state-icon" id="customer-wa-login-state-icon">
-        <i class="fa-solid fa-circle-info"></i>
-    </span>
-
-    <span class="customer-wa-login__state-content">
-        <strong id="customer-wa-login-state-title">Informasi Login</strong>
-        <span id="customer-wa-login-state-message"></span>
-    </span>
-
-    <span class="customer-wa-login__state-loader" id="customer-wa-login-state-loader" hidden>
-        <i class="fa-solid fa-spinner"></i>
-    </span>
-</div>
-    <a class="customer-wa-login__button customer-wa-login__open-wa" id="customer-wa-login-open-wa" href="#" target="_blank" rel="noopener" hidden>Buka WhatsApp</a>
+    <a class="customer-wa-login__button customer-google-login__button" href="{{ route('customer.login.google') }}" aria-label="Lanjutkan login dengan Google">
+        <svg class="customer-google-login__icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+            <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.8 6-15z"/>
+            <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.7-5.1c-1.8 1.2-4 2-6.8 2-5.2 0-9.6-3.5-11.2-8.2H5.9v5.2A20 20 0 0 0 24 44z"/>
+            <path fill="#FBBC05" d="M12.8 27.9a12 12 0 0 1 0-7.8v-5.2H5.9a20 20 0 0 0 0 18.2l6.9-5.2z"/>
+            <path fill="#EA4335" d="M24 11.9c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 5.8 29.5 4 24 4A20 20 0 0 0 5.9 14.9l6.9 5.2c1.6-4.7 6-8.2 11.2-8.2z"/>
+        </svg>
+        <span>Lanjutkan dengan Google</span>
+    </a>
+    <p class="customer-google-login__note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Kata sandi Google tidak disimpan di Quattro.</p>
+    @if (session('google_login_error'))
+        <div class="customer-wa-login__state is-error" role="alert">
+            <span class="customer-wa-login__state-icon"><i class="fa-solid fa-circle-exclamation"></i></span>
+            <span class="customer-wa-login__state-content"><strong>Login belum berhasil</strong><span>{{ session('google_login_error') }}</span></span>
+        </div>
+    @endif
     <a class="customer-wa-login__guest" href="{{ route('customer.home') }}">
-    <i class="fa-solid fa-arrow-right"></i>
-    Lanjutkan sebagai tamu
-</a>
+        <i class="fa-solid fa-arrow-right"></i>
+        Lihat menu sebagai tamu
+    </a>
     <p class="customer-wa-login__terms">Dengan melanjutkan, kamu menyetujui <a href="{{ route('customer.privacy') }}">Kebijakan Privasi</a> Quattro Coffee.</p>
-</main>
-
 @push('styles')
 <style>
 /* =====================================================
-   QUATTRO COFFEE - WHATSAPP LOGIN
+   QUATTRO COFFEE - CUSTOMER LOGIN
    NOTIFICATION DESIGN
 ===================================================== */
 
@@ -376,143 +364,54 @@
     line-height: 1.7;
 }
 
+
+.customer-wa-login { max-width: 500px; padding-inline: 24px; background: radial-gradient(ellipse at 50% 15%, #fffdf9 0, #fbf7f0 62%, #f5ede1 100%); }
+.customer-wa-login__hero { margin-top: 18px; }
+.customer-wa-login__art { height: 210px; border-radius: 28px; }
+.customer-wa-login__button { min-height: 54px; border-radius: 14px; background: linear-gradient(135deg, #8b4e0d, #633607); box-shadow: 0 8px 20px rgba(99,54,7,.18); transition: transform .18s ease, box-shadow .18s ease; }
+.customer-wa-login__button:hover { transform: translateY(-1px); box-shadow: 0 11px 24px rgba(99,54,7,.22); }
+.customer-wa-login__hint { max-width: 380px; color: #766755; line-height: 1.65; }
+.customer-wa-login { max-width: 500px; padding-inline: 24px; background: radial-gradient(ellipse at 50% 15%, #fffdf9 0, #fbf7f0 62%, #f5ede1 100%); }
+.customer-wa-login__hero { margin-top: 18px; }
+.customer-wa-login__art { height: 210px; border-radius: 28px; }
+.customer-wa-login__button { min-height: 54px; border-radius: 14px; background: linear-gradient(135deg, #8b4e0d, #633607); box-shadow: 0 8px 20px rgba(99,54,7,.18); transition: transform .18s ease, box-shadow .18s ease; }
+.customer-wa-login__button:hover { transform: translateY(-1px); box-shadow: 0 11px 24px rgba(99,54,7,.22); }
+.customer-wa-login__hint { max-width: 380px; color: #766755; line-height: 1.65; }
+.customer-wa-login__state { max-width: none; }
+.customer-google-login__button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 58px;
+    margin-top: 26px;
+    padding: 0 20px;
+    border: 1px solid #e6ddd2;
+    background: #fff;
+    color: #3a2b1d;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 8px 22px rgba(66, 45, 23, .09);
+}
+.customer-google-login__button:hover {
+    background: #fffdfa;
+    border-color: #cdb99e;
+    box-shadow: 0 12px 26px rgba(66, 45, 23, .14);
+}
+.customer-google-login__button:focus-visible {
+    outline: 3px solid rgba(66, 133, 244, .35);
+    outline-offset: 3px;
+}
+.customer-google-login__icon { width: 21px; height: 21px; flex: 0 0 21px; }
+
+.customer-google-login__note { margin: 13px auto 0; color: #8b7b68; text-align: center; font-size: 10px; line-height: 1.5; }
+.customer-google-login__note i { margin-right: 5px; color: #8b5727; }
+
+@media (max-width: 480px) { .customer-wa-login { padding-inline: 18px; } .customer-wa-login__art { height: 190px; } }
+
 </style>
 @endpush
 
-@push('scripts')
-<script>
-(() => {
-    const startButton = document.getElementById('customer-wa-login-start');
-   const status = document.getElementById('customer-wa-login-state');
-const statusIcon = document.getElementById('customer-wa-login-state-icon');
-const statusTitle = document.getElementById('customer-wa-login-state-title');
-const statusMessage = document.getElementById('customer-wa-login-state-message');
-const statusLoader = document.getElementById('customer-wa-login-state-loader');
-    const openWhatsApp = document.getElementById('customer-wa-login-open-wa');
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
-    let polling = false;
-
-   // =====================================================
-// LOGIN NOTIFICATION
-// =====================================================
-
-const showStatus = (
-    message,
-    type = 'info',
-    title = 'Informasi Login'
-) => {
-
-    const icons = {
-        loading: 'fa-solid fa-clock',
-        success: 'fa-solid fa-circle-check',
-        error: 'fa-solid fa-circle-exclamation',
-        info: 'fa-solid fa-circle-info'
-    };
-
-    status.className = `customer-wa-login__state is-${type}`;
-
-    statusIcon.innerHTML = `<i class="${icons[type] || icons.info}"></i>`;
-
-    statusTitle.textContent = title;
-
-    statusMessage.textContent = message;
-
-    statusLoader.hidden = type !== 'loading';
-
-    status.hidden = false;
-};
-    async function poll(code) {
-        if (polling) return;
-        polling = true;
-        const startedAt = Date.now();
-        let pendingStatusShown = false;
-
-        while (polling) {
-            try {
-                const response = await fetch(@json(route('customer.login.whatsapp.poll')), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
-                    body: JSON.stringify({ code })
-                });
-                const result = await response.json();
-
-                if (response.status === 202 && result.status === 'pending') {
-                    if (!pendingStatusShown) {
-                        showStatus('Menunggu pesan diterima WhatsApp Business Quattro. Pastikan nomor akun yang digunakan sudah benar.', 'loading', 'Menunggu verifikasi');
-                        pendingStatusShown = true;
-                    }
-                    if (Date.now() - startedAt > 4 * 60 * 1000) {
-                        showStatus('Pesan belum diterima sistem. Periksa koneksi WhatsApp Business dan webhook, lalu coba lagi.', 'error', 'Login belum terverifikasi');
-                        polling = false;
-                        startButton.hidden = false;
-                        startButton.disabled = false;
-                        return;
-                    }
-                    await new Promise(resolve => setTimeout(resolve, 1800));
-                    continue;
-                }
-
-                if (response.ok && result.status === 'authenticated') {
-                    showStatus('Berhasil masuk. Mengalihkan…');
-                    window.location.assign(result.redirect_url);
-                    return;
-                }
-
-                if (result.status === 'unlinked') {
-                    showStatus('Nomor WhatsApp ini belum terhubung ke akun Quattro Coffee. Tambahkan nomor di profil atau lanjut sebagai tamu.');
-                } else {
-                    showStatus('Verifikasi tidak ditemukan atau sudah kedaluwarsa. Silakan mulai lagi.');
-                }
-                polling = false;
-                startButton.hidden = false;
-                startButton.disabled = false;
-                return;
-            } catch (error) {
-                showStatus('Sesi verifikasi terputus. Silakan mulai login WhatsApp lagi.', 'error', 'Login terputus');
-                polling = false;
-                startButton.hidden = false;
-                startButton.disabled = false;
-            }
-        }
-    }
-
-    async function beginLogin() {
-        startButton.disabled = true;
-        showStatus('Menyiapkan pesan login…');
-        const chatTab = window.open('about:blank', '_blank');
-
-        try {
-            const response = await fetch(@json(route('customer.login.whatsapp.start')), {
-                method: 'POST',
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf }
-            });
-            if (!response.ok) throw new Error('start_failed');
-
-            const result = await response.json();
-            showStatus('Kirim pesan yang sudah disiapkan. Login berlanjut otomatis setelah pesan diterima WhatsApp Business.');
-            if (chatTab) {
-                chatTab.location = result.whatsapp_url;
-            } else {
-                openWhatsApp.href = result.whatsapp_url;
-                openWhatsApp.hidden = false;
-            }
-            poll(result.code);
-        } catch (error) {
-            if (chatTab) chatTab.close();
-            showStatus('Login WhatsApp belum siap. Periksa konfigurasi WhatsApp lalu coba lagi.');
-            startButton.disabled = false;
-        }
-    }
-
-    startButton.addEventListener('click', beginLogin);
-
-    const returnedCode = new URLSearchParams(window.location.search).get('wa_code');
-    if (returnedCode) {
-        startButton.hidden = true;
-        showStatus('Memeriksa pesan WhatsApp kamu…');
-        poll(returnedCode);
-    }
-})();
-</script>
-@endpush
 @endsection
